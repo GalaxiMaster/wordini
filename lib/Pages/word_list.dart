@@ -22,6 +22,7 @@ class WordList extends StatelessWidget {
                 final word = snapshot.data!.keys.elementAt(index);
                 return ListTile(
                   title: Text(word),
+                  subtitle: Text(snapshot.data![word]['definitions'][0]['definition']),
                 );
               },
             ),
