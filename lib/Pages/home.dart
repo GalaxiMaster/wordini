@@ -1,5 +1,7 @@
 // import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:vocab_app/Pages/add_word.dart';
+import 'package:vocab_app/Pages/word_list.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,7 +14,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 1;
   final List<Widget> _pages = [
-    Container(),
+    WordList(),
     HomePageContent(),
     Container(),
   ];
@@ -78,7 +80,14 @@ class _HomePageContentState extends State<HomePageContent> {
             right: 10,
             bottom: 10,
             child: FloatingActionButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddWord(),
+                    )
+                );
+              },
               backgroundColor: Colors.blue,
               child: Text(
                 "+",
