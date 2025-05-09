@@ -46,7 +46,7 @@ class _AddWordState extends State<AddWord> {
 }
 void addWordToList(String value) {
   readData().then((data) {
-    data[value] = {'Word: $value'};
+    data[value] = {'Definition': 'Test'};
     writeData(data, append: false);
   });
 }
