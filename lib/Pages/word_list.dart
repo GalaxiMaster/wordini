@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vocab_app/file_handling.dart';
+import 'package:vocab_app/word_functions.dart';
 
 class WordList extends StatelessWidget {
   const WordList({super.key});
@@ -20,8 +21,19 @@ class WordList extends StatelessWidget {
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index) {
                 final word = snapshot.data!.keys.elementAt(index);
+                getWordType(snapshot.data![word]);
                 return ListTile(
-                  title: Text(word),
+                  title: Row(
+                    children: [
+                      Text(
+                        word,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                   subtitle: Text(snapshot.data![word]['definitions'][0]['definition']),
                 );
               },

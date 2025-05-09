@@ -1,0 +1,47 @@
+import 'package:flutter/material.dart';
+import 'package:free_dictionary_api_v2/free_dictionary_api_v2.dart';
+
+void getWordType(Map word) {
+  Set types = {};
+  for (var definition in word['definitions']) {
+    if (definition['partOfSpeech'] != null) {
+      types.add(definition['partOfSpeech']);
+    }
+  }
+}
+
+Future<Map> getWordDef(String word) async {
+  try {
+    Map wordDetails = {
+      'word': word,
+      'definitions': []// [{
+      //   'definition': '',
+      //   'example': '',
+      //   'partOfSpeech': '',
+      //   'synonyms': [],
+      //   'antonyms': [],
+      // }],
+    };
+    // TODO probably switch to a different API, this ones not it
+    final dictionary = FreeDictionaryApiV2();
+    final response = await dictionary.getDefinition(word);
+    debugPrint(response.toString());
+    response[0].meanings?.forEach((meaning) {
+      meaning.definitions?.forEach((definition) {
+        Map meaningDetails = {
+          'partOfSpeech': meaning.partOfSpeech,
+          'definition': definition.definition,
+          'example': definition.example,
+          'synonyms': definition.synonyms,
+          'antonyms': definition.antonyms,
+        };
+
+        wordDetails['definitions'].add(meaningDetails);
+      });
+    });
+    return wordDetails;
+  } on FreeDictionaryException catch (error, stackTrace) {
+    debugPrint(error.toString());
+    return {};
+  }
+}
