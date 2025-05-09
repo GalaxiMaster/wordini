@@ -9,7 +9,9 @@ void getWordType(Map word) {
     }
   }
 }
-
+String capitalise(String s) =>
+  s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+  
 Future<Map> getWordDef(String word) async {
   try {
     Map wordDetails = {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:free_dictionary_api_v2/free_dictionary_api_v2.dart';
 import 'package:vocab_app/file_handling.dart';
 import 'package:vocab_app/word_functions.dart';
 

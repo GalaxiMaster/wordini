@@ -26,7 +26,7 @@ class WordList extends StatelessWidget {
                   title: Row(
                     children: [
                       Text(
-                        word,
+                        capitalise(word),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
