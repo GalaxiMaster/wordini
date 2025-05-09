@@ -21,15 +21,24 @@ class WordList extends StatelessWidget {
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index) {
                 final word = snapshot.data!.keys.elementAt(index);
-                getWordType(snapshot.data![word]);
                 return ListTile(
                   title: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    spacing: 10,
                     children: [
                       Text(
                         capitalise(word),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        getWordType(snapshot.data![word]).join(' / '),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: Colors.grey,
+                          fontStyle: FontStyle.italic                         
                         ),
                       ),
                     ],

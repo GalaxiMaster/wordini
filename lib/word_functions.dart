@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:free_dictionary_api_v2/free_dictionary_api_v2.dart';
 
-void getWordType(Map word) {
+Set getWordType(Map word) {
   Set types = {};
   for (var definition in word['definitions']) {
     if (definition['partOfSpeech'] != null) {
       types.add(definition['partOfSpeech']);
     }
   }
+  return types;
 }
 String capitalise(String s) =>
   s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
