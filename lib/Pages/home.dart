@@ -1,6 +1,7 @@
 // import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:vocab_app/Pages/add_word.dart';
+import 'package:vocab_app/Pages/quizzes.dart';
 import 'package:vocab_app/Pages/word_list.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,7 +17,7 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     WordList(),
     HomePageContent(),
-    Container(),
+    Quizzes(),
   ];
   @override
   Widget build(BuildContext context) {
