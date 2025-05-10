@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:free_dictionary_api_v2/free_dictionary_api_v2.dart';
+import 'package:vocab_app/file_handling.dart';
 
 Set getWordType(Map word) {
   Set types = {};
@@ -47,4 +48,12 @@ Future<Map> getWordDef(String word) async {
     debugPrint(error.toString());
     return {};
   }
+}
+
+void deleteWord(word) {
+  readData().then((data) async{
+    data.remove(word);
+    await writeData(data, append: false);
+  });
+  debugPrint('deleted $word');
 }
