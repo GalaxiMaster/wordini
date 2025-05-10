@@ -68,3 +68,26 @@ Map organiseToSpeechPart(List wordDetails) {
   }
   return organised;
 }
+
+gatherSynonyms(Map word) {
+  Set synonyms = {};
+  for (var definition in word['definitions']) {
+    if (definition['synonyms'] != null) {
+      for (var synonym in definition['synonyms']) {
+        synonyms.add(synonym);
+      }
+    }
+  }
+  return synonyms.toList();
+}
+gatherAntonyms(Map word) {
+  Set antonyms = {};
+  for (var definition in word['definitions']) {
+    if (definition['antonyms'] != null) {
+      for (var antonym in definition['antonyms']) {
+        antonyms.add(antonym);
+      }
+    }
+  }
+  return antonyms.toList();
+}
