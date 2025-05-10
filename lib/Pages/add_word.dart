@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vocab_app/file_handling.dart';
+import 'package:vocab_app/widgets.dart';
 import 'package:vocab_app/word_functions.dart';
 
 class AddWord extends StatefulWidget {
@@ -26,14 +27,14 @@ class _AddWordState extends State<AddWord> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 50),
-                child: TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Word',
-                  ),
-                  onFieldSubmitted: (value) {
-                    addWordToList(value);
-                    Navigator.pop(context);
+                padding: const EdgeInsets.symmetric(horizontal: 75),
+                child: TextField(
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 20,
+                  ), 
+                  onSubmitted: (value) {
+                    addWordToList(value, context);
                   },
                 ),
               ),
@@ -45,10 +46,39 @@ class _AddWordState extends State<AddWord> {
   }
   
 }
-void addWordToList(String word) {
+void addWordToList(String word, context) {
+  LoadingOverlay loadingOverlay = LoadingOverlay();
   readData().then((data) async{
+    loadingOverlay.showLoadingOverlay(context);
     Map wordDetails = await getWordDef(word);
     data[word] = wordDetails;
-    writeData(data, append: false);
+    loadingOverlay.removeLoadingOverlay();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: const Color(0xFF151515),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Word: ${capitalise(word)}'),
+            const SizedBox(height: 10),
+            Text('Definitions: ${wordDetails['definitions'][0]['definition']}'),
+            const SizedBox(height: 10),
+            Text('Word Type: ${getWordType(wordDetails).join(', ')}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+
+    // Navigator.pop(context);
+
+    // writeData(data, append: false);
   });
 }
