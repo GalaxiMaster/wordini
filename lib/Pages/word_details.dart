@@ -21,7 +21,7 @@ class _WordDetailstate extends State<WordDetails> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.word['word'],
+              capitalise(widget.word['word']),
               style: TextStyle(fontSize: 24),
             ),
             Padding(

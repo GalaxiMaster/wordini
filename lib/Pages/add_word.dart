@@ -49,6 +49,10 @@ class _AddWordState extends State<AddWord> {
 void addWordToList(String word, context) {
   LoadingOverlay loadingOverlay = LoadingOverlay();
   readData().then((data) async{
+    if (data.containsKey(word)) {
+      errorOverlay(context, 'Already added word');
+      return;
+    }
     loadingOverlay.showLoadingOverlay(context);
     Map wordDetails = await getWordDef(word);
     data[word] = wordDetails;
