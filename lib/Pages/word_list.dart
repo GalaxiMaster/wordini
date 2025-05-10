@@ -11,7 +11,7 @@ class WordList extends StatefulWidget {
 
 class _WordListState extends State<WordList> {
   late Future<Map> _wordsFuture;
-
+  String searchTerm = '';
   @override
   void initState() {
     super.initState();
@@ -30,55 +30,85 @@ class _WordListState extends State<WordList> {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
         Map words = snapshot.data!;
-
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: ListView.builder(
-            itemCount: words.length,
-            itemBuilder: (context, index) {
-              final word = words.keys.elementAt(index);
-              return InkWell(
-                onLongPress: () async {
-                  deleteWord(word);
+        List filteredWords = words.keys.where((word) {
+          return word.toLowerCase().contains(searchTerm.toLowerCase());
+        }).toList();
+        
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: TextField(
+                decoration: InputDecoration(
+                  labelText: 'Search for a word',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(
+                      color: Color.fromARGB(255, 87, 153, 239),
+                      width: 2,
+                    ),
+                  ),
+                ),
+                onChanged: (value) {
                   setState(() {
-                    words.remove(word); 
+                    searchTerm = value;
                   });
                 },
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => WordDetails(word: words[word]),
-                  ),
-                ),
-                child: ListTile(
-                  title: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        capitalise(word),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ListView.builder(
+                padding: EdgeInsets.zero, // Remove default padding
+                shrinkWrap: true,
+                itemCount: filteredWords.length,
+                itemBuilder: (context, index) {
+                  final word = filteredWords[index];
+                  return InkWell(
+                    onLongPress: () async {
+                      deleteWord(word);
+                      setState(() {
+                        words.remove(word); 
+                      });
+                    },
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WordDetails(word: words[word]),
                       ),
-                      const SizedBox(width: 10),
-                      Text(
-                        getWordType(words[word]).join(' / '),
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: Colors.grey,
-                          fontStyle: FontStyle.italic,
-                        ),
+                    ),
+                    child: ListTile(
+                      title: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            capitalise(word),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            getWordType(words[word]).join(' / '),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.grey,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  subtitle: Text(
-                    words[word]['definitions'][0]['definition'],
-                  ),
-                ),
-              );
-            },
-          ),
+                      subtitle: Text(
+                        words[word]['definitions'][0]['definition'],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         );
       },
     );

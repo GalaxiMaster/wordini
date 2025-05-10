@@ -114,6 +114,6 @@ void addWordToList(String word, context) {
     }
     Navigator.pop(context);
 
-    // writeData(data, append: false);
+    writeData(data, append: false);
   });
 }
