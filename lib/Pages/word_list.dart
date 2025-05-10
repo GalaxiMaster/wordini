@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vocab_app/Pages/word_details.dart';
 import 'package:vocab_app/file_handling.dart';
 import 'package:vocab_app/word_functions.dart';
 class WordList extends StatefulWidget {
@@ -43,6 +44,12 @@ class _WordListState extends State<WordList> {
                     words.remove(word); 
                   });
                 },
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => WordDetails(word: words[word]),
+                  ),
+                ),
                 child: ListTile(
                   title: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
