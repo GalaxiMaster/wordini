@@ -53,7 +53,7 @@ void addWordToList(String word, context) {
     Map wordDetails = await getWordDef(word);
     data[word] = wordDetails;
     loadingOverlay.removeLoadingOverlay();
-    showDialog(
+    bool? result = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -96,13 +96,19 @@ void addWordToList(String word, context) {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: const Text('Edit?'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Confirm'),
           ),
         ],
       ),
     );
-
-    // Navigator.pop(context);
+    if (!(result ?? false)) {
+      return;
+    }
+    Navigator.pop(context);
 
     // writeData(data, append: false);
   });
