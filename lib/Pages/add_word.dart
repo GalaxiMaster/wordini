@@ -58,14 +58,39 @@ void addWordToList(String word, context) {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         backgroundColor: const Color(0xFF151515),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              capitalise(word)
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 5),
+              child: Text(
+                getWordType(wordDetails).map((e) => e[0]).join(', '),
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
+        ),
         content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Word: ${capitalise(word)}'),
-            const SizedBox(height: 10),
-            Text('Definitions: ${wordDetails['definitions'][0]['definition']}'),
-            const SizedBox(height: 10),
-            Text('Word Type: ${getWordType(wordDetails).join(', ')}'),
+            for (var speechType in organiseToSpeechPart(wordDetails['definitions']).entries) ...[
+              Text(
+                capitalise(speechType.key),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              for (var entry in speechType.value.asMap().entries)
+                Text(
+                  '${entry.key + 1}. ${entry.value['definition']}',
+                ),
+            ]
           ],
         ),
         actions: [

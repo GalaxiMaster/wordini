@@ -45,7 +45,7 @@ Future<Map> getWordDef(String word) async {
     });
     return wordDetails;
   } on FreeDictionaryException catch (error, stackTrace) {
-    debugPrint(error.toString());
+    debugPrint(error.toString() + stackTrace.toString());
     return {};
   }
 }
@@ -56,4 +56,15 @@ void deleteWord(word) {
     await writeData(data, append: false);
   });
   debugPrint('deleted $word');
+}
+
+Map organiseToSpeechPart(List wordDetails) {
+  Map organised = {};
+  for (var definition in wordDetails) {
+    if (organised[definition['partOfSpeech']] == null) {
+      organised[definition['partOfSpeech']] = [];
+    }
+    organised[definition['partOfSpeech']].add(definition);
+  }
+  return organised;
 }
