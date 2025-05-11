@@ -14,6 +14,7 @@ class _WordListState extends State<WordList> {
   String searchTerm = '';
   Map filters = {
     'wordTypes': [],
+    'wordTypeMode': 'U', // 'intersect': ∩ or 'union': ∪
   };
 
   @override
@@ -35,12 +36,19 @@ class _WordListState extends State<WordList> {
         }
         Map words = snapshot.data!;
         List filteredWords = words.keys.where((word) {
-          final matchesSearch = word.toLowerCase().contains(searchTerm.toLowerCase()); // search term
-          
+          final matchesSearch = word.toLowerCase().contains(searchTerm.toLowerCase());
           final selectedTypes = filters['wordTypes'] as List;
           if (selectedTypes.isEmpty) return matchesSearch;
-          final wordTypes = getWordType(words[word]);
-          final matchesType = wordTypes.any((type) => selectedTypes.contains(type.toLowerCase()));
+          final wordTypes = getWordType(words[word]).map((e) => e.toLowerCase()).toList();
+
+          bool matchesType;
+          if (filters['wordTypeMode'] == '∩') {
+            // Intersect: must match ALL selected types
+            matchesType = selectedTypes.every((type) => wordTypes.contains(type));
+          } else {
+            // Union: must match AT LEAST ONE selected type
+            matchesType = selectedTypes.any((type) => wordTypes.contains(type));
+          }
           return matchesSearch && matchesType;
         }).toList();
 
@@ -81,32 +89,85 @@ class _WordListState extends State<WordList> {
                               title: const Text('Filter Options'),
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'Filter by word type',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'Filter by word type',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      StatefulBuilder(
+                                        builder: (context, setStateDialog) {
+                                          return GestureDetector(
+                                            onTap: (){
+                                              setStateDialog(() {
+                                                if (!(filters['wordTypeMode'] == 'U')) {
+                                                  filters['wordTypeMode'] = 'U';
+                                                } else {
+                                                  filters['wordTypeMode'] = '∩';
+                                                }
+                                              });
+                                            },
+                                            child: Container(
+                                              width: 30,
+                                              height: 30,
+                                              decoration: BoxDecoration(
+                                                color: filters['wordTypeMode'] == 'U' ? Colors.orangeAccent : Colors.red,
+                                                borderRadius: BorderRadius.circular(16),
+                                              ),
+                                              child: Center(
+                                                child: Text(
+                                                  filters['wordTypeMode'],
+                                                  style: const TextStyle(
+                                                    fontSize: 20,
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                  )
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      )
+                                    ],
                                   ),
                                   StatefulBuilder(
                                     builder: (context, setStateDialog) {
-                                      return Column(
+                                      return Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                         children: [
                                           for (var type in ['noun', 'verb', 'adjective', 'adverb'])
-                                            CheckboxListTile(
-                                              title: Text(type),
-                                              value: filters['wordTypes'].contains(type),
-                                              onChanged: (bool? value) {
+                                            GestureDetector(
+                                              onTap: (){
                                                 setStateDialog(() {
-                                                  if (value == true) {
+                                                  if (!filters['wordTypes'].contains(type)) {
                                                     filters['wordTypes'].add(type);
                                                   } else {
                                                     filters['wordTypes'].remove(type);
                                                   }
                                                 });
                                               },
-                                            ),
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(6),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: filters['wordTypes'].contains(type) ? Colors.blue : Colors.grey[900],
+                                                    borderRadius: BorderRadius.circular(16),
+                                                  ),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    child: Text(
+                                                      type
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            )
                                         ],
                                       );
                                     },
