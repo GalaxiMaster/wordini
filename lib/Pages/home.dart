@@ -42,8 +42,8 @@ class _HomePageState extends State<HomePage> {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.auto_graph),
-            label: 'Stats',
+            icon: Icon(Icons.quiz),
+            label: 'Questions',
           ),
         ],
       ),

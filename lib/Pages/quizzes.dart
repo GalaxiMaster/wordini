@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vocab_app/file_handling.dart';
+import 'package:vocab_app/widgets.dart';
 import 'package:vocab_app/word_functions.dart';
 
 class Quizzes extends StatefulWidget {
@@ -13,6 +14,7 @@ class _QuizzesState extends State<Quizzes> {
   late Future<Map> words;
   int _currentIndex = 0;
   Map currentWord = {};
+  final TextEditingController entryController = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -45,6 +47,7 @@ class _QuizzesState extends State<Quizzes> {
                   ),
                   const SizedBox(height: 20),
                   TextField(
+                    controller: entryController,
                     decoration: InputDecoration(
                       labelText: 'Search for a word',
                     ),
@@ -55,7 +58,11 @@ class _QuizzesState extends State<Quizzes> {
                           setState(() {
                             _currentIndex++;
                           });
+                          entryController.clear();
                         }
+                      }
+                      else{
+                        errorOverlay(context, 'Wrong answer');
                       }
                     },
                   ),
