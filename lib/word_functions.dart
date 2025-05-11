@@ -18,6 +18,7 @@ Future<Map> getWordDef(String word) async {
   try {
     Map wordDetails = {
       'word': word,
+      'dateAdded': DateTime.now().toString(),
       'definitions': []// [{
       //   'definition': '',
       //   'example': '',

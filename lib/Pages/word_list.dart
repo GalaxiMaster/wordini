@@ -12,6 +12,10 @@ class WordList extends StatefulWidget {
 class _WordListState extends State<WordList> {
   late Future<Map> _wordsFuture;
   String searchTerm = '';
+  Map filters = {
+    'wordTypes': [],
+  };
+
   @override
   void initState() {
     super.initState();
@@ -31,30 +35,101 @@ class _WordListState extends State<WordList> {
         }
         Map words = snapshot.data!;
         List filteredWords = words.keys.where((word) {
-          return word.toLowerCase().contains(searchTerm.toLowerCase());
+          final matchesSearch = word.toLowerCase().contains(searchTerm.toLowerCase()); // search term
+          
+          final selectedTypes = filters['wordTypes'] as List;
+          if (selectedTypes.isEmpty) return matchesSearch;
+          final wordTypes = getWordType(words[word]);
+          final matchesType = wordTypes.any((type) => selectedTypes.contains(type.toLowerCase()));
+          return matchesSearch && matchesType;
         }).toList();
-        
+
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: TextField(
-                decoration: InputDecoration(
-                  labelText: 'Search for a word',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(
-                      color: Color.fromARGB(255, 87, 153, 239),
-                      width: 2,
+              child: Stack(
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Search for a word',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 87, 153, 239),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        searchTerm = value;
+                      });
+                    },
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 5,
+                    child: IconButton(
+                      icon: const Icon(Icons.filter_list),
+                      onPressed: () async{
+                        await showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text('Filter Options'),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'Filter by word type',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  StatefulBuilder(
+                                    builder: (context, setStateDialog) {
+                                      return Column(
+                                        children: [
+                                          for (var type in ['noun', 'verb', 'adjective', 'adverb'])
+                                            CheckboxListTile(
+                                              title: Text(type),
+                                              value: filters['wordTypes'].contains(type),
+                                              onChanged: (bool? value) {
+                                                setStateDialog(() {
+                                                  if (value == true) {
+                                                    filters['wordTypes'].add(type);
+                                                  } else {
+                                                    filters['wordTypes'].remove(type);
+                                                  }
+                                                });
+                                              },
+                                            ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text('Close'),
+                                ),
+                              ],
+                            );
+                            
+                          },
+                        );
+                        setState(() {});
+                      },
                     ),
                   ),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    searchTerm = value;
-                  });
-                },
+                ],
               ),
             ),
             Container(
