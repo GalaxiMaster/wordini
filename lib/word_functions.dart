@@ -1,3 +1,4 @@
+import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
 import 'package:free_dictionary_api_v2/free_dictionary_api_v2.dart';
 import 'package:vocab_app/file_handling.dart';
@@ -29,7 +30,7 @@ Future<Map> getWordDef(String word) async {
     };
     // TODO probably switch to a different API, this ones not it
     final dictionary = FreeDictionaryApiV2();
-    final response = await dictionary.getDefinition(word);
+    final response = await dictionary.getDefinition(word); // todo handle: word not real (FreeDictionaryExceptionType.noDefinitionFound)
     debugPrint(response.toString());
     response[0].meanings?.forEach((meaning) {
       meaning.definitions?.forEach((definition) {
@@ -91,4 +92,46 @@ gatherAntonyms(Map word) {
     }
   }
   return antonyms.toList();
+}
+Future<bool> checkDefinition(word, userDef, actualDef) async{
+  // the system message that will be sent to the request.
+  final systemMessage = OpenAIChatCompletionChoiceMessageModel(
+    content: [
+      OpenAIChatCompletionChoiceMessageContentItemModel.text(
+        "Answer if the user given definition matches the word with only yes or no as an answer",
+      ),
+    ],
+    role: OpenAIChatMessageRole.assistant,
+  );
+
+    // the user message that will be sent to the request.
+  final userMessage = OpenAIChatCompletionChoiceMessageModel(
+
+    content: [
+      OpenAIChatCompletionChoiceMessageContentItemModel.text(
+        "Does the user's definition '$userDef' correctly define the word '$word', whose definition is '$actualDef'?",
+      ),
+    ],
+    role: OpenAIChatMessageRole.user,
+  );
+
+  // all messages to be sent.
+  final requestMessages = [
+    systemMessage,
+    userMessage,
+  ];
+  // test();
+  OpenAIChatCompletionModel chatCompletion = await OpenAI.instance.chat.create(
+    model: "gpt-4",
+    seed: 6,
+    messages: requestMessages,
+    temperature: 0.2,
+    maxTokens: 500,
+  );
+  String answer = chatCompletion.choices.first.message.content!.first.text.toString();
+  debugPrint(answer);
+  debugPrint(chatCompletion.systemFingerprint.toString());
+  debugPrint(chatCompletion.usage.promptTokens.toString());
+  debugPrint(chatCompletion.id);
+  return answer.toLowerCase() == 'yes' ? true : false;
 }

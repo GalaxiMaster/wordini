@@ -4,7 +4,7 @@ import 'package:vocab_app/widgets.dart';
 import 'package:vocab_app/word_functions.dart';
 
 class AddWord extends StatefulWidget {
-  AddWord({super.key});
+  const AddWord({super.key});
   @override
   // ignore: library_private_types_in_public_api
   _AddWordState createState() => _AddWordState();

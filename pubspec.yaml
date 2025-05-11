@@ -7,9 +7,11 @@ environment:
   sdk: ^3.6.0
 
 dependencies:
+  dart_openai: ^5.1.0
   flutter:
     sdk: flutter
   free_dictionary_api_v2: ^1.0.3
+  http: ^1.4.0
   path_provider: ^2.1.4
 
 dev_dependencies:

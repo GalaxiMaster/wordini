@@ -3,7 +3,7 @@ import 'package:vocab_app/Pages/word_details.dart';
 import 'package:vocab_app/file_handling.dart';
 import 'package:vocab_app/word_functions.dart';
 class WordList extends StatefulWidget {
-  WordList({super.key});
+  const WordList({super.key});
   @override
   // ignore: library_private_types_in_public_api
   _WordListState createState() => _WordListState();
@@ -56,7 +56,7 @@ class _WordListState extends State<WordList> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: const EdgeInsets.fromLTRB(16, 35, 16, 0),
               child: Stack(
                 children: [
                   TextField(
@@ -78,7 +78,7 @@ class _WordListState extends State<WordList> {
                   ),
                   Positioned(
                     right: 0,
-                    top: 5,
+                    // top: 5,
                     child: IconButton(
                       icon: const Icon(Icons.filter_list),
                       onPressed: () async{

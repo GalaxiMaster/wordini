@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 class HomePageContent extends StatefulWidget {
-  HomePageContent({super.key});
+  const HomePageContent({super.key});
   @override
   // ignore: library_private_types_in_public_api
   _HomePageContentState createState() => _HomePageContentState();

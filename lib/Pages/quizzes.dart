@@ -3,7 +3,7 @@ import 'package:vocab_app/file_handling.dart';
 import 'package:vocab_app/word_functions.dart';
 
 class Quizzes extends StatefulWidget {
-  Quizzes({super.key});
+  const Quizzes({super.key});
   @override
   // ignore: library_private_types_in_public_api
   _QuizzesState createState() => _QuizzesState();
@@ -29,6 +29,9 @@ class _QuizzesState extends State<Quizzes> {
         } else if (snapshot.hasError) {
           return const Center(child: Text('Error loading data'));
         } else if (snapshot.hasData) {
+          if (snapshot.data!.isEmpty) {
+            return const Center(child: Text('No words added'));
+          }
           currentWord = snapshot.data![snapshot.data!.keys.elementAt(_currentIndex)];
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -45,8 +48,8 @@ class _QuizzesState extends State<Quizzes> {
                     decoration: InputDecoration(
                       labelText: 'Search for a word',
                     ),
-                    onSubmitted: (value) {
-                      if (true){
+                    onSubmitted: (value) async{
+                      if (await checkDefinition(currentWord['word'], value, currentWord['definitions'].first['definition'])) {
                         // new word
                         if (_currentIndex < snapshot.data!.length -1) {
                           setState(() {
