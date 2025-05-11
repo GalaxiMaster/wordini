@@ -1,7 +1,11 @@
+import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:vocab_app/Pages/home.dart';
 
-void main() {
+void main() async{
+  await dotenv.load();
+  OpenAI.apiKey = dotenv.env['GPT_API_KEY'] ?? ''; 
   runApp(const MainApp());
 }
 
