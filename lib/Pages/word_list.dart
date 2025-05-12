@@ -193,55 +193,56 @@ class _WordListState extends State<WordList> {
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ListView.builder(
-                padding: EdgeInsets.zero, // Remove default padding
-                shrinkWrap: true,
-                itemCount: filteredWords.length,
-                itemBuilder: (context, index) {
-                  final word = filteredWords[index];
-                  return InkWell(
-                    onLongPress: () async {
-                      deleteWord(word);
-                      setState(() {
-                        words.remove(word); 
-                      });
-                    },
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => WordDetails(word: words[word]),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ListView.builder(
+                  padding: EdgeInsets.zero, // Remove default padding
+                  itemCount: filteredWords.length,
+                  itemBuilder: (context, index) {
+                    final word = filteredWords[index];
+                    return InkWell(
+                      onLongPress: () async {
+                        deleteWord(word);
+                        setState(() {
+                          words.remove(word); 
+                        });
+                      },
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => WordDetails(word: words[word]),
+                        ),
                       ),
-                    ),
-                    child: ListTile(
-                      title: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            capitalise(word),
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                      child: ListTile(
+                        title: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              capitalise(word),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            getWordType(words[word]).join(' / '),
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.grey,
-                              fontStyle: FontStyle.italic,
+                            const SizedBox(width: 10),
+                            Text(
+                              getWordType(words[word]).join(' / '),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: Colors.grey,
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                        subtitle: Text(
+                          words[word]['definitions'][0]['definition'],
+                        ),
                       ),
-                      subtitle: Text(
-                        words[word]['definitions'][0]['definition'],
-                      ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ],
