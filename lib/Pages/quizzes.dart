@@ -18,7 +18,8 @@ class _QuizzesState extends State<Quizzes> {
   @override
   void initState() {
     super.initState();
-    words = readData();
+    final data = readData();
+    words = randomise(data);
   }
   @override
   Widget build(BuildContext context) {
@@ -31,10 +32,11 @@ class _QuizzesState extends State<Quizzes> {
         } else if (snapshot.hasError) {
           return const Center(child: Text('Error loading data'));
         } else if (snapshot.hasData) {
-          if (snapshot.data!.isEmpty) {
+          Map words = snapshot.data!;
+          if (words.isEmpty) {
             return const Center(child: Text('No words added'));
           }
-          currentWord = snapshot.data![snapshot.data!.keys.elementAt(_currentIndex)];
+          currentWord = words[words.keys.elementAt(_currentIndex)];
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 25),
             child: Center(
@@ -52,18 +54,27 @@ class _QuizzesState extends State<Quizzes> {
                       labelText: 'Search for a word',
                     ),
                     onSubmitted: (value) async{
-                      if (await checkDefinition(currentWord['word'], value, currentWord['definitions'].first['definition'])) {
-                        // new word
-                        if (_currentIndex < snapshot.data!.length -1) {
+                      bool correct = await checkDefinition(currentWord['word'], value, currentWord['definitions'].first['definition']);
+                      if (correct) {
+                        // move to next word
+                        if (_currentIndex < words.length -1) {
                           setState(() {
                             _currentIndex++;
                           });
                           entryController.clear();
                         }
+                        // some sort of orrect answer animation
                       }
                       else{
                         errorOverlay(context, 'Wrong answer');
                       }
+                      words[currentWord['word']]['entries'] ??= [];
+                      words[currentWord['word']]['entries'].add({
+                        'guess': value,
+                        'correct': correct,
+                        'date': DateTime.now().toString(),
+                      });
+                      writeData(words, append: false);
                     },
                   ),
                 ],
@@ -76,5 +87,79 @@ class _QuizzesState extends State<Quizzes> {
       },
       ),
     );
+  }
+  
+  Future<Map> randomise(Future<Map> data) {
+    // return data.then((value) {
+    //   List keys = value.keys.toList();
+    //   keys.shuffle();
+    //   Map<String, dynamic> shuffledData = {};
+    //   for (String key in keys) {
+    //     shuffledData[key] = value[key];
+    //   }
+    //   return shuffledData;
+    // });
+    return data.then((words) {
+        Map weightings = generateWieightings(words);
+        // Create a list of keys sorted by their weighting
+        List sortedKeys = weightings.keys.toList()
+          ..sort((a, b) => (weightings[a]['weight'] as double).compareTo(weightings[b]['weight'] as double));
+        // Build a new map with sorted keys
+        Map sortedWords = { for (var k in sortedKeys) k : words[k] };
+        return sortedWords;
+    });
+  }
+  Map generateWieightings(Map data){
+    // last time checked
+    // last time value
+    // how many times checked / right percentage
+    double doubleMaxTimesChecked = 0;
+    double doubleMaxTimesRight = 0;
+    double doubleMaxPercentage = 0;
+    Map weightings = {};
+    for (var key in data.keys) {
+      
+      int timesChecked = data[key]['entries']?.length ?? 0;
+      int timesRight = data[key]['entries']?.where((entry) => entry['correct'] == true).length ?? 0;
+      DateTime? lastChecked;
+      bool? lastTimeValue;
+      if (timesChecked != 0){
+        lastChecked = DateTime.parse(data[key]['entries']?.last['date'] ?? '');
+        lastTimeValue = data[key]['entries']?.last['correct'];
+      }
+
+      double percentage = timesChecked > 0 ? (timesRight / timesChecked) : 0.0;
+      if (timesChecked > doubleMaxTimesChecked) {
+        doubleMaxTimesChecked = timesChecked.toDouble();
+      }
+      if (timesRight > doubleMaxTimesRight) {
+        doubleMaxTimesRight = timesRight.toDouble();
+      }
+      if (percentage > doubleMaxPercentage) {
+        doubleMaxPercentage = percentage;
+      }
+      weightings[key] = {
+        'timesChecked': timesChecked,
+        'timesRight': timesRight,
+        'lastChecked': lastChecked,
+        'lastTimeValue': lastTimeValue,
+        'percentage': percentage,
+      };
+    }
+
+    
+    for (MapEntry weight in weightings.entries) {
+      late double value;
+      if (weight.value['timesChecked'] == 0){
+        value = 1;
+      } else{
+        value = weight.value['timesChecked'] / doubleMaxTimesChecked / 2;
+        value += weight.value['percentage'] / doubleMaxPercentage / 2;
+        value += weight.value['lastChecked']!.difference(DateTime.now()).inDays / 60;
+        value = value.clamp(0, 0.99);
+      }
+      weightings[weight.key]['weight'] = value;
+    }
+    return weightings;
   }
 }
