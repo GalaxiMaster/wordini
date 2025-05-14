@@ -23,14 +23,19 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     // resetData();
-
-    scheduleNotification(
+    showInstantNotification(
       title: 'YOU JUST GOT NOTIFIED', 
       description: 'notified', 
-      duration: Duration(seconds: 1), 
       androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
       payload: 'wordReminder'
     );
+    // scheduleNotification(
+    //   title: 'YOU JUST GOT NOTIFIED', 
+    //   description: 'notified', 
+    //   duration: Duration(seconds: 1), 
+    //   androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
+    //   payload: 'wordReminder'
+    // );
     return Scaffold(
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {

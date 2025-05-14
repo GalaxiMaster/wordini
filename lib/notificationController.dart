@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:vocab_app/main.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> initializeNotifications() async {
   // Settings for Android
@@ -35,27 +36,28 @@ Future<void> initializeNotifications() async {
     },
   );
 }
-Future<void> showInstantNotification() async {
+
+Future<void> showInstantNotification({
+  required String title,
+  required String description,
+  required AndroidNotificationDetails androidPlatformChannelSpecifics,
+  required String payload,
+}) async {
   await requestNotificationPermission();
 
-  const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    'your_channel_id',
-    'your_channel_name',
-    channelDescription: 'your_channel_description',
-    importance: Importance.max,
-    priority: Priority.high,
-  );
+  NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
 
-  const NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+  int id = await NotificationIdManager.getNextId();
 
   await flutterLocalNotificationsPlugin.show(
-    0, // Notification ID
-    'Instant Notification', // Notification title
-    'This is an instant notification!', // Notification body
+    id, // Notification ID
+    title, // Notification title
+    description, // Notification body
     platformChannelSpecifics,
-    payload: 'instant_notification', // Data payload
+    payload: payload, // Data payload
   );
 }
+
 Future<void> scheduleNotification(
   {
     required String title,
@@ -77,9 +79,11 @@ Future<void> scheduleNotification(
 
   NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
 
+  int id = await NotificationIdManager.getNextId();
+
   // Schedule notification 20 minutes from now
   await flutterLocalNotificationsPlugin.zonedSchedule(
-    1, // Notification ID (different from instant notification)
+    id, // Notification ID (different from instant notification)
     title,
     description,
     tz.TZDateTime.now(tz.local).add(duration),
@@ -104,17 +108,6 @@ class NotificationType {
 
   const NotificationType._(this.id, this.details);
 
-  // static const NotificationType scheduled = NotificationType._(
-  //   'scheduled',
-  //   AndroidNotificationDetails(
-  //     'your_scheduled_channel_id',
-  //     'your_scheduled_channel_name',
-  //     channelDescription: 'your_scheduled_channel_description',
-  //     importance: Importance.max,
-  //     priority: Priority.high,
-  //   ),
-  // );
-
   static const NotificationType wordReminder = NotificationType._(
     'wordReminder',
     AndroidNotificationDetails(
@@ -125,4 +118,24 @@ class NotificationType {
       priority: Priority.high,
     ),
   );
+}
+
+
+class NotificationIdManager {
+  static const String _key = 'notification_id_counter';
+
+  /// Get the next available notification ID
+  static Future<int> getNextId() async {
+    final prefs = await SharedPreferences.getInstance();
+    int currentId = prefs.getInt(_key) ?? 0;
+    int nextId = currentId + 1;
+    await prefs.setInt(_key, nextId);
+    return nextId;
+  }
+
+  /// Optionally reset the counter
+  static Future<void> resetCounter() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_key, 0);
+  }
 }
