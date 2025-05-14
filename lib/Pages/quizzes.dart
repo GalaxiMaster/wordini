@@ -118,7 +118,7 @@ class _QuizzesState extends State<Quizzes> {
     double doubleMaxPercentage = 0;
     Map weightings = {};
     for (var key in data.keys) {
-      
+
       int timesChecked = data[key]['entries']?.length ?? 0;
       int timesRight = data[key]['entries']?.where((entry) => entry['correct'] == true).length ?? 0;
       DateTime? lastChecked;

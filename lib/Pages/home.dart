@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:vocab_app/Pages/add_word.dart';
 import 'package:vocab_app/Pages/quizzes.dart';
 import 'package:vocab_app/Pages/word_list.dart';
+import 'package:vocab_app/notificationController.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,6 +23,9 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     // resetData();
+    scheduleNotification(Duration(seconds: 10));
+    requestNotificationPermission();
+    showInstantNotification();
     return Scaffold(
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
