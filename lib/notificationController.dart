@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:vocab_app/main.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:permission_handler/permission_handler.dart';
 
 Future<void> initializeNotifications() async {
   // Settings for Android
+  if (await Permission.notification.isDenied) {
+    await Permission.notification.request();
+  }
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -32,6 +36,8 @@ Future<void> initializeNotifications() async {
   );
 }
 Future<void> showInstantNotification() async {
+  await requestNotificationPermission();
+
   const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
     'your_channel_id',
     'your_channel_name',
@@ -50,27 +56,36 @@ Future<void> showInstantNotification() async {
     payload: 'instant_notification', // Data payload
   );
 }
-Future<void> scheduleNotification(Duration duration) async {
-  const AndroidNotificationDetails androidPlatformChannelSpecifics =
-      AndroidNotificationDetails(
-    'your_scheduled_channel_id',
-    'your_scheduled_channel_name',
-    channelDescription: 'your_scheduled_channel_description',
-    importance: Importance.max,
-    priority: Priority.high,
-  );
+Future<void> scheduleNotification(
+  {
+    required String title,
+    required String description,
+    required Duration duration, 
+    required AndroidNotificationDetails androidPlatformChannelSpecifics,
+    required String payload,
+  }
+  ) async {
+  await requestNotificationPermission();
+  // const AndroidNotificationDetails androidPlatformChannelSpecifics =
+  //     AndroidNotificationDetails(
+  //   'your_scheduled_channel_id',
+  //   'your_scheduled_channel_name',
+  //   channelDescription: 'your_scheduled_channel_description',
+  //   importance: Importance.max,
+  //   priority: Priority.high,
+  // );
 
-  const NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+  NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
 
   // Schedule notification 20 minutes from now
   await flutterLocalNotificationsPlugin.zonedSchedule(
     1, // Notification ID (different from instant notification)
-    'Scheduled Notification', // Notification title
-    'This notification was scheduled 20 minutes ago!', // Notification body
+    title,
+    description,
     tz.TZDateTime.now(tz.local).add(duration),
     platformChannelSpecifics,
-    androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    payload: 'scheduled_notification', // Data payload
+    androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // TODO probably dont need exact
+    payload: payload,
   );
 }
 
@@ -81,4 +96,33 @@ Future<void> requestNotificationPermission() async {
     final bool? granted = await androidImplementation.requestExactAlarmsPermission();
     debugPrint('Notification permission granted: $granted');
   }
+}
+
+class NotificationType {
+  final String id;
+  final AndroidNotificationDetails details;
+
+  const NotificationType._(this.id, this.details);
+
+  // static const NotificationType scheduled = NotificationType._(
+  //   'scheduled',
+  //   AndroidNotificationDetails(
+  //     'your_scheduled_channel_id',
+  //     'your_scheduled_channel_name',
+  //     channelDescription: 'your_scheduled_channel_description',
+  //     importance: Importance.max,
+  //     priority: Priority.high,
+  //   ),
+  // );
+
+  static const NotificationType wordReminder = NotificationType._(
+    'wordReminder',
+    AndroidNotificationDetails(
+      'Definition_Reminders_id',
+      'Definition Reminders',
+      channelDescription: 'mydescription',
+      importance: Importance.max,
+      priority: Priority.high,
+    ),
+  );
 }
