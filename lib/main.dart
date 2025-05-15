@@ -5,11 +5,16 @@ import 'package:vocab_app/Pages/home.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:vocab_app/notificationController.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 void main() async{
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter(); // Initializes Hive using path_provider
+  await Hive.openBox('myBox'); // Open a box
+
+
   initializeNotifications();
   // Initialize timezone database
   tz.initializeTimeZones();

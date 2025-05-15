@@ -4,6 +4,7 @@ import 'package:vocab_app/main.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
 
 Future<void> initializeNotifications() async {
   // Settings for Android
@@ -33,6 +34,13 @@ Future<void> initializeNotifications() async {
     onDidReceiveNotificationResponse: (NotificationResponse response) {
       // Handle notification tap
       debugPrint('Notification clicked: ${response.payload}');
+      if ((response.payload?.split('-') ?? []).length == 2) {
+        if (response.payload!.split('-')[0] == 'wordReminder') {
+          String word = response.payload!.split('-')[1];
+          debugPrint('Word: $word');
+          // TODO impliment reroute to word test page, needs rewrite of how the test page works
+        }
+      }
     },
   );
 }
@@ -49,7 +57,7 @@ Future<void> showInstantNotification({
 
   int id = await NotificationIdManager.getNextId();
 
-  await flutterLocalNotificationsPlugin.show(
+  await flutterLocalNotificationsPlugin.show( // !here
     id, // Notification ID
     title, // Notification title
     description, // Notification body
@@ -91,6 +99,15 @@ Future<void> scheduleNotification(
     androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // TODO probably dont need exact
     payload: payload,
   );
+  noteNotification(id, payload);
+  debugPrint('Scheduled notification with ID: $id for $payload at $duration');
+}
+
+Future<void> noteNotification(int id, String payload) async {
+  // Open the box if not already open
+  Hive.openBox<int>('active-notifications');
+  var box = await Hive.openBox<int>('active-notifications');
+  await box.put(payload, id);
 }
 
 Future<void> requestNotificationPermission() async {
