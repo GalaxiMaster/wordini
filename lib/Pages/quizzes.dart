@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vocab_app/file_handling.dart';
+import 'package:vocab_app/notificationController.dart';
 import 'package:vocab_app/widgets.dart';
 import 'package:vocab_app/word_functions.dart';
 
@@ -55,7 +56,7 @@ class _QuizzesState extends State<Quizzes> {
                     ),
                     onSubmitted: (value) async{
                       bool correct = await checkDefinition(currentWord['word'], value, currentWord['definitions'].first['definition']);
-                      if (correct) {
+                      if (correct) { // ! On Correct
                         // move to next word
                         if (_currentIndex < words.length -1) {
                           setState(() {
@@ -63,7 +64,8 @@ class _QuizzesState extends State<Quizzes> {
                           });
                           entryController.clear();
                         }
-                        // some sort of orrect answer animation
+                        removeNotif(currentWord['word']);
+                        // TODO some sort of correct answer animation
                       }
                       else{
                         errorOverlay(context, 'Wrong answer');

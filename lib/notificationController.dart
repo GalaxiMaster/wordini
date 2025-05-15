@@ -115,6 +115,18 @@ Future<void> noteNotification(int id, String payload) async {
   await box.put(payload, id);
 }
 
+void removeNotif(String word){
+  // Open the box if not already open
+  Hive.openBox<int>('active-notifications');
+  var box = Hive.box<int>('active-notifications');
+  int? id = box.get(word);
+  if (id != null) {
+    flutterLocalNotificationsPlugin.cancel(id);
+    box.delete(word);
+  }
+  debugPrint('Notification with ID: $id removed for word: $word');
+}
+
 Future<void> requestNotificationPermission() async {
   final androidImplementation = flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
