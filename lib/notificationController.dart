@@ -40,6 +40,11 @@ Future<void> initializeNotifications() async {
           debugPrint('Word: $word');
           // TODO impliment reroute to word test page, needs rewrite of how the test page works
         }
+      } else if (response.payload == 'wordReminder') {
+        navigatorKey.currentState?.pushNamed(
+          '/testing', // Your route name
+          // arguments: word,
+        );      
       }
     },
   );

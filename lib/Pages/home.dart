@@ -21,9 +21,9 @@ class _HomePageState extends State<HomePage> {
     Quizzes(),
   ];
   @override
-  Widget build(BuildContext context) {
-    // resetData();
-    // showInstantNotification(
+  void initState() {
+    super.initState();
+        // showInstantNotification(
     //   title: 'YOU JUST GOT NOTIFIED', 
     //   description: 'notified', 
     //   androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
@@ -34,8 +34,12 @@ class _HomePageState extends State<HomePage> {
       description: 'notified', 
       duration: Duration(seconds: 1), 
       androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
-      payload: 'wordReminder-myWord'
+      payload: 'wordReminder'
     );
+  }
+  @override
+  Widget build(BuildContext context) {
+    // resetData();
     return Scaffold(
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
