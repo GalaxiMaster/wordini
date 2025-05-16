@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
 import 'package:free_dictionary_api_v2/free_dictionary_api_v2.dart';
 import 'package:vocab_app/file_handling.dart';
+import 'package:vocab_app/widgets.dart';
 
 Set getWordType(Map word) {
   Set types = {};
@@ -93,7 +96,7 @@ gatherAntonyms(Map word) {
   }
   return antonyms.toList();
 }
-Future<bool> checkDefinition(word, userDef, actualDef) async{
+Future<bool?> checkDefinition(word, userDef, actualDef, context) async{
   // the system message that will be sent to the request.
   final systemMessage = OpenAIChatCompletionChoiceMessageModel(
     content: [
@@ -121,17 +124,27 @@ Future<bool> checkDefinition(word, userDef, actualDef) async{
     userMessage,
   ];
   // test();
-  OpenAIChatCompletionModel chatCompletion = await OpenAI.instance.chat.create(
-    model: "gpt-4",
-    seed: 6,
-    messages: requestMessages,
-    temperature: 0.2,
-    maxTokens: 500,
-  );
-  String answer = chatCompletion.choices.first.message.content!.first.text.toString();
-  debugPrint(answer);
-  debugPrint(chatCompletion.systemFingerprint.toString());
-  debugPrint(chatCompletion.usage.promptTokens.toString());
-  debugPrint(chatCompletion.id);
-  return answer.toLowerCase() == 'yes' ? true : false;
+  try {
+    OpenAIChatCompletionModel chatCompletion = await OpenAI.instance.chat.create(
+      model: "gpt-4",
+      seed: 6,
+      messages: requestMessages,
+      temperature: 0.2,
+      maxTokens: 500,
+    );
+    String answer = chatCompletion.choices.first.message.content!.first.text.toString();
+    debugPrint(answer);
+    debugPrint(chatCompletion.systemFingerprint.toString());
+    debugPrint(chatCompletion.usage.promptTokens.toString());
+    debugPrint(chatCompletion.id);
+    return answer.toLowerCase() == 'yes' ? true : false;
+
+  } catch (e) {
+    if (e is HandshakeException){
+      errorOverlay(context, 'Failed to connect to server, please check your internet connection');
+    }
+    debugPrint(e.toString());
+    // TODO handle more error types
+  }
+  return null;
 }

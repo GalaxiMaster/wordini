@@ -15,6 +15,9 @@ class _QuizzesState extends State<Quizzes> {
   late Future<Map> words;
   int _currentIndex = 0;
   Map currentWord = {};
+  // session stats
+  int questionsDone = 0;
+  int questionsRight = 0;
   final TextEditingController entryController = TextEditingController();
   @override
   void initState() {
@@ -38,50 +41,73 @@ class _QuizzesState extends State<Quizzes> {
             return const Center(child: Text('No words added'));
           }
           currentWord = words[words.keys.elementAt(_currentIndex)];
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    capitalise(currentWord['word']),
-                    style: TextStyle(fontSize: 24),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: entryController,
-                    decoration: InputDecoration(
-                      labelText: 'Search for a word',
+          return Stack(
+            children: [
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(30),
+                  child: Text(
+                    '$questionsRight / $questionsDone',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
                     ),
-                    onSubmitted: (value) async{
-                      bool correct = await checkDefinition(currentWord['word'], value, currentWord['definitions'].first['definition']);
-                      if (correct) { // ! On Correct
-                        // move to next word
-                        if (_currentIndex < words.length -1) {
-                          setState(() {
-                            _currentIndex++;
-                          });
-                          entryController.clear();
-                        }
-                        removeNotif(currentWord['word']);
-                        // TODO some sort of correct answer animation
-                      }
-                      else{
-                        errorOverlay(context, 'Wrong answer');
-                      }
-                      words[currentWord['word']]['entries'] ??= [];
-                      words[currentWord['word']]['entries'].add({
-                        'guess': value,
-                        'correct': correct,
-                        'date': DateTime.now().toString(),
-                      });
-                      writeData(words, append: false);
-                    },
                   ),
-                ],
+                )
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        capitalise(currentWord['word']),
+                        style: TextStyle(fontSize: 24),
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: entryController,
+                        decoration: InputDecoration(
+                          labelText: 'Search for a word',
+                        ),
+                        onSubmitted: (value) async{
+                          bool? correct = await checkDefinition(currentWord['word'], value, currentWord['definitions'].first['definition'], context);
+                          if (correct == null) {
+                            return;
+                          }
+                          if (correct) { // ! On Correct
+                            // move to next word
+                            if (_currentIndex < words.length -1) {
+                              setState(() {
+                                _currentIndex++;
+                              });
+                              entryController.clear();
+                            }
+                            removeNotif(currentWord['word']);
+                            questionsRight++;
+                            // TODO some sort of correct answer animation
+                          }
+                          else{
+                            errorOverlay(context, 'Wrong answer');
+                          }
+                          questionsDone++;
+                          words[currentWord['word']]['entries'] ??= [];
+                          words[currentWord['word']]['entries'].add({
+                            'guess': value,
+                            'correct': correct,
+                            'date': DateTime.now().toString(),
+                          });
+                          writeData(words, append: false);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         } else {
           return const Center(child: Text('No data available'));
