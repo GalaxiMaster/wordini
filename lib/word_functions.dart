@@ -140,7 +140,9 @@ Future<bool?> checkDefinition(word, userDef, actualDef, context) async{
     return answer.toLowerCase() == 'yes' ? true : false;
 
   } catch (e) {
-    if (e is HandshakeException){
+    if (e is HandshakeException ||
+        e is SocketException ||
+        e is HttpException) {
       errorOverlay(context, 'Failed to connect to server, please check your internet connection');
     }
     debugPrint(e.toString());
