@@ -112,7 +112,7 @@ Future<bool?> checkDefinition(word, userDef, actualDef, context) async{
 
     content: [
       OpenAIChatCompletionChoiceMessageContentItemModel.text(
-        "Does the user's definition '$userDef' correctly define the word '$word', whose definition is '$actualDef'?",
+        "Does the user's definition '$userDef' correctly define the word '$word'", // , whose definition is '$actualDef'? // ! TODO this doesnt account for multiple definitions so its out currently
       ),
     ],
     role: OpenAIChatMessageRole.user,
@@ -123,7 +123,7 @@ Future<bool?> checkDefinition(word, userDef, actualDef, context) async{
     systemMessage,
     userMessage,
   ];
-  // test();
+
   try {
     OpenAIChatCompletionModel chatCompletion = await OpenAI.instance.chat.create(
       model: "gpt-4",
