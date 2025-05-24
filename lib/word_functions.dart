@@ -1,10 +1,12 @@
 import 'dart:io';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
 import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
 import 'package:free_dictionary_api_v2/free_dictionary_api_v2.dart';
 import 'package:vocab_app/file_handling.dart';
 import 'package:vocab_app/widgets.dart';
+import 'dart:convert';
 
 Set getWordType(Map word) {
   Set types = {};
@@ -31,23 +33,49 @@ Future<Map> getWordDef(String word) async {
       //   'antonyms': [],
       // }],
     };
-    // TODO probably switch to a different API, this ones not it
-    final dictionary = FreeDictionaryApiV2();
-    final response = await dictionary.getDefinition(word); // todo handle: word not real (FreeDictionaryExceptionType.noDefinitionFound)
-    debugPrint(response.toString());
-    response[0].meanings?.forEach((meaning) {
-      meaning.definitions?.forEach((definition) {
-        Map meaningDetails = {
-          'partOfSpeech': meaning.partOfSpeech,
-          'definition': definition.definition,
-          'example': definition.example,
-          'synonyms': definition.synonyms,
-          'antonyms': definition.antonyms,
-        };
+    String? apiKey = dotenv.env['MERRIAM_WEB_API_KEY'];
+    if (apiKey == null) {
+      throw Exception('MERRIAM_WEB_API_KEY not found in .env file'); // TODO handle.
+    }
+    final String url = 'https://www.dictionaryapi.com/api/v3/references/collegiate/json/$word?key=$apiKey';
 
-        wordDetails['definitions'].add(meaningDetails);
-      });
-    });
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      Map mainData = data[0];
+      if (data.isNotEmpty && mainData is Map<String, dynamic>) { // TODO Exapnd past the first result
+        debugPrint('Word: $word');
+        wordDetails['definitions'] = mainData['shortdef'] ?? []; // TODO understand bigger definition structure
+        wordDetails['synonyms'] = [];
+        wordDetails['firstUsed'] = mainData['date']?.split('{')?[0] ?? ''; // Maybe solidify this further
+        wordDetails['etymology'] = mainData['et']?[0]?[1] ?? '';
+        wordDetails['partOfSpeech'] = mainData['fl'] ?? '';
+        wordDetails['stems'] = mainData['meta']?['stems'] ?? [];
+        debugPrint('jiejlge');
+      } else {
+        debugPrint('No definitions found for "$word".');
+      }
+    } else {
+      debugPrint('Failed to load definition: ${response.statusCode}');
+    }
+
+
+
+    debugPrint(response.toString());
+    // response[0].meanings?.forEach((meaning) {
+    //   meaning.definitions?.forEach((definition) {
+    //     Map meaningDetails = {
+    //       'partOfSpeech': meaning.partOfSpeech,
+    //       'definition': definition.definition,
+    //       'example': definition.example,
+    //       'synonyms': definition.synonyms,
+    //       'antonyms': definition.antonyms,
+    //     };
+
+    //     wordDetails['definitions'].add(meaningDetails);
+    //   });
+    // });
     return wordDetails;
   } on FreeDictionaryException catch (error, stackTrace) {
     debugPrint(error.toString() + stackTrace.toString());
