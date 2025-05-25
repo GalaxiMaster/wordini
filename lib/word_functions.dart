@@ -25,13 +25,7 @@ Future<Map> getWordDef(String word) async {
     Map wordDetails = {
       'word': word,
       'dateAdded': DateTime.now().toString(),
-      'definitions': []// [{
-      //   'definition': '',
-      //   'example': '',
-      //   'partOfSpeech': '',
-      //   'synonyms': [],
-      //   'antonyms': [],
-      // }],
+      'entries': []
     };
     String? apiKey = dotenv.env['MERRIAM_WEB_API_KEY'];
     if (apiKey == null) {
@@ -45,14 +39,24 @@ Future<Map> getWordDef(String word) async {
       final data = json.decode(response.body);
       Map mainData = data[0];
       if (data.isNotEmpty && mainData is Map<String, dynamic>) { // TODO Exapnd past the first result
-        debugPrint('Word: $word');
-        wordDetails['definitions'] = mainData['shortdef'] ?? []; // TODO understand bigger definition structure
-        wordDetails['synonyms'] = [];
-        wordDetails['firstUsed'] = mainData['date']?.split('{')?[0] ?? ''; // Maybe solidify this further
-        wordDetails['etymology'] = mainData['et']?[0]?[1] ?? '';
-        wordDetails['partOfSpeech'] = mainData['fl'] ?? '';
-        wordDetails['stems'] = mainData['meta']?['stems'] ?? [];
-        debugPrint('jiejlge');
+        Map wordDeets = {
+          'definitions': [],
+          'quotes': [],
+          'partOfSpeech': '',
+          'synonyms': [],
+          'etymology': '',
+          'stems': '',
+          'firstUsed': '', 
+        };
+        wordDeets['shortDefs'] = mainData['shortdef'] ?? [];
+        wordDeets['synonyms'] = [];
+        wordDeets['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
+        wordDeets['etymology'] = mainData['et']?[0]?[1] ?? '';
+        wordDeets['partOfSpeech'] = mainData['fl'] ?? '';
+        wordDeets['stems'] = mainData['meta']?['stems'] ?? [];
+        wordDeets['quotes'] = mainData['quotes'] ?? [];
+        wordDeets['definitions'] = parseDefinitions(mainData['def'][0]);
+        wordDetails['entries'].add(wordDeets);
       } else {
         debugPrint('No definitions found for "$word".');
       }
@@ -82,6 +86,47 @@ Future<Map> getWordDef(String word) async {
     return {};
   }
 }
+
+List parseDefinitions(Map data){
+  final List<List<dynamic>> sseq = List.from(data['sseq']);
+
+  final definitions = <List<Map<String, dynamic>>>[];
+
+  for (var i = 0; i < sseq.length; i++) {
+    final group = sseq[i];
+    final groupList = <Map<String, dynamic>>[];
+
+    for (var j = 0; j < group.length; j++) {
+      final item = group[j];
+      if (item[0] == 'sense') {
+        final sense = item[1];
+        final dt = List.from(sense['dt']);
+        String defText = '';
+        List<String> examples = [];
+
+        for (var entry in dt) {
+          if (entry[0] == 'text') {
+            defText += entry[1].trim() + ' ';
+          } else if (entry[0] == 'vis') {
+            for (var vis in entry[1]) {
+              examples.add(vis['t']);
+            }
+          }
+        }
+
+        groupList.add({
+          'definition': defText.trim(),
+          'example': examples,
+        });
+      }
+    }
+
+    definitions.add(groupList);
+  }
+  return definitions;
+}
+
+
 
 void deleteWord(word) {
   readData().then((data) async{
