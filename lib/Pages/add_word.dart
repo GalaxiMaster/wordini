@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vocab_app/Pages/word_details.dart';
 import 'package:vocab_app/file_handling.dart';
 import 'package:vocab_app/widgets.dart';
 import 'package:vocab_app/word_functions.dart';
@@ -57,59 +58,9 @@ void addWordToList(String word, context) {
     Map wordDetails = await getWordDetails(word);
     data[word] = wordDetails;
     loadingOverlay.removeLoadingOverlay();
-    bool? result = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: const Color(0xFF151515),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              capitalise(word)
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 5),
-              child: Text(
-                getWordType(wordDetails).map((e) => e[0]).join(', '),
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var speechType in organiseToSpeechPart(wordDetails['entries']).entries) ...[
-              Text(
-                capitalise(speechType.key),
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              for (var entry in speechType.value.asMap().entries)
-                for (var definition in entry.value['definitions'])
-                Text(
-                  '${entry.key + 1}. ${definition[0]['definition']}',
-                  style: const TextStyle(fontSize: 14),
-                ),
-            ]
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Edit?'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Confirm'),
-          ),
-        ],
-      ),
+    bool? result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => WordDetails(word: wordDetails)),
     );
     if (!(result ?? false)) {
       return;

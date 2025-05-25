@@ -167,7 +167,9 @@ List parseDefinitions(Map data){
             }
           }
         }
-
+        if (cleanText(defText).isEmpty) {
+          continue; // Skip empty definitions
+        }
         groupList.add({
           'definition': defText.trim(),
           'example': examples,
@@ -186,7 +188,16 @@ List parseDefinitions(Map data){
   return definitions;
 }
 
+String cleanText(String input) {
+  // Remove all formatting tags: {sc}...{/sc}, {it}...{/it}, etc.
+  final tagRegex = RegExp(r'\{[^}]*\}');
+  // Remove all punctuation (anywhere in the text)
+  final punctuationRegex = RegExp(r'[\p{P}]', unicode: true);
 
+  String noTags = input.replaceAll(tagRegex, '');
+  String cleaned = noTags.replaceAll(punctuationRegex, '');
+  return cleaned;
+}
 
 void deleteWord(word) {
   readData().then((data) async{
