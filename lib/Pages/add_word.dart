@@ -54,7 +54,7 @@ void addWordToList(String word, context) {
       return;
     }
     loadingOverlay.showLoadingOverlay(context);
-    Map wordDetails = await getWordDef(word);
+    Map wordDetails = await getWordDetails(word);
     data[word] = wordDetails;
     loadingOverlay.removeLoadingOverlay();
     bool? result = await showDialog(
@@ -85,14 +85,16 @@ void addWordToList(String word, context) {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            for (var speechType in organiseToSpeechPart(wordDetails['definitions']).entries) ...[
+            for (var speechType in organiseToSpeechPart(wordDetails['entries']).entries) ...[
               Text(
                 capitalise(speechType.key),
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               for (var entry in speechType.value.asMap().entries)
+                for (var definition in entry.value['definitions'])
                 Text(
-                  '${entry.key + 1}. ${entry.value['definition']}',
+                  '${entry.key + 1}. ${definition[0]['definition']}',
+                  style: const TextStyle(fontSize: 14),
                 ),
             ]
           ],

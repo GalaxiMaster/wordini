@@ -10,7 +10,7 @@ import 'dart:convert';
 
 Set getWordType(Map word) {
   Set types = {};
-  for (var definition in word['definitions']) {
+  for (var definition in word['entries']) {// TODO multple 
     if (definition['partOfSpeech'] != null) {
       types.add(definition['partOfSpeech']);
     }
@@ -20,7 +20,7 @@ Set getWordType(Map word) {
 String capitalise(String s) =>
   s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
   
-Future<Map> getWordDef(String word) async {
+Future<Map> getWordDetails(String word) async {
   try {
     Map wordDetails = {
       'word': word,
@@ -37,26 +37,28 @@ Future<Map> getWordDef(String word) async {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      Map mainData = data[0];
-      if (data.isNotEmpty && mainData is Map<String, dynamic>) { // TODO Exapnd past the first result
-        Map wordDeets = {
-          'definitions': [],
-          'quotes': [],
-          'partOfSpeech': '',
-          'synonyms': [],
-          'etymology': '',
-          'stems': '',
-          'firstUsed': '', 
-        };
-        wordDeets['shortDefs'] = mainData['shortdef'] ?? [];
-        wordDeets['synonyms'] = [];
-        wordDeets['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
-        wordDeets['etymology'] = mainData['et']?[0]?[1] ?? '';
-        wordDeets['partOfSpeech'] = mainData['fl'] ?? '';
-        wordDeets['stems'] = mainData['meta']?['stems'] ?? [];
-        wordDeets['quotes'] = mainData['quotes'] ?? [];
-        wordDeets['definitions'] = parseDefinitions(mainData['def'][0]);
-        wordDetails['entries'].add(wordDeets);
+      if (data.isNotEmpty && data[0] is Map<String, dynamic>) { // TODO Exapnd past the first result
+        for (Map mainData in data){
+          Map wordDeets = {
+            // 'definitions': [],
+            // 'quotes': [],
+            // 'partOfSpeech': '',
+            // 'synonyms': [],
+            // 'etymology': '',
+            // 'stems': '',
+            // 'firstUsed': '', 
+          };
+          wordDeets['shortDefs'] = mainData['shortdef'] ?? [];
+          wordDeets['synonyms'] = parseSynonyms(mainData);
+          wordDeets['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
+          wordDeets['etymology'] = mainData['et']?[0]?[1] ?? '';
+          wordDeets['partOfSpeech'] = mainData['fl'] ?? '';
+          wordDeets['stems'] = mainData['meta']?['stems'] ?? [];
+          wordDeets['quotes'] = mainData['quotes'] ?? [];
+          wordDeets['definitions'] = parseDefinitions(mainData['def'][0]);
+
+          wordDetails['entries'].add(wordDeets);
+        }
       } else {
         debugPrint('No definitions found for "$word".');
       }
@@ -86,6 +88,58 @@ Future<Map> getWordDef(String word) async {
     return {};
   }
 }
+
+Map<String, Map<String, dynamic>> parseSynonyms(Map entry) {
+  final Map<String, Map<String, dynamic>> result = {};
+
+  if (!entry.containsKey('syns')) return result;
+
+  for (final synGroup in entry['syns']) {
+    final pt = List.from(synGroup['pt']);
+    String? currentTerm;
+    String? currentDefinition;
+    List<String> currentExamples = [];
+
+    for (int i = 0; i < pt.length; i += 2) {
+      final textItem = pt[i];
+      final visItem = (i + 1 < pt.length) ? pt[i + 1] : null;
+
+      if (textItem[0] == 'text') {
+        final text = textItem[1] as String;
+
+        // Extract first {sc}...{/sc} term
+        final regex = RegExp(r'{sc}(.*?){/sc}');
+        final match = regex.firstMatch(text);
+        if (match != null) {
+          currentTerm = match.group(1);
+        }
+
+        currentDefinition = text;
+      }
+
+      currentExamples = [];
+      if (visItem != null && visItem[0] == 'vis') {
+        for (final vis in visItem[1]) {
+          currentExamples.add(vis['t']);
+        }
+      }
+
+      if (currentTerm != null && currentDefinition != null) {
+        result[currentTerm] = {
+          'definition': currentDefinition.trim(),
+          'example': currentExamples,
+        };
+      }
+
+      // Clear term for next group unless new one is found
+      currentTerm = null;
+      currentDefinition = null;
+    }
+  }
+
+  return result;
+}
+
 
 List parseDefinitions(Map data){
   final List<List<dynamic>> sseq = List.from(data['sseq']);
@@ -122,6 +176,12 @@ List parseDefinitions(Map data){
     }
 
     definitions.add(groupList);
+  }
+    for (var i = 0; i < definitions.length; i++) {
+    for (var j = 0; j < definitions[i].length; j++) {
+      debugPrint('definition[$i][$j]["definition"] = ${definitions[i][j]["definition"]}');
+      debugPrint('definition[$i][$j]["example"] = ${definitions[i][j]["example"]}\n');
+    }
   }
   return definitions;
 }
