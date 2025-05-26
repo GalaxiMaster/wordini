@@ -88,7 +88,7 @@ class _HomePageContentState extends State<HomePageContent> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
-                  'Welcome to Vocab App',
+                  'Welcome to the Vocab Lab',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),

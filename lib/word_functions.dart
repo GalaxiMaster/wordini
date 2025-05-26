@@ -3,7 +3,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
-import 'package:free_dictionary_api_v2/free_dictionary_api_v2.dart';
 import 'package:vocab_app/file_handling.dart';
 import 'package:vocab_app/widgets.dart';
 import 'dart:convert';
@@ -28,9 +27,19 @@ String capitalise(String s) {
       s.substring(letterIndex + 1);
   return result;
 }
-
+Future<void> testConnection() async {
+  try {
+    final result = await InternetAddress.lookup('google.com');
+    if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+      debugPrint('Connected to internet');
+    }
+  } on SocketException catch (_) {
+    debugPrint('Not connected to internet');
+  }
+}
   
 Future<Map> getWordDetails(String word) async {
+  testConnection();
   try {
     Map wordDetails = {
       'word': word,
@@ -93,9 +102,13 @@ Future<Map> getWordDetails(String word) async {
     //   });
     // });
     return wordDetails;
-  } on FreeDictionaryException catch (error, stackTrace) {
-    debugPrint(error.toString() + stackTrace.toString());
-    return {};
+  } catch (e) {
+    debugPrint('Error fetching word details: $e');
+    return {
+      'word': word,
+      'dateAdded': DateTime.now().toString(),
+      'entries': [],
+    };
   }
 }
 
@@ -227,7 +240,18 @@ Map organiseToSpeechPart(List wordDetails) {
     }
     organised[definition['partOfSpeech']].add(definition);
   }
-
+  for (var entry in organised.entries) {
+    debugPrint('Speech Part: ${entry.key}  -----------------------------------------------------------------');
+    for (var definition in entry.value){
+      for (var def in definition['definitions']) {
+        debugPrint('**** newform ****');
+        for (var definit in def){
+          debugPrint('definition: ${definit['definition']}');
+        }
+      }
+    }
+  }
+  
   return organised;
 }
 
@@ -306,4 +330,8 @@ Future<bool?> checkDefinition(word, userDef, actualDef, context) async{
     // TODO handle more error types
   }
   return null;
+}
+
+String indexToLetter(int index) {
+  return String.fromCharCode('a'.codeUnitAt(0) + index);
 }
