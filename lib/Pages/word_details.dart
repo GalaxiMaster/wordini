@@ -12,11 +12,21 @@ class WordDetails extends StatefulWidget {
 
 class _WordDetailstate extends State<WordDetails> {
   late Map organisedDetails;
+  final PageController _controller = PageController(
+    initialPage: 0,
+  );
+  double currentPage = 0;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     organisedDetails = organiseToSpeechPart(widget.word['entries']);
+    _controller.addListener(() {
+      setState(() {
+        currentPage = _controller.page ?? 0;
+      });
+    });
   }
   @override
   Widget build(BuildContext context) {
@@ -37,8 +47,43 @@ class _WordDetailstate extends State<WordDetails> {
               child: Divider(),
             ),
             const SizedBox(height: 20),
+            SizedBox(
+              height: 10,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  double width = constraints.maxWidth;
+                  int totalPages = organisedDetails.length;
+                  double indicatorWidth = width / totalPages;
+
+                  return Stack(
+                    children: [
+                      // Background track
+                      Container(
+                        width: width,
+                        height: 4,
+                        color: Colors.transparent,
+                      ),
+                      // Active indicator
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 150),
+                        curve: Curves.easeOutQuart,
+                        left: indicatorWidth * currentPage,
+                        child: Container(
+                          width: indicatorWidth,
+                          height: 4,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+
             Expanded(
               child: PageView.builder(
+                controller: _controller,
                 itemCount: organisedDetails.length,
                 itemBuilder: (context, index){
                   MapEntry speechType = organisedDetails.entries.elementAt(index);
