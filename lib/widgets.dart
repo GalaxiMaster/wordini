@@ -179,7 +179,7 @@ class MWTaggedText extends StatelessWidget {
   Widget build(BuildContext context) {
     return RichText(
       text: TextSpan(
-        children: _parseMWTags(input.replaceAll('{bc}', ':')),
+        children: _parseMWTags(input.replaceAll('{bc}', '')),
         style: DefaultTextStyle.of(context).style,
       ),
     );

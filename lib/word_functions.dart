@@ -17,8 +17,18 @@ Set getWordType(Map word) {
   }
   return types;
 }
-String capitalise(String s) =>
-  s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+String capitalise(String s) {
+  if (s.isEmpty) return s;
+  final cleanedText = s.replaceFirst(RegExp(r'^\{[^}]*\}'), '');
+  final letterIndex = s.indexOf(RegExp(r'[A-Za-z]'), s.indexOf(cleanedText));
+
+  if (letterIndex == -1) return s; // No letter found
+  final result = s.substring(0, letterIndex) +
+      s[letterIndex].toUpperCase() +
+      s.substring(letterIndex + 1);
+  return result;
+}
+
   
 Future<Map> getWordDetails(String word) async {
   try {
@@ -126,7 +136,7 @@ Map<String, Map<String, dynamic>> parseSynonyms(Map entry) {
 
       if (currentTerm != null && currentDefinition != null) {
         result[currentTerm] = {
-          'definition': currentDefinition.trim(),
+          'definition': capitalise(currentDefinition.trim()),
           'example': currentExamples,
         };
       }
@@ -168,15 +178,19 @@ List parseDefinitions(Map data){
           }
         }
         if (cleanText(defText).isEmpty) {
+          debugPrint('Empty definition found in group $i, item $j | $defText');
           continue; // Skip empty definitions
         }
         groupList.add({
-          'definition': defText.trim(),
+          'definition': capitalise(defText.trim()),
           'example': examples,
         });
       }
     }
-
+    if (groupList.isEmpty) {
+      debugPrint('Empty group found at index $i');
+      continue; // Skip empty groups
+    }
     definitions.add(groupList);
   }
     for (var i = 0; i < definitions.length; i++) {
@@ -189,14 +203,12 @@ List parseDefinitions(Map data){
 }
 
 String cleanText(String input) {
-  // Remove all formatting tags: {sc}...{/sc}, {it}...{/it}, etc.
   final tagRegex = RegExp(r'\{[^}]*\}');
-  // Remove all punctuation (anywhere in the text)
   final punctuationRegex = RegExp(r'[\p{P}]', unicode: true);
 
   String noTags = input.replaceAll(tagRegex, '');
   String cleaned = noTags.replaceAll(punctuationRegex, '');
-  return cleaned;
+  return cleaned.trim(); // <-- trim whitespace
 }
 
 void deleteWord(word) {
@@ -215,6 +227,7 @@ Map organiseToSpeechPart(List wordDetails) {
     }
     organised[definition['partOfSpeech']].add(definition);
   }
+
   return organised;
 }
 
