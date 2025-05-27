@@ -125,9 +125,8 @@ class _WordDetailstate extends State<WordDetails> {
                                 ],
                               ),
                               // etymology, examples, stems, synyonyms, quotes, maybe short defs
-                              Text(
+                              MWTaggedText(
                                 'Etymology: ${speechType.value[0]['etymology'] ?? 'N/A'}',
-                                style: const TextStyle(fontStyle: FontStyle.italic),
                               ),
                           ],
                         ),

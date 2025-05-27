@@ -99,8 +99,9 @@ class _AnimatedErrorOverlayState extends State<_AnimatedErrorOverlay>
 
 class MWTaggedText extends StatelessWidget {
   final String input;
+  final TextStyle? style;
 
-  const MWTaggedText(this.input, {super.key});
+  const MWTaggedText(this.input, {super.key, this.style});
 
   List<InlineSpan> _parseMWTags(String text) {
     final spans = <InlineSpan>[];
@@ -180,7 +181,7 @@ class MWTaggedText extends StatelessWidget {
     return RichText(
       text: TextSpan(
         children: _parseMWTags(input.replaceAll('{bc}', '')),
-        style: DefaultTextStyle.of(context).style,
+        style: style ?? DefaultTextStyle.of(context).style,
       ),
     );
   }
