@@ -4,7 +4,8 @@ import 'package:vocab_app/word_functions.dart';
 
 class WordDetails extends StatefulWidget {
   final Map word;
-  const WordDetails({super.key, required this.word});
+  final bool addWordMode;
+  const WordDetails({super.key, required this.word, this.addWordMode = false});
   @override
   // ignore: library_private_types_in_public_api
   _WordDetailstate createState() => _WordDetailstate();
@@ -131,6 +132,7 @@ class _WordDetailstate extends State<WordDetails> {
               ],
             ),
           ),
+          if (widget.addWordMode)
           Positioned(
             bottom: 10,
             left: 50,

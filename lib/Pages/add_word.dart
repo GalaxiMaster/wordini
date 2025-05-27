@@ -60,7 +60,7 @@ void addWordToList(String word, context) {
     loadingOverlay.removeLoadingOverlay();
     bool? result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => WordDetails(word: wordDetails)),
+      MaterialPageRoute(builder: (context) => WordDetails(word: wordDetails, addWordMode: true,)),
     );
     if (!(result ?? false)) {
       return;
