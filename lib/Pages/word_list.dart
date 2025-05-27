@@ -237,7 +237,7 @@ class _WordListState extends State<WordList> {
                           ],
                         ),
                         subtitle: Text(
-                          words[word]['definitions'][0]['definition'],
+                          words[word]['entries'][0]['shortDefs'][0],
                         ),
                       ),
                     );
