@@ -204,23 +204,18 @@ class _WordDetailstate extends State<WordDetails> {
                             const SizedBox(height: 8),
                             Wrap(
                               spacing: 8,
-                              runSpacing: 8,
-                              children: speechType.value[0]['synonyms'].entries.map<Widget>((synEntry) => Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade800,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: MWTaggedText(
-                                  synEntry.value['definition'],
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
+                              children: speechType.value[0]['synonyms'].entries.map<Widget>(
+                                (synonym) => Chip(
+                                  label: MWTaggedText(
+                                    capitalise(synonym.key),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
+                                  backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  side: BorderSide.none,
                                 ),
-                              )).toList(),
-                            ),
-                            const SizedBox(height: 10),
+                              ).toList(),
+                            )
                           ],
                         ],
                       ),
