@@ -56,6 +56,11 @@ void addWordToList(String word, context) {
     }
     loadingOverlay.showLoadingOverlay(context);
     Map wordDetails = await getWordDetails(word);
+    if (wordDetails['entries'].isEmpty) {
+      loadingOverlay.removeLoadingOverlay();
+      errorOverlay(context, 'Word not found');
+      return;
+    }
     data[word] = wordDetails;
     loadingOverlay.removeLoadingOverlay();
     bool? result = await Navigator.push(
