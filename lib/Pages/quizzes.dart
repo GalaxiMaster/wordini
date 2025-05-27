@@ -34,7 +34,7 @@ class _QuizzesState extends State<Quizzes> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          return const Center(child: Text('Error loading data'));
+          return Center(child: Text('Error loading data ${snapshot.error}'));
         } else if (snapshot.hasData) {
           Map words = snapshot.data!;
           if (words.isEmpty) {
@@ -147,13 +147,13 @@ class _QuizzesState extends State<Quizzes> {
     Map weightings = {};
     for (var key in data.keys) {
 
-      int timesChecked = data[key]['entries']?.length ?? 0;
-      int timesRight = data[key]['entries']?.where((entry) => entry['correct'] == true).length ?? 0;
+      int timesChecked = data[key]['inputs']?.length ?? 0;
+      int timesRight = data[key]['inputs']?.where((entry) => entry['correct'] == true).length ?? 0;
       DateTime? lastChecked;
       bool? lastTimeValue;
       if (timesChecked != 0){
-        lastChecked = DateTime.parse(data[key]['entries']?.last['date'] ?? '');
-        lastTimeValue = data[key]['entries']?.last['correct'];
+        lastChecked = DateTime.parse(data[key]['inputs']?.last['date'] ?? '');
+        lastTimeValue = data[key]['inputs']?.last['correct'];
       }
 
       double percentage = timesChecked > 0 ? (timesRight / timesChecked) : 0.0;
