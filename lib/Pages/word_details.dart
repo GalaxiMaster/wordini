@@ -95,9 +95,11 @@ class _WordDetailstate extends State<WordDetails> {
                             children: [
                               const Icon(Icons.menu_book_rounded, color: Colors.teal, size: 24),
                               const SizedBox(width: 8),
-                              Text(
-                                capitalise(speechType.key),
-                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              Expanded(
+                                child: Text(
+                                  capitalise(speechType.key),
+                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                ),
                               ),
                             ],
                           ),
@@ -204,18 +206,20 @@ class _WordDetailstate extends State<WordDetails> {
                             const SizedBox(height: 8),
                             Wrap(
                               spacing: 8,
-                              children: speechType.value[0]['synonyms'].entries.map<Widget>(
-                                (synonym) => Chip(
-                                  label: MWTaggedText(
-                                    capitalise(synonym.key),
-                                    style: const TextStyle(fontSize: 16),
+                              children: speechType.value[0]['synonyms'].entries
+                                .where((synonym) => synonym.key.toLowerCase() != widget.word['word'].toLowerCase())
+                                .map<Widget>(
+                                  (synonym) => Chip(
+                                    label: MWTaggedText(
+                                      capitalise(synonym.key),
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    side: BorderSide.none,
                                   ),
-                                  backgroundColor: const Color.fromARGB(255, 19, 54, 79),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  side: BorderSide.none,
-                                ),
-                              ).toList(),
-                            )
+                                ).toList(),
+                            ),
                           ],
                         ],
                       ),
@@ -223,32 +227,6 @@ class _WordDetailstate extends State<WordDetails> {
                   },
                 ),
               ),
-              // Submit button for addWordMode
-              if (widget.addWordMode)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10, left: 50, right: 50),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 16, 38, 55),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context, true);
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: Text(
-                        'Submit',
-                        style: TextStyle(
-                          fontSize: 22,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
             ],
           ),
         ),

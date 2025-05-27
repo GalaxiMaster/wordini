@@ -226,12 +226,15 @@ class _WordListState extends State<WordList> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            Text(
-                              getWordType(words[word]).join(' / '),
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: Colors.grey,
-                                fontStyle: FontStyle.italic,
+                            Expanded(
+                              child: Text(
+                                getWordType(words[word]).join(' / '),
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  color: Colors.grey,
+                                  fontStyle: FontStyle.italic,
+                                ),
                               ),
                             ),
                           ],
