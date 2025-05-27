@@ -94,12 +94,13 @@ class _QuizzesState extends State<Quizzes> {
                             errorOverlay(context, 'Wrong answer');
                           }
                           questionsDone++;
-                          words[currentWord['word']]['entries'] ??= [];
-                          words[currentWord['word']]['entries'].add({
+                          words[currentWord['word']]['inputs'] ??= [];
+                          words[currentWord['word']]['inputs'].add({
                             'guess': value,
                             'correct': correct,
                             'date': DateTime.now().toString(),
                           });
+
                           writeData(words, append: false);
                         },
                       ),

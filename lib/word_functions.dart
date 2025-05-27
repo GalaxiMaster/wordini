@@ -16,6 +16,7 @@ Set getWordType(Map word) {
   }
   return types;
 }
+
 String capitalise(String s) {
   if (s.isEmpty) return s;
   final cleanedText = s.replaceFirst(RegExp(r'^\{[^}]*\}'), '');
@@ -28,7 +29,6 @@ String capitalise(String s) {
   return result;
 }
 
-  
 Future<Map> getWordDetails(String word) async {
   try {
     Map wordDetails = {
@@ -158,7 +158,6 @@ Map<String, Map<String, dynamic>> parseSynonyms(Map entry) {
   return result;
 }
 
-
 List parseDefinitions(Map data){
   final List<List<dynamic>> sseq = List.from(data['sseq']);
 
@@ -250,28 +249,6 @@ Map organiseToSpeechPart(List wordDetails) {
   return organised;
 }
 
-gatherSynonyms(Map word) {
-  Set synonyms = {};
-  for (var definition in word['definitions']) {
-    if (definition['synonyms'] != null) {
-      for (var synonym in definition['synonyms']) {
-        synonyms.add(synonym);
-      }
-    }
-  }
-  return synonyms.toList();
-}
-gatherAntonyms(Map word) {
-  Set antonyms = {};
-  for (var definition in word['definitions']) {
-    if (definition['antonyms'] != null) {
-      for (var antonym in definition['antonyms']) {
-        antonyms.add(antonym);
-      }
-    }
-  }
-  return antonyms.toList();
-}
 Future<bool?> checkDefinition(word, userDef, actualDef, context) async{
   // the system message that will be sent to the request.
   final systemMessage = OpenAIChatCompletionChoiceMessageModel(

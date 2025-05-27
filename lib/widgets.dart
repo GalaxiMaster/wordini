@@ -115,7 +115,7 @@ class MWTaggedText extends StatelessWidget {
 
     void flushBuffer() {
       if (buffer.isNotEmpty) {
-        spans.add(TextSpan(text: buffer.toString(), style: currentStyle));
+        spans.add(TextSpan(text: parseMerriamWebsterTags(buffer.toString()), style: currentStyle));
         buffer.clear();
       }
     }
@@ -174,6 +174,82 @@ class MWTaggedText extends StatelessWidget {
       default:
         return base;
     }
+  }
+  String parseMerriamWebsterTags(String input) {
+    final tagPattern = RegExp(r'\{([^|{}]+)\|([^|{}]*)\|([^|{}]*)\|?([^|{}]*)\}');
+    return input.replaceAllMapped(tagPattern, (match) {
+      final type = match[1];
+      final part1 = match[2];
+      final part2 = match[3];
+      final part3 = match[4];
+      if (part1 != null) {
+        switch (type) {
+          case 'dxt':
+            // {dxt|flower|flower|illustration} → "flower (see illustration)"
+            return '$part1 (see $part3)';
+          case 'sx':
+            // {sx|fashion||} → "fashion"
+            return '— $part1';
+          case 'a_link':
+          case 'd_link':
+          case 'i_link':
+          case 'et_link':
+            // {a_link|word} → "word"
+            return part1;
+          case 'dx':
+          case 'dx_def':
+          case 'dx_ety':
+            // {dx|word|label} → "word (label)"
+            if (part2 != null) {
+              return part2.isNotEmpty ? '$part1 ($part2)' : part1;
+            }
+          case 'mat':
+            // {mat|word|label} → "word (label)"
+            if (part2 != null) {
+              return part2.isNotEmpty ? '$part1 ($part2)' : part1;
+            }
+          case 'ma':
+            // {ma|word|label} → "word (label)"
+            if (part2 != null) {
+              return part2.isNotEmpty ? '$part1 ($part2)' : part1;
+            }
+          case 'wi':
+            // {wi|word} → "word"
+            return part1;
+          case 'qword':
+            // {qword|word} → "“word”"
+            return '“$part1”';
+          case 'gloss':
+            // {gloss} → "(gloss)"
+            return '(gloss)';
+          case 'sup':
+            // {sup|text} → "text"
+            return part1;
+          case 'inf':
+            // {inf|text} → "text"
+            return part1;
+          case 'it':
+            // {it|text} → "text"
+            return part1;
+          case 'sc':
+            // {sc|text} → "text"
+            return part1;
+          case 'b':
+            // {b} → ""
+            return '';
+          case 'bc':
+            // {bc} → ":"
+            return ':';
+          case 'ds':
+            // {ds|text} → "text"
+            return part1;
+          default:
+            // Unknown tag, return the inner text if available
+            return part1.isNotEmpty ? part1 : '';
+        }
+      }
+      return input;
+    });
   }
 
   @override
