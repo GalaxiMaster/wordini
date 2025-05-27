@@ -131,9 +131,9 @@ class _WordDetailstate extends State<WordDetails> {
                               ),
                             ),
                           const SizedBox(height: 18),
-                          Divider(),
                           // Etymology Section
                           if (speechType.value[0]['etymology'] != null && speechType.value[0]['etymology'].isNotEmpty) ...[
+                            Divider(),
                             Row(
                               children: const [
                                 Icon(Icons.biotech, color: Colors.amber, size: 22),
