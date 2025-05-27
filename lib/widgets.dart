@@ -100,7 +100,7 @@ class _AnimatedErrorOverlayState extends State<_AnimatedErrorOverlay>
 class MWTaggedText extends StatelessWidget {
   final String input;
 
-  MWTaggedText(this.input);
+  const MWTaggedText(this.input, {super.key});
 
   List<InlineSpan> _parseMWTags(String text) {
     final spans = <InlineSpan>[];

@@ -92,6 +92,7 @@ class _WordDetailstate extends State<WordDetails> {
                       MapEntry speechType = organisedDetails.entries.elementAt(index);
                       return SingleChildScrollView(
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               capitalise(speechType.key),
@@ -122,6 +123,11 @@ class _WordDetailstate extends State<WordDetails> {
                                   //     ),
                                   //   )
                                 ],
+                              ),
+                              // etymology, examples, stems, synyonyms, quotes, maybe short defs
+                              Text(
+                                'Etymology: ${speechType.value[0]['etymology'] ?? 'N/A'}',
+                                style: const TextStyle(fontStyle: FontStyle.italic),
                               ),
                           ],
                         ),
