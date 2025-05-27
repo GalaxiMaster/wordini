@@ -31,143 +31,223 @@ class _WordDetailstate extends State<WordDetails> {
   }
   @override
   Widget build(BuildContext context) {
-    // List synonyms = gatherSynonyms(widget.word);
-    // List antonyms = gatherAntonyms(widget.word);
     return Scaffold(
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(25),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  capitalise(widget.word['word']),
-                  style: TextStyle(fontSize: 24),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 100),
-                  child: Divider(),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  height: 10,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      double width = constraints.maxWidth;
-                      int totalPages = organisedDetails.length;
-                      double indicatorWidth = width / totalPages;
-          
-                      return Stack(
-                        children: [
-                          // Background track
-                          Container(
-                            width: width,
-                            height: 4,
-                            color: Colors.transparent,
-                          ),
-                          // Active indicator
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 150),
-                            curve: Curves.easeOutQuint,
-                            left: indicatorWidth * currentPage,
-                            child: Container(
-                              width: indicatorWidth,
-                              height: 4,
-                              color: Colors.blue,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 10),
-          
-                Expanded(
-                  child: PageView.builder(
-                    controller: _controller,
-                    itemCount: organisedDetails.length,
-                    itemBuilder: (context, index){
-                      MapEntry speechType = organisedDetails.entries.elementAt(index);
-                      return SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              capitalise(speechType.key),
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            for (var entry in speechType.value.asMap().entries)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${entry.key + 1}.',
-                                  ),
-                                  for (var definition in entry.value['definitions'])...[
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 5),
-                                      child: MWTaggedText(
-                                        '{b}${indexToLetter(entry.value['definitions'].indexOf(definition))}){/b} ${definition[0]['definition']}',
-                                      ),
-                                    ),
-                                    SizedBox(height: 7.5,)
-                                  ]
-                                  // if (entry.value['example'] != null) 
-                                  //   Padding(
-                                  //     padding: const EdgeInsets.only(left: 5),
-                                  //     child: Text(
-                                  //       'Example: ${entry.value['example']}',
-                                  //       style: const TextStyle(fontStyle: FontStyle.italic),
-                                  //     ),
-                                  //   )
-                                ],
-                              ),
-                              // etymology, examples, stems, synyonyms, quotes, maybe short defs
-                              MWTaggedText(
-                                'Etymology: ${speechType.value[0]['etymology'] ?? 'N/A'}',
-                              ),
-                          ],
-                        ),
-                      );
-                    }
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (widget.addWordMode)
-          Positioned(
-            bottom: 10,
-            left: 50,
-            right: 50,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 16, 38, 55),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(50),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Word Title
+              Text(
+                capitalise(widget.word['word']),
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              onPressed: (){
-                Navigator.pop(context, true);
-              }, 
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Text(
-                  'Submit',
-                  style: TextStyle(
-                    fontSize: 22,
-                    color: Colors.white,
+              const SizedBox(height: 18),
+              // Page indicator
+              SizedBox(
+                height: 10,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    double width = constraints.maxWidth;
+                    int totalPages = organisedDetails.length;
+                    double indicatorWidth = width / (totalPages == 0 ? 1 : totalPages);
+
+                    return Stack(
+                      children: [
+                        Container(
+                          width: width,
+                          height: 4,
+                          color: Colors.transparent,
+                        ),
+                        AnimatedPositioned(
+                          duration: const Duration(milliseconds: 150),
+                          curve: Curves.easeOutQuint,
+                          left: indicatorWidth * currentPage,
+                          child: Container(
+                            width: indicatorWidth,
+                            height: 4,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              // PageView for speech types
+              Expanded(
+                child: PageView.builder(
+                  controller: _controller,
+                  itemCount: organisedDetails.length,
+                  itemBuilder: (context, index) {
+                    MapEntry speechType = organisedDetails.entries.elementAt(index);
+                    return SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Definition Section
+                          Row(
+                            children: [
+                              const Icon(Icons.menu_book_rounded, color: Colors.teal, size: 24),
+                              const SizedBox(width: 8),
+                              Text(
+                                capitalise(speechType.key),
+                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          for (var entry in speechType.value.asMap().entries)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MWTaggedText(
+                                    "${entry.key + 1}. ",
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        for (var definition in entry.value['definitions'].asMap().entries)
+                                          Padding(
+                                            padding: const EdgeInsets.only(bottom: 4),
+                                            child: MWTaggedText(
+                                              "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}",
+                                              style: const TextStyle(fontSize: 16),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          const SizedBox(height: 18),
+                          Divider(),
+                          // Etymology Section
+                          if (speechType.value[0]['etymology'] != null && speechType.value[0]['etymology'].isNotEmpty) ...[
+                            Row(
+                              children: const [
+                                Icon(Icons.biotech, color: Colors.amber, size: 22),
+                                SizedBox(width: 8),
+                                Text(
+                                  "Etymology",
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 17),
+                              child: MWTaggedText(
+                                speechType.value[0]['etymology'],
+                                style: const TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                          ],
+                          // Quotes Section
+                          if (speechType.value[0]['quotes'] != null && speechType.value[0]['quotes'].isNotEmpty) ...[
+                            Divider(),
+                            Row(
+                              children: const [
+                                Icon(Icons.format_quote_rounded, color: Colors.lightBlue, size: 22),
+                                SizedBox(width: 8),
+                                Text(
+                                  "Quotes",
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            for (var quote in speechType.value[0]['quotes'])...[
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 17),
+                                child: MWTaggedText(
+                                  '"${quote['t']}"\n - {it}${quote['aq']['auth']} (${quote['aq']['aqdate']}){/it}',
+                                ),
+                              ),
+                            ],
+                          ],
+                          // Synonyms Section
+                          if (speechType.value[0]['synonyms'] != null && speechType.value[0]['synonyms'].isNotEmpty) ...[
+                            Divider(),
+                            Row(
+                              children: const [
+                                Icon(Icons.local_florist_rounded, color: Colors.green, size: 22),
+                                SizedBox(width: 8),
+                                Text(
+                                  "Synonyms",
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: speechType.value[0]['synonyms'].entries.map<Widget>((synEntry) => Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade800,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: MWTaggedText(
+                                  synEntry.value['definition'],
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              )).toList(),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // Submit button for addWordMode
+              if (widget.addWordMode)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10, left: 50, right: 50),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 16, 38, 55),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context, true);
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Text(
+                        'Submit',
+                        style: TextStyle(
+                          fontSize: 22,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              )
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
-
 }
 
