@@ -74,7 +74,7 @@ class _QuizzesState extends State<Quizzes> {
                           labelText: 'Search for a word',
                         ),
                         onSubmitted: (value) async{
-                          bool? correct = await checkDefinition(currentWord['word'], value, currentWord['definitions'].first['definition'], context);
+                          bool? correct = await checkDefinition(currentWord['word'], value, '', context);//currentWord['definitions'].first['definition']
                           if (correct == null) {
                             return;
                           }
