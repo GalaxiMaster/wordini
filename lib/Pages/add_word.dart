@@ -55,12 +55,25 @@ void addWordToList(String word, context) {
       return;
     }
     loadingOverlay.showLoadingOverlay(context);
-    Map wordDetails = await getWordDetails(word);
+    Map wordDetails;
+    
+    try {
+      wordDetails = await getWordDetails(word);
+    } on FormatException {
+      loadingOverlay.removeLoadingOverlay();
+      errorOverlay(context, 'Invalid word');
+      return;
+    } catch (e) {
+      loadingOverlay.removeLoadingOverlay();
+      errorOverlay(context, 'Error fetching word details: $e');
+      return;
+    }
     if (wordDetails['entries'].isEmpty) {
       loadingOverlay.removeLoadingOverlay();
       errorOverlay(context, 'Word not found');
       return;
     }
+
     data[word] = wordDetails;
     loadingOverlay.removeLoadingOverlay();
     bool? result = await Navigator.push(

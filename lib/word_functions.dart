@@ -27,19 +27,9 @@ String capitalise(String s) {
       s.substring(letterIndex + 1);
   return result;
 }
-Future<void> testConnection() async {
-  try {
-    final result = await InternetAddress.lookup('google.com');
-    if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-      debugPrint('Connected to internet');
-    }
-  } on SocketException catch (_) {
-    debugPrint('Not connected to internet');
-  }
-}
+
   
 Future<Map> getWordDetails(String word) async {
-  testConnection();
   try {
     Map wordDetails = {
       'word': word,
@@ -67,16 +57,20 @@ Future<Map> getWordDetails(String word) async {
             // 'stems': '',
             // 'firstUsed': '', 
           };
-          wordDeets['shortDefs'] = mainData['shortdef'] ?? [];
-          wordDeets['synonyms'] = parseSynonyms(mainData);
-          wordDeets['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
-          wordDeets['etymology'] = mainData['et']?[0]?[1] ?? '';
-          wordDeets['partOfSpeech'] = mainData['fl'] ?? '';
-          wordDeets['stems'] = mainData['meta']?['stems'] ?? [];
-          wordDeets['quotes'] = mainData['quotes'] ?? [];
-          wordDeets['definitions'] = parseDefinitions(mainData['def'][0]);
+          try{
+            wordDeets['shortDefs'] = mainData['shortdef'] ?? [];
+            wordDeets['synonyms'] = parseSynonyms(mainData);
+            wordDeets['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
+            wordDeets['etymology'] = mainData['et']?[0]?[1] ?? '';
+            wordDeets['partOfSpeech'] = mainData['fl'] ?? '';
+            wordDeets['stems'] = mainData['meta']?['stems'] ?? [];
+            wordDeets['quotes'] = mainData['quotes'] ?? [];
+            wordDeets['definitions'] = parseDefinitions(mainData['def'][0]);
 
-          wordDetails['entries'].add(wordDeets);
+            wordDetails['entries'].add(wordDeets);
+          } catch(e){
+            throw FormatException('Error parsing word details: $e');
+          }
         }
       } else {
         debugPrint('No definitions found for "$word".');
@@ -103,6 +97,7 @@ Future<Map> getWordDetails(String word) async {
     // });
     return wordDetails;
   } catch (e) {
+    if (e is FormatException) rethrow;
     debugPrint('Error fetching word details: $e');
     return {
       'word': word,

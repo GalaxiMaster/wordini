@@ -22,13 +22,13 @@ class LoadingOverlay {
     _overlayEntry.remove();
   }
 }
-void errorOverlay(context, String s) {
+void errorOverlay(context, String message) {
   var overlay = Overlay.of(context);
   late OverlayEntry overlayEntry;
   overlayEntry = OverlayEntry(
     builder: (context) {
       return _AnimatedErrorOverlay(
-        message: s,
+        message: message,
         onFinish: () => overlayEntry.remove(),
       );
     },
