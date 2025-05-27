@@ -168,14 +168,25 @@ class _WordDetailstate extends State<WordDetails> {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            for (var quote in speechType.value[0]['quotes'])...[
+                            for (var quote in speechType.value[0]['quotes']) ...[
                               Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 17),
-                                child: MWTaggedText(
-                                  '"${quote['t']}"\n - {it}${quote['aq']['auth']} (${quote['aq']['aqdate']}){/it}',
+                                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      left: BorderSide(
+                                        color: Colors.blue.shade300,
+                                        width: 4,
+                                      ),
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                                  child: MWTaggedText(
+                                    '"${quote['t']}"\n - {it}${quote['aq']['auth']} (${quote['aq']['aqdate']}){/it}',
+                                  ),
                                 ),
                               ),
-                            ],
+                            ]
                           ],
                           // Synonyms Section
                           if (speechType.value[0]['synonyms'] != null && speechType.value[0]['synonyms'].isNotEmpty) ...[
