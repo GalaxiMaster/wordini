@@ -127,13 +127,13 @@ class _WordDetailstate extends State<WordDetails> {
                                     setState(() {
                                       // ADD perma move
                                       if (newIndex > oldIndex) newIndex -= 1;
-                                      final item = speechType.value.removeAt(oldIndex);
-                                      speechType.value.insert(newIndex, item);
+                                      final item = speechType.value['details'].removeAt(oldIndex);
+                                      speechType.value['details'].insert(newIndex, item);
                                     });
                                   },
-                                  itemCount: speechType.value.length,
+                                  itemCount: speechType.value['details'].length,
                                   itemBuilder: (context, index) {
-                                    var entry = speechType.value[index];
+                                    var entry = speechType.value['details'][index];
                                     return ListTile(
                                       key: ValueKey("definition_$index"),
                                       leading: const Icon(Icons.drag_handle),
@@ -144,7 +144,7 @@ class _WordDetailstate extends State<WordDetails> {
                                             Padding(
                                               padding: const EdgeInsets.only(bottom: 4),
                                               child: MWTaggedText(
-                                                "{b}${indexToLetter(definition.key)}){/b} ${definition.value['definition']}",
+                                                "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}",
                                                 style: const TextStyle(fontSize: 16),
                                               ),
                                             ),
