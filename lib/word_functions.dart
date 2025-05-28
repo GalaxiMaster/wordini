@@ -46,7 +46,7 @@ Future<Map> getWordDetails(String word) async {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      if (data.isNotEmpty && data[0] is Map<String, dynamic>) { // TODO Exapnd past the first result
+      if (data.isNotEmpty && data[0] is Map<String, dynamic>) {
         for (Map mainData in data){
           Map wordDeets = {
             // 'definitions': [],
