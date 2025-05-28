@@ -144,7 +144,7 @@ class _WordDetailstate extends State<WordDetails> {
                                             Padding(
                                               padding: const EdgeInsets.only(bottom: 4),
                                               child: MWTaggedText(
-                                                "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}",
+                                                "{b}${indexToLetter(definition.key)}){/b} ${definition.value['definition']}",
                                                 style: const TextStyle(fontSize: 16),
                                               ),
                                             ),
@@ -154,7 +154,7 @@ class _WordDetailstate extends State<WordDetails> {
                                   },
                                 )
                               : Column(
-                                  children: speechType.value.asMap().entries.map<Widget>((entry) {
+                                  children: speechType.value['details'].asMap().entries.map<Widget>((entry) {
                                     return Padding(
                                       padding: const EdgeInsets.only(bottom: 6),
                                       child: Row(
@@ -172,7 +172,7 @@ class _WordDetailstate extends State<WordDetails> {
                                                   Padding(
                                                     padding: const EdgeInsets.only(bottom: 4),
                                                     child: MWTaggedText(
-                                                      "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}",
+                                                      "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}", // Currently set to only show the first wording of it
                                                       style: const TextStyle(fontSize: 16),
                                                     ),
                                                   ),
@@ -186,7 +186,7 @@ class _WordDetailstate extends State<WordDetails> {
                                 ),
                               const SizedBox(height: 18),
                                                          // Synonyms Section
-                              if (speechType.value[0]['synonyms'] != null && speechType.value[0]['synonyms'].isNotEmpty) ...[
+                              if (speechType.value['synonyms'] != null && speechType.value['synonyms'].isNotEmpty) ...[
                                 Divider(),
                                 Row(
                                   children: const [
@@ -201,7 +201,7 @@ class _WordDetailstate extends State<WordDetails> {
                                 const SizedBox(height: 8),
                                 Wrap(
                                   spacing: 8,
-                                  children: speechType.value[0]['synonyms'].entries
+                                  children: speechType.value['synonyms'].entries
                                     .where((synonym) => synonym.key.toLowerCase() != widget.word['word'].toLowerCase())
                                     .map<Widget>(
                                       (synonym) => Chip(
@@ -217,7 +217,7 @@ class _WordDetailstate extends State<WordDetails> {
                                 ),
                               ],
                               // Etymology Section
-                              if (speechType.value[0]['etymology'] != null && speechType.value[0]['etymology'].isNotEmpty) ...[
+                              if (speechType.value['etymology'] != null && speechType.value['etymology'].isNotEmpty) ...[
                                 Divider(),
                                 Row(
                                   children: const [
@@ -233,14 +233,14 @@ class _WordDetailstate extends State<WordDetails> {
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 17),
                                   child: MWTaggedText(
-                                    speechType.value[0]['etymology'],
+                                    speechType.value['etymology'],
                                     style: const TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
                                   ),
                                 ),
                                 const SizedBox(height: 18),
                               ],
                               // Quotes Section
-                              if (speechType.value[0]['quotes'] != null && speechType.value[0]['quotes'].isNotEmpty) ...[
+                              if (speechType.value['quotes'] != null && speechType.value['quotes'].isNotEmpty) ...[
                                 Divider(),
                                 Row(
                                   children: const [
@@ -253,7 +253,7 @@ class _WordDetailstate extends State<WordDetails> {
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                for (var quote in speechType.value[0]['quotes']) ...[
+                                for (var quote in speechType.value['quotes']) ...[
                                   Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
                                     child: Container(

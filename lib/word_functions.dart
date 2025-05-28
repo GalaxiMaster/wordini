@@ -43,22 +43,29 @@ Future<Map> getWordDetails(String word) async {
       if (data.isNotEmpty && data[0] is Map<String, dynamic>) {
         for (Map mainData in data) {
           Map wordDeets = {};
-          try {
-            wordDeets['shortDefs'] = mainData['shortdef'] ?? [];
-            wordDeets['synonyms'] = parseSynonyms(mainData);
-            wordDeets['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
-            wordDeets['etymology'] = mainData['et']?[0]?[1] ?? '';
-            wordDeets['partOfSpeech'] = mainData['fl'] ?? '';
-            wordDeets['stems'] = mainData['meta']?['stems'] ?? [];
-            wordDeets['quotes'] = mainData['quotes'] ?? [];
-            wordDeets['definitions'] = parseDefinitions(mainData['def'][0]);
-
-            String partOfSpeech = wordDeets['partOfSpeech'] ?? '';
+          try {           
+            String partOfSpeech = mainData['fl'] ?? '';
             if (partOfSpeech.isEmpty) partOfSpeech = 'unknown';
             if (wordDetails['entries'][partOfSpeech] == null) {
-              wordDetails['entries'][partOfSpeech] = [];
+              wordDetails['entries'][partOfSpeech] = {
+                'synonyms': {},
+                'etymology': '',
+                'partOfSpeech': partOfSpeech,
+                'quotes': [],
+                'details': [] 
+              };
             }
-            wordDetails['entries'][partOfSpeech].add(wordDeets);
+            wordDetails['entries'][partOfSpeech]['synonyms'].addAll(parseSynonyms(mainData));
+            wordDetails['entries'][partOfSpeech]['etymology'] += mainData['et']?[0]?[1] ?? '';
+            wordDetails['entries'][partOfSpeech]['partOfSpeech'] = mainData['fl'] ?? '';
+            wordDetails['entries'][partOfSpeech]['quotes'].addAll(mainData['quotes'] ?? []);
+            wordDeets['definitions'] = parseDefinitions(mainData['def'][0]);
+            wordDeets['shortDefs'] = mainData['shortdef'] ?? [];
+            wordDeets['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
+            wordDeets['stems'] = mainData['meta']?['stems'] ?? [];
+            wordDeets['homograph'] = mainData['hom'] ?? wordDetails['entries'][partOfSpeech]['details'].length + 1;
+
+            wordDetails['entries'][partOfSpeech]['details'].add(wordDeets);
           } catch (e) {
             throw FormatException('Error parsing word details: $e');
           }

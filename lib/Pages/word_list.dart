@@ -240,13 +240,13 @@ class _WordListState extends State<WordList> {
                           ],
                         ),
                         subtitle: Text(
-                          words[word]['entries'].entries.first.value[0]['shortDefs'][0],
+                          words[word]['entries'].entries.first.value['details'].first['shortDefs'][0],
                         ),
                       ),
                     );
                   },
                 ),
-              ),
+              ),  
             ),
           ],
         );
