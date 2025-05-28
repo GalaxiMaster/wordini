@@ -12,7 +12,6 @@ class WordDetails extends StatefulWidget {
 }
 
 class _WordDetailstate extends State<WordDetails> {
-  late Map organisedDetails;
   final PageController _controller = PageController(
     initialPage: 0,
   );
@@ -22,7 +21,6 @@ class _WordDetailstate extends State<WordDetails> {
   @override
   void initState() {
     super.initState();
-    organisedDetails = organiseToSpeechPart(widget.word['entries']);
     _controller.addListener(() {
       setState(() {
         currentPage = _controller.page ?? 0;
@@ -71,7 +69,7 @@ class _WordDetailstate extends State<WordDetails> {
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         double width = constraints.maxWidth;
-                        int totalPages = organisedDetails.length;
+                        int totalPages = widget.word['entries'].length;
                         double indicatorWidth = width / (totalPages == 0 ? 1 : totalPages);
             
                         return Stack(
@@ -101,9 +99,9 @@ class _WordDetailstate extends State<WordDetails> {
                   Expanded(
                     child: PageView.builder(
                       controller: _controller,
-                      itemCount: organisedDetails.length,
+                      itemCount: widget.word['entries'].length,
                       itemBuilder: (context, index) {
-                        MapEntry speechType = organisedDetails.entries.elementAt(index);
+                        MapEntry speechType = widget.word['entries'].entries.toList().elementAt(index);
                         return SingleChildScrollView(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

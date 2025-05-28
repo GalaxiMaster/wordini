@@ -8,13 +8,7 @@ import 'package:vocab_app/widgets.dart';
 import 'dart:convert';
 
 Set getWordType(Map word) {
-  Set types = {};
-  for (var definition in word['entries']) {// TODO multple 
-    if (definition['partOfSpeech'] != null) {
-      types.add(definition['partOfSpeech']);
-    }
-  }
-  return types;
+  return word['entries'].keys.toSet();
 }
 
 String capitalise(String s) {
