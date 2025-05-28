@@ -283,8 +283,10 @@ class _WordDetailstate extends State<WordDetails> {
               ),
             ),
             if (widget.addWordMode)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10, left: 50, right: 50),
+              Positioned(
+                left: 50,
+                right: 50,
+                bottom: 20,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 16, 38, 55),
