@@ -34,11 +34,11 @@ Future<Map> getWordDetails(String word) async {
     Map wordDetails = {
       'word': word,
       'dateAdded': DateTime.now().toString(),
-      'entries': []
+      'entries': {} // Now a map keyed by partOfSpeech
     };
     String? apiKey = dotenv.env['MERRIAM_WEB_API_KEY'];
     if (apiKey == null) {
-      throw Exception('MERRIAM_WEB_API_KEY not found in .env file'); // TODO handle.
+      throw Exception('MERRIAM_WEB_API_KEY not found in .env file');
     }
     final String url = 'https://www.dictionaryapi.com/api/v3/references/collegiate/json/$word?key=$apiKey';
 
@@ -47,17 +47,9 @@ Future<Map> getWordDetails(String word) async {
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data.isNotEmpty && data[0] is Map<String, dynamic>) {
-        for (Map mainData in data){
-          Map wordDeets = {
-            // 'definitions': [],
-            // 'quotes': [],
-            // 'partOfSpeech': '',
-            // 'synonyms': [],
-            // 'etymology': '',
-            // 'stems': '',
-            // 'firstUsed': '', 
-          };
-          try{
+        for (Map mainData in data) {
+          Map wordDeets = {};
+          try {
             wordDeets['shortDefs'] = mainData['shortdef'] ?? [];
             wordDeets['synonyms'] = parseSynonyms(mainData);
             wordDeets['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
@@ -67,8 +59,13 @@ Future<Map> getWordDetails(String word) async {
             wordDeets['quotes'] = mainData['quotes'] ?? [];
             wordDeets['definitions'] = parseDefinitions(mainData['def'][0]);
 
-            wordDetails['entries'].add(wordDeets);
-          } catch(e){
+            String partOfSpeech = wordDeets['partOfSpeech'] ?? '';
+            if (partOfSpeech.isEmpty) partOfSpeech = 'unknown';
+            if (wordDetails['entries'][partOfSpeech] == null) {
+              wordDetails['entries'][partOfSpeech] = [];
+            }
+            wordDetails['entries'][partOfSpeech].add(wordDeets);
+          } catch (e) {
             throw FormatException('Error parsing word details: $e');
           }
         }
@@ -76,25 +73,10 @@ Future<Map> getWordDetails(String word) async {
         debugPrint('No definitions found for "$word".');
       }
     } else {
-      debugPrint('Failed to load definition: ${response.statusCode}');
+      debugPrint('Failed to load definition: \\${response.statusCode}');
     }
 
-
-
     debugPrint(response.toString());
-    // response[0].meanings?.forEach((meaning) {
-    //   meaning.definitions?.forEach((definition) {
-    //     Map meaningDetails = {
-    //       'partOfSpeech': meaning.partOfSpeech,
-    //       'definition': definition.definition,
-    //       'example': definition.example,
-    //       'synonyms': definition.synonyms,
-    //       'antonyms': definition.antonyms,
-    //     };
-
-    //     wordDetails['definitions'].add(meaningDetails);
-    //   });
-    // });
     return wordDetails;
   } catch (e) {
     if (e is FormatException) rethrow;
@@ -102,7 +84,7 @@ Future<Map> getWordDetails(String word) async {
     return {
       'word': word,
       'dateAdded': DateTime.now().toString(),
-      'entries': [],
+      'entries': {},
     };
   }
 }
