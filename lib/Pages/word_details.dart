@@ -17,10 +17,10 @@ class _WordDetailstate extends State<WordDetails> {
     initialPage: 0,
   );
   double currentPage = 0;
+  bool editMode = false; 
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     organisedDetails = organiseToSpeechPart(widget.word['entries']);
     _controller.addListener(() {
@@ -39,12 +39,28 @@ class _WordDetailstate extends State<WordDetails> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Word Title
-              Text(
-                capitalise(widget.word['word']),
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    capitalise(widget.word['word']),
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        editMode = !editMode;
+                      });
+                    },
+                    child: Icon(
+                      editMode ? Icons.edit_outlined : Icons.edit,
+                      size: 30,
+                    ),
+                  )
+                ],
               ),
               const SizedBox(height: 18),
               // Page indicator
@@ -104,33 +120,69 @@ class _WordDetailstate extends State<WordDetails> {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          for (var entry in speechType.value.asMap().entries)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  MWTaggedText(
-                                    "${entry.key + 1}. ",
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                  ),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        for (var definition in entry.value['definitions'].asMap().entries)
-                                          Padding(
-                                            padding: const EdgeInsets.only(bottom: 4),
-                                            child: MWTaggedText(
-                                              "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}",
-                                              style: const TextStyle(fontSize: 16),
-                                            ),
+                          editMode ? ReorderableListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              onReorder: (oldIndex, newIndex) {
+                                setState(() {
+                                  // ADD perma move
+                                  if (newIndex > oldIndex) newIndex -= 1;
+                                  final item = speechType.value.removeAt(oldIndex);
+                                  speechType.value.insert(newIndex, item);
+                                });
+                              },
+                              itemCount: speechType.value.length,
+                              itemBuilder: (context, index) {
+                                var entry = speechType.value[index];
+                                return ListTile(
+                                  key: ValueKey("definition_$index"),
+                                  leading: const Icon(Icons.drag_handle),
+                                  title: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      for (var definition in entry['definitions'].asMap().entries)
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 4),
+                                          child: MWTaggedText(
+                                            "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}",
+                                            style: const TextStyle(fontSize: 16),
                                           ),
-                                      ],
-                                    ),
+                                        ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                );
+                              },
+                            )
+                          : Column(
+                              children: speechType.value.asMap().entries.map<Widget>((entry) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      MWTaggedText(
+                                        "${entry.key + 1}. ",
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                      ),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            for (var definition in entry.value['definitions'].asMap().entries)
+                                              Padding(
+                                                padding: const EdgeInsets.only(bottom: 4),
+                                                child: MWTaggedText(
+                                                  "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}",
+                                                  style: const TextStyle(fontSize: 16),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
                             ),
                           const SizedBox(height: 18),
                           // Etymology Section
