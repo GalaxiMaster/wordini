@@ -49,6 +49,39 @@ class _WordDetailstate extends State<WordDetails> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      SizedBox(width: 10,),
+                      Expanded(
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: -4,
+                          children: [
+                            for (var tag in widget.word['tags'] ?? [])
+                              Chip(
+                                label: MWTaggedText(
+                                  capitalise(tag),
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                side: BorderSide.none,
+                              ),
+                            IconButton(
+                              style: ButtonStyle(
+                                backgroundColor: WidgetStateProperty.all<Color>(const Color.fromARGB(255, 16, 38, 55)),
+                                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                              onPressed: (){
+                                
+                              }, 
+                              icon: Icon(Icons.add)
+                            )
+                          ],
+                        ),
+                      ),
                       GestureDetector(
                         onTap: () {
                           setState(() {

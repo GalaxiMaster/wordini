@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:vocab_app/Pages/add_word.dart';
 import 'package:vocab_app/Pages/quizzes.dart';
 import 'package:vocab_app/Pages/word_list.dart';
-import 'package:vocab_app/notificationController.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,13 +28,13 @@ class _HomePageState extends State<HomePage> {
     //   androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
     //   payload: 'wordReminder'
     // );
-    scheduleNotification(
-      title: 'YOU JUST GOT NOTIFIED', 
-      description: 'notified', 
-      duration: Duration(seconds: 1), 
-      androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
-      payload: 'wordReminder'
-    );
+    // scheduleNotification(
+    //   title: 'YOU JUST GOT NOTIFIED', 
+    //   description: 'notified', 
+    //   duration: Duration(seconds: 1), 
+    //   androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
+    //   payload: 'wordReminder'
+    // );
   }
   @override
   Widget build(BuildContext context) {
@@ -80,45 +79,43 @@ class HomePageContent extends StatefulWidget {
 class _HomePageContentState extends State<HomePageContent> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Stack(
-        children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Welcome to the Vocab Lab',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-          Positioned(
-            right: 10,
-            bottom: 10,
-            child: FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AddWord(),
-                    )
-                );
-              },
-              backgroundColor: Colors.blue,
-              child: Text(
-                "+",
-                style: TextStyle(
-                  fontSize: 30,
-                  color: Colors.white,
-                ),
+    return Stack(
+      children: [
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Welcome to the Vocab Lab',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-            )
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+        Positioned(
+          right: 10,
+          bottom: 10,
+          child: FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddWord(),
+                  )
+              );
+            },
+            backgroundColor: Colors.blue,
+            child: Text(
+              "+",
+              style: TextStyle(
+                fontSize: 30,
+                color: Colors.white,
+              ),
+            ),
           )
-        ],
-      ),
+        )
+      ],
     );
   }
 
