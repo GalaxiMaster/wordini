@@ -21,6 +21,16 @@ class _WordDetailstate extends State<WordDetails> {
   final TextEditingController _tagController = TextEditingController();
   final FocusNode _tagFocusNode = FocusNode();
 
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      setState(() {
+        currentPage = _controller.page ?? 0;
+      });
+    });
+  }
+  
   void _showTagPopup(BuildContext context) {
     if (_tagOverlayEntry != null) return;
     final overlay = Overlay.of(context);
