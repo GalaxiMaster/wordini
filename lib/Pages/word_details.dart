@@ -460,50 +460,54 @@ class _WordDetailstate extends State<WordDetails> {
     );
   }
 
-  AnimatedSize tagChip(tag) {
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 19, 54, 79),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              capitalise(tag),
-              style: const TextStyle(fontSize: 16, color: Colors.white),
-            ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: editMode ? 8 : 0, // Animate spacing
-              curve: Curves.easeInOut,
-            ),
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 200),
-              opacity: editMode ? 1.0 : 0.0,
-              curve: Curves.easeInOut,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: editMode ? 18 : 0, // Animate icon width
-                curve: Curves.easeInOut,
-                child: editMode
-                    ? GestureDetector(
-                        onTap: () => _removeTag(tag),
-                        child: const Icon(
-                          Icons.close,
-                          size: 18,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const SizedBox.shrink(),
+  Widget tagChip(tag) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        alignment: Alignment.centerLeft,
+        child: Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 19, 54, 79),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                capitalise(tag),
+                style: const TextStyle(fontSize: 16, color: Colors.white),
               ),
-            ),
-          ],
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: editMode ? 8 : 0, // Animate spacing
+                curve: Curves.easeInOut,
+              ),
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: editMode ? 1.0 : 0.0,
+                curve: Curves.easeInOut,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: editMode ? 18 : 0, // Animate icon width
+                  curve: Curves.easeInOut,
+                  child: editMode
+                      ? GestureDetector(
+                          onTap: () => _removeTag(tag),
+                          child: const Icon(
+                            Icons.close,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
