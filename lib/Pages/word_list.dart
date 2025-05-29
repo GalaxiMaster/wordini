@@ -211,7 +211,7 @@ class _WordListState extends State<WordList> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => WordDetails(word: words[word]),
+                          builder: (context) => WordDetails(words: words, wordId: word),
                         ),
                       ),
                       child: ListTile(

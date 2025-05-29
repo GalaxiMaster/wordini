@@ -76,9 +76,11 @@ void addWordToList(String word, context) {
 
     data[word] = wordDetails;
     loadingOverlay.removeLoadingOverlay();
+    final Map allData = await readData();
+    allData[word] = wordDetails;
     bool? result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => WordDetails(word: wordDetails, addWordMode: true,)),
+      MaterialPageRoute(builder: (context) => WordDetails(words: allData, wordId: word, addWordMode: true,))
     );
     if (!(result ?? false)) {
       return;

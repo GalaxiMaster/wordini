@@ -115,9 +115,11 @@ Future<void> noteNotification(int id, String payload) async {
   await box.put(payload, id);
 }
 
-void removeNotif(String word){
-  // Open the box if not already open
-  Hive.openBox<int>('active-notifications');
+void removeNotif(String word) async {
+  // Ensure the box is open before accessing it
+  if (!Hive.isBoxOpen('active-notifications')) {
+    await Hive.openBox<int>('active-notifications');
+  }
   var box = Hive.box<int>('active-notifications');
   int? id = box.get(word);
   if (id != null) {

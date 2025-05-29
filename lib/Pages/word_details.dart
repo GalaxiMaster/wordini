@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:vocab_app/file_handling.dart';
 import 'package:vocab_app/widgets.dart';
 import 'package:vocab_app/word_functions.dart';
 
 class WordDetails extends StatefulWidget {
-  final Map word;
+  final Map words;
+  final String wordId;
   final bool addWordMode;
-  const WordDetails({super.key, required this.word, this.addWordMode = false});
+  const WordDetails({super.key, required this.words, required this.wordId, this.addWordMode = false});
   @override
   // ignore: library_private_types_in_public_api
   _WordDetailstate createState() => _WordDetailstate();
@@ -15,7 +17,7 @@ class _WordDetailstate extends State<WordDetails> {
   final PageController _controller = PageController(initialPage: 0);
   double currentPage = 0;
   bool editMode = false;
-
+  late Map word;
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _tagOverlayEntry;
   final TextEditingController _tagController = TextEditingController();
@@ -24,13 +26,14 @@ class _WordDetailstate extends State<WordDetails> {
   @override
   void initState() {
     super.initState();
+    word = widget.words[widget.wordId];
     _controller.addListener(() {
       setState(() {
         currentPage = _controller.page ?? 0;
       });
     });
   }
-  
+
   void _showTagPopup(BuildContext context) {
     if (_tagOverlayEntry != null) return;
     final overlay = Overlay.of(context);
@@ -114,12 +117,21 @@ class _WordDetailstate extends State<WordDetails> {
   void _addTag(String value) {
     if (value.trim().isEmpty) return;
     setState(() {
-      widget.word['tags'] ??= [];
-      if (!widget.word['tags'].contains(value.trim())) {
-        widget.word['tags'].add(value.trim());
+      word['tags'] ??= [];
+      if (!word['tags'].contains(value.trim())) {
+        word['tags'].add(value.trim());
+        widget.words[widget.wordId] = word;
+        writeData(widget.words, append: false);
       }
     });
+
     _hideTagPopup();
+  }
+  void _removeTag(String tag) {
+    setState(() {
+      word['tags']?.remove(tag);
+    });
+    writeData(widget.words, append: false);
   }
 
   @override
@@ -146,7 +158,7 @@ class _WordDetailstate extends State<WordDetails> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        capitalise(widget.word['word']),
+                        capitalise(word['word']),
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -160,7 +172,7 @@ class _WordDetailstate extends State<WordDetails> {
                             spacing: 8,
                             runSpacing: -4,
                             children: [
-                              for (var tag in widget.word['tags'] ?? [])
+                              for (var tag in word['tags'] ?? [])
                                 Chip(
                                   label: MWTaggedText(
                                     capitalise(tag),
@@ -209,7 +221,7 @@ class _WordDetailstate extends State<WordDetails> {
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         double width = constraints.maxWidth;
-                        int totalPages = widget.word['entries'].length;
+                        int totalPages = word['entries'].length;
                         double indicatorWidth = width / (totalPages == 0 ? 1 : totalPages);
             
                         return Stack(
@@ -239,9 +251,9 @@ class _WordDetailstate extends State<WordDetails> {
                   Expanded(
                     child: PageView.builder(
                       controller: _controller,
-                      itemCount: widget.word['entries'].length,
+                      itemCount: word['entries'].length,
                       itemBuilder: (context, index) {
-                        MapEntry speechType = widget.word['entries'].entries.toList().elementAt(index);
+                        MapEntry speechType = word['entries'].entries.toList().elementAt(index);
                         return SingleChildScrollView(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,7 +354,7 @@ class _WordDetailstate extends State<WordDetails> {
                                 Wrap(
                                   spacing: 8,
                                   children: speechType.value['synonyms'].entries
-                                    .where((synonym) => synonym.key.toLowerCase() != widget.word['word'].toLowerCase())
+                                    .where((synonym) => synonym.key.toLowerCase() != word['word'].toLowerCase())
                                     .map<Widget>(
                                       (synonym) => Chip(
                                         label: MWTaggedText(
