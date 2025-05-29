@@ -12,21 +12,114 @@ class WordDetails extends StatefulWidget {
 }
 
 class _WordDetailstate extends State<WordDetails> {
-  final PageController _controller = PageController(
-    initialPage: 0,
-  );
+  final PageController _controller = PageController(initialPage: 0);
   double currentPage = 0;
-  bool editMode = false; 
+  bool editMode = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller.addListener(() {
-      setState(() {
-        currentPage = _controller.page ?? 0;
-      });
+  final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _tagOverlayEntry;
+  final TextEditingController _tagController = TextEditingController();
+  final FocusNode _tagFocusNode = FocusNode();
+
+  void _showTagPopup(BuildContext context) {
+    if (_tagOverlayEntry != null) return;
+    final overlay = Overlay.of(context);
+    _tagController.clear();
+
+    _tagOverlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // Dismiss when tapping outside
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () {
+                _hideTagPopup();
+              },
+              child: Container(
+                color: Colors.transparent,
+              ),
+            ),
+          ),
+          // The popup itself
+          CompositedTransformFollower(
+            link: _layerLink,
+            showWhenUnlinked: false,
+            offset: const Offset(0, 40),
+            child: Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: SizedBox(
+                  width: 220,
+                  height: 44,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _tagController,
+                          focusNode: _tagFocusNode,
+                          autofocus: true,
+                          decoration: const InputDecoration(
+                            hintText: "Add tag...",
+                            border: InputBorder.none,
+                          ),
+                          onSubmitted: (value) {
+                            _addTag(value);
+                          },
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.check),
+                        onPressed: () {
+                          _addTag(_tagController.text);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    overlay.insert(_tagOverlayEntry!);
+
+    // Focus after frame to ensure popup is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _tagFocusNode.canRequestFocus) {
+        _tagFocusNode.requestFocus();
+      }
     });
   }
+
+  void _hideTagPopup() {
+    _tagOverlayEntry?.remove();
+    _tagOverlayEntry = null;
+  }
+
+  void _addTag(String value) {
+    if (value.trim().isEmpty) return;
+    setState(() {
+      widget.word['tags'] ??= [];
+      if (!widget.word['tags'].contains(value.trim())) {
+        widget.word['tags'].add(value.trim());
+      }
+    });
+    _hideTagPopup();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _tagController.dispose();
+    _tagFocusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,37 +142,41 @@ class _WordDetailstate extends State<WordDetails> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(width: 10,),
+                      const SizedBox(width: 10),
                       Expanded(
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: -4,
-                          children: [
-                            for (var tag in widget.word['tags'] ?? [])
-                              Chip(
-                                label: MWTaggedText(
-                                  capitalise(tag),
-                                  style: const TextStyle(fontSize: 16),
+                        child: CompositedTransformTarget(
+                          link: _layerLink,
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: -4,
+                            children: [
+                              for (var tag in widget.word['tags'] ?? [])
+                                Chip(
+                                  label: MWTaggedText(
+                                    capitalise(tag),
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  side: BorderSide.none,
                                 ),
-                                backgroundColor: const Color.fromARGB(255, 19, 54, 79),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                side: BorderSide.none,
-                              ),
-                            IconButton(
-                              style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all<Color>(const Color.fromARGB(255, 16, 38, 55)),
-                                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                              IconButton(
+                                style: ButtonStyle(
+                                  backgroundColor: WidgetStateProperty.all<Color>(
+                                      const Color.fromARGB(255, 16, 38, 55)),
+                                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
                                 ),
+                                onPressed: () {
+                                  _showTagPopup(context);
+                                },
+                                icon: const Icon(Icons.add),
                               ),
-                              onPressed: (){
-                                
-                              }, 
-                              icon: Icon(Icons.add)
-                            )
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       GestureDetector(
