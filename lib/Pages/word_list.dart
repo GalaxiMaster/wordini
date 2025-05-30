@@ -103,16 +103,12 @@ class _WordListState extends State<WordList> {
                                     leading: (selectedTags).contains(tag) ? const Icon(Icons.check, size: 20) : null,
                                     title: Text(tag, style: const TextStyle(fontSize: 16)),
                                     onTap: () {
-                                      setState(() {
-                                        if ((selectedTags).contains(tag)) {
-                                          selectedTags.add(tag);
-                                        } else {
-                                          selectedTags.remove(tag);
-                                        }
-                                      });
-                                      // _hideTagPopup();
+                                      if (!(selectedTags).contains(tag)) {
+                                        selectedTags.add(tag);
+                                      } else {
+                                        selectedTags.remove(tag);
+                                      }
                                       setPopupState(() {});
-
                                     },
                                   )).toList()),
                           )
@@ -171,7 +167,9 @@ class _WordListState extends State<WordList> {
           }
           return matchesSearch && matchesType;
         }).toList();
-
+        allTags = words.values
+          .expand((w) => w['tags'] ?? [])
+          .toSet();
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -281,12 +279,17 @@ class _WordListState extends State<WordList> {
                           words.remove(word); 
                         });
                       },
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => WordDetails(words: words, wordId: word),
-                        ),
-                      ),
+                      onTap: () async{
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => WordDetails(words: words, wordId: word),
+                          ),
+                        );
+                        setState(() {
+                          _wordsFuture = readData();
+                        });
+                      },
                       child: ListTile(
                         title: Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
