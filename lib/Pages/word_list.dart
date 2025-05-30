@@ -15,7 +15,9 @@ class _WordListState extends State<WordList> {
   String searchTerm = '';
   Map filters = {
     'wordTypes': [],
-    'wordTypeMode': 'U', // 'intersect': ∩ or 'union': ∪
+    'wordTypeMode': 'any',
+    'selectedTags': <String>{},
+    'selectedTagsMode': 'any',
   };
   bool _showBar = true;
 
@@ -24,7 +26,6 @@ class _WordListState extends State<WordList> {
   final LayerLink _layerLink = LayerLink();
   final FocusNode _tagFocusNode = FocusNode();
   late Set allTags;
-  Set selectedTags = {};
 
   @override
   void initState() {
@@ -95,11 +96,10 @@ class _WordListState extends State<WordList> {
                           ),
                           AnimatedToggleSwitch(
                             options: const ['Any', 'All'],
-                            initialIndex: 1,
+                            initialIndex: filters['selectedTagsMode'] == 'any' ? 0 : 1,
                             onToggle: (index) {
-                              setState(() {
-
-                              });
+                              filters['selectedTagsMode'] = index == 0 ? 'any' : 'all';
+                              setPopupState(() {});
                             },
                           ),
                           Divider(color: Colors.white,),
@@ -110,13 +110,13 @@ class _WordListState extends State<WordList> {
                             children: (allTags.isEmpty
                                 ? [const ListTile(title: Text("No tags available", style: TextStyle(fontSize: 16)))]
                                 : allTags.map((tag) => ListTile(
-                                    leading: (selectedTags).contains(tag) ? const Icon(Icons.check, size: 20) : null,
+                                    leading: (filters['selectedTags']).contains(tag) ? const Icon(Icons.check, size: 20) : null,
                                     title: Text(tag, style: const TextStyle(fontSize: 16)),
                                     onTap: () {
-                                      if (!(selectedTags).contains(tag)) {
-                                        selectedTags.add(tag);
+                                      if (!(filters['selectedTags']).contains(tag)) {
+                                        filters['selectedTags'].add(tag);
                                       } else {
-                                        selectedTags.remove(tag);
+                                        filters['selectedTags'].remove(tag);
                                       }
                                       setPopupState(() {});
                                     },
@@ -162,23 +162,30 @@ class _WordListState extends State<WordList> {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
         Map words = snapshot.data!;
-        debugPrint('mytest ${selectedTags.toString()}');
+
         List filteredWords = words.keys.where((word) {
           final matchesSearch = word.toLowerCase().contains(searchTerm.toLowerCase());
           final selectedTypes = filters['wordTypes'] as List;
-          final wordTags = (words[word]['tags'] ?? []).cast<String>().toSet();
-          final matchesTags = selectedTags.isEmpty || wordTags.intersection(selectedTags.cast<String>()).isNotEmpty;
-          if (selectedTypes.isEmpty) return matchesSearch && matchesTags;
           final wordTypes = getWordType(words[word]).map((e) => e.toLowerCase()).toList();
 
           bool matchesType;
-          if (filters['wordTypeMode'] == '∩') {
-            matchesType = selectedTypes.every((type) => wordTypes.contains(type));
+          if (filters['wordTypeMode'] == 'all') {
+            matchesType = selectedTypes.isEmpty || selectedTypes.every((type) => wordTypes.contains(type));
           } else {
-            matchesType = selectedTypes.any((type) => wordTypes.contains(type));
+            matchesType = selectedTypes.isEmpty || selectedTypes.any((type) => wordTypes.contains(type));
+          }
+
+          final bool matchesTags;
+          final wordTags = (words[word]['tags'] ?? []).cast<String>().toSet();
+          if (filters['selectedTagsMode'] == 'any') {
+            matchesTags = filters['selectedTags'].isEmpty || wordTags.intersection(filters['selectedTags'].cast<String>()).isNotEmpty;
+          }
+          else{
+            matchesTags = filters['selectedTags'].isEmpty || wordTags.intersection(filters['selectedTags'].cast<String>()).length == filters['selectedTags'].length;
           }
           return matchesSearch && matchesType && matchesTags;
         }).toList();
+
         allTags = words.values
           .expand((w) => w['tags'] ?? [])
           .toSet();
