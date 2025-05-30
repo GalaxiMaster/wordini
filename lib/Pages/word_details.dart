@@ -224,10 +224,11 @@ class _WordDetailstate extends State<WordDetails> {
                                 side: BorderSide.none,
                                 labelPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
                               ),
+                              if (editMode)
                               IconButton(
                                 style: ButtonStyle(
                                   backgroundColor: WidgetStateProperty.all<Color>(
-                                      const Color.fromARGB(255, 16, 38, 55)),
+                                      const Color.fromARGB(255, 19, 54, 79)),
                                   shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                                     RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
