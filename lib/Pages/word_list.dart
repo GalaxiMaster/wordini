@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vocab_app/Pages/word_details.dart';
 import 'package:vocab_app/file_handling.dart';
+import 'package:vocab_app/widgets.dart';
 import 'package:vocab_app/word_functions.dart';
 class WordList extends StatefulWidget {
   const WordList({super.key});
@@ -91,6 +92,15 @@ class _WordListState extends State<WordList> {
                                 ),
                               ],
                             ),
+                          ),
+                          AnimatedToggleSwitch(
+                            options: const ['Any', 'All'],
+                            initialIndex: 1,
+                            onToggle: (index) {
+                              setState(() {
+
+                              });
+                            },
                           ),
                           Divider(color: Colors.white,),
                           ListView(

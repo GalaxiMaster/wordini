@@ -262,3 +262,152 @@ class MWTaggedText extends StatelessWidget {
     );
   }
 }
+
+class AnimatedToggleSwitch extends StatefulWidget {
+  final List<String> options;
+  final Function(int) onToggle;
+  final int initialIndex;
+
+  const AnimatedToggleSwitch({
+    Key? key,
+    required this.options,
+    required this.onToggle,
+    this.initialIndex = 0,
+  }) : super(key: key);
+
+  @override
+  State<AnimatedToggleSwitch> createState() => _AnimatedToggleSwitchState();
+}
+
+class _AnimatedToggleSwitchState extends State<AnimatedToggleSwitch>
+    with SingleTickerProviderStateMixin {
+  late int selectedIndex;
+  late AnimationController _animationController;
+  late Animation<double> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedIndex = widget.initialIndex;
+    
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+    
+    _slideAnimation = Tween<double>(
+      begin: selectedIndex.toDouble(),
+      end: selectedIndex.toDouble(),
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _toggle() {
+    final newIndex = (selectedIndex + 1) % widget.options.length;
+    
+    setState(() {
+      selectedIndex = newIndex;
+    });
+    
+    // Update animation target
+    _slideAnimation = Tween<double>(
+      begin: _slideAnimation.value,
+      end: newIndex.toDouble(),
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+    
+    _animationController.forward(from: 0);
+    widget.onToggle(newIndex);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _toggle,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Color.fromARGB(255, 33, 33, 33),
+          borderRadius: BorderRadius.circular(25),
+        ),
+        padding: const EdgeInsets.all(4),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = (constraints.maxWidth - 8) / widget.options.length;
+            
+            return Stack(
+              children: [
+                // Sliding background
+                AnimatedBuilder(
+                  animation: _slideAnimation,
+                  builder: (context, child) {
+                    return Positioned(
+                      left: _slideAnimation.value * itemWidth,
+                      top: 0,
+                      child: Container(
+                        width: itemWidth,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                // Text labels
+                Row(
+                  children: List.generate(widget.options.length, (index) {
+                    return Expanded(
+                      child: Container(
+                        height: 32,
+                        alignment: Alignment.center,
+                        child: AnimatedBuilder(
+                          animation: _slideAnimation,
+                          builder: (context, child) {
+                            // Calculate how close this option is to being selected
+                            final distance = (index - _slideAnimation.value).abs();
+                            final isSelected = distance < 0.5;
+                            
+                            return AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 150),
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : Colors.grey[400],
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                fontSize: 14,
+                              ),
+                              child: Text(
+                                widget.options[index],
+                                textAlign: TextAlign.center,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
