@@ -18,10 +18,129 @@ class _WordListState extends State<WordList> {
   };
   bool _showBar = true;
 
+  OverlayEntry? _tagOverlayEntry;
+  final TextEditingController _tagController = TextEditingController();
+  final LayerLink _layerLink = LayerLink();
+  final FocusNode _tagFocusNode = FocusNode();
+  late Set allTags;
+  Set selectedTags = {};
+
   @override
   void initState() {
     super.initState();
     _wordsFuture = readData();
+  }
+  void _showTagPopup(BuildContext context) {
+    if (_tagOverlayEntry != null) return;
+    final overlay = Overlay.of(context);
+    _tagController.clear();
+
+    _tagOverlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // Dismiss when tapping outside
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () {
+                _hideTagPopup();
+              },
+              child: Container(
+                color: Colors.transparent,
+              ),
+            ),
+          ),
+          // The popup itself
+          CompositedTransformFollower(
+            link: _layerLink,
+            showWhenUnlinked: false,
+            offset: const Offset(-100, 50),
+            child: StatefulBuilder(
+              builder: (context,setPopupState) {
+                return Material(
+                  elevation: 4,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: SizedBox(
+                      width: 220,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            height: 44,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _tagController,
+                                    focusNode: _tagFocusNode,
+                                    autofocus: true,
+                                    decoration: const InputDecoration(
+                                      hintText: "Search tag...",
+                                      border: InputBorder.none,
+                                    ),
+                                    onSubmitted: (value) {
+                                    },
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.check),
+                                  onPressed: () {
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          Divider(color: Colors.white,),
+                          ListView(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            children: (allTags.isEmpty
+                                ? [const ListTile(title: Text("No tags available", style: TextStyle(fontSize: 16)))]
+                                : allTags.map((tag) => ListTile(
+                                    leading: (selectedTags).contains(tag) ? const Icon(Icons.check, size: 20) : null,
+                                    title: Text(tag, style: const TextStyle(fontSize: 16)),
+                                    onTap: () {
+                                      setState(() {
+                                        if ((selectedTags).contains(tag)) {
+                                          selectedTags.add(tag);
+                                        } else {
+                                          selectedTags.remove(tag);
+                                        }
+                                      });
+                                      // _hideTagPopup();
+                                      setPopupState(() {});
+
+                                    },
+                                  )).toList()),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+            ),
+          ),
+        ],
+      ),
+    );
+
+    overlay.insert(_tagOverlayEntry!);
+
+    // Focus after frame to ensure popup is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _tagFocusNode.canRequestFocus) {
+        _tagFocusNode.requestFocus();
+      }
+    });
+  }
+
+  void _hideTagPopup() {
+    _tagOverlayEntry?.remove();
+    _tagOverlayEntry = null;
   }
 
   @override
@@ -125,19 +244,23 @@ class _WordListState extends State<WordList> {
                           },
                           child: const Text('Types'),
                         ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[900],
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        CompositedTransformTarget(
+                          link: _layerLink,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[900],
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 50),
+                              elevation: 0,
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 50),
-                            elevation: 0,
+                            onPressed: () {
+                              _showTagPopup(context);
+                            },
+                            child: const Text('Tags'),
                           ),
-                          onPressed: () {
-                          },
-                          child: const Text('Tags'),
                         )
                       ],
                     )
