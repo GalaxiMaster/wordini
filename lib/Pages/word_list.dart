@@ -16,6 +16,7 @@ class _WordListState extends State<WordList> {
     'wordTypes': [],
     'wordTypeMode': 'U', // 'intersect': ∩ or 'union': ∪
   };
+  bool _showBar = true;
 
   @override
   void initState() {
@@ -56,7 +57,10 @@ class _WordListState extends State<WordList> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 35, 16, 0),
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 18, 18, 18),
+              ),
+              padding: const EdgeInsets.fromLTRB(16, 35, 16, 5),
               child: Stack(
                 children: [
                   TextField(
@@ -78,120 +82,66 @@ class _WordListState extends State<WordList> {
                   ),
                   Positioned(
                     right: 0,
-                    // top: 5,
+                    top: 2.5,
                     child: IconButton(
                       icon: const Icon(Icons.filter_list),
                       onPressed: () async{
-                        await showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: const Text('Filter Options'),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Text(
-                                        'Filter by word type',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      StatefulBuilder(
-                                        builder: (context, setStateDialog) {
-                                          return GestureDetector(
-                                            onTap: (){
-                                              setStateDialog(() {
-                                                if (!(filters['wordTypeMode'] == 'U')) {
-                                                  filters['wordTypeMode'] = 'U';
-                                                } else {
-                                                  filters['wordTypeMode'] = '∩';
-                                                }
-                                              });
-                                            },
-                                            child: Container(
-                                              width: 30,
-                                              height: 30,
-                                              decoration: BoxDecoration(
-                                                color: filters['wordTypeMode'] == 'U' ? Colors.orangeAccent : Colors.red,
-                                                borderRadius: BorderRadius.circular(16),
-                                              ),
-                                              child: Center(
-                                                child: Text(
-                                                  filters['wordTypeMode'],
-                                                  style: const TextStyle(
-                                                    fontSize: 20,
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                  )
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      )
-                                    ],
-                                  ),
-                                  StatefulBuilder(
-                                    builder: (context, setStateDialog) {
-                                      return Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          for (var type in ['noun', 'verb', 'adjective', 'adverb'])
-                                            GestureDetector(
-                                              onTap: (){
-                                                setStateDialog(() {
-                                                  if (!filters['wordTypes'].contains(type)) {
-                                                    filters['wordTypes'].add(type);
-                                                  } else {
-                                                    filters['wordTypes'].remove(type);
-                                                  }
-                                                });
-                                              },
-                                              child: Padding(
-                                                padding: const EdgeInsets.all(6),
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    color: filters['wordTypes'].contains(type) ? Colors.blue : Colors.grey[900],
-                                                    borderRadius: BorderRadius.circular(16),
-                                                  ),
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8.0),
-                                                    child: Text(
-                                                      type
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text('Close'),
-                                ),
-                              ],
-                            );
-                            
-                          },
-                        );
-                        setState(() {});
+                        setState(() {
+                          _showBar = !_showBar;
+                        });
                       },
                     ),
                   ),
                 ],
               ),
+            ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300), // Animation duration
+              curve: Curves.easeInOut,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 18, 18, 18),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+              ),
+              height: _showBar ? 60 : 10, // Animate between 60 and 5
+              child: _showBar
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[900],
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 50),
+                            elevation: 0,
+                          ),
+                          onPressed: () {
+                          },
+                          child: const Text('Types'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[900],
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 50),
+                            elevation: 0,
+                          ),
+                          onPressed: () {
+                          },
+                          child: const Text('Tags'),
+                        )
+                      ],
+                    )
+                  : null,
             ),
             Expanded(
               child: Container(
