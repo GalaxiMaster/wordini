@@ -22,11 +22,14 @@ class _WordDetailstate extends State<WordDetails> {
   OverlayEntry? _tagOverlayEntry;
   final TextEditingController _tagController = TextEditingController();
   final FocusNode _tagFocusNode = FocusNode();
-
+  late Set allTags = {};
   @override
   void initState() {
     super.initState();
     word = widget.words[widget.wordId];
+    allTags = widget.words.values
+        .expand((w) => w['tags'] ?? [])
+        .toSet(); // Collect all unique tags from all words
     _controller.addListener(() {
       setState(() {
         currentPage = _controller.page ?? 0;
@@ -59,40 +62,75 @@ class _WordDetailstate extends State<WordDetails> {
             link: _layerLink,
             showWhenUnlinked: false,
             offset: const Offset(0, 40),
-            child: Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(10),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: SizedBox(
-                  width: 220,
-                  height: 44,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _tagController,
-                          focusNode: _tagFocusNode,
-                          autofocus: true,
-                          decoration: const InputDecoration(
-                            hintText: "Add tag...",
-                            border: InputBorder.none,
+            child: StatefulBuilder(
+              builder: (context,setPopupState) {
+                return Material(
+                  elevation: 4,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: SizedBox(
+                      width: 220,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            height: 44,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _tagController,
+                                    focusNode: _tagFocusNode,
+                                    autofocus: true,
+                                    decoration: const InputDecoration(
+                                      hintText: "Add tag...",
+                                      border: InputBorder.none,
+                                    ),
+                                    onSubmitted: (value) {
+                                      _addTag(value);
+                                    },
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.check),
+                                  onPressed: () {
+                                    _addTag(_tagController.text);
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          onSubmitted: (value) {
-                            _addTag(value);
-                          },
-                        ),
+                          Divider(color: Colors.white,),
+                          ListView(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            children: (allTags.isEmpty
+                                ? [const ListTile(title: Text("No tags available", style: TextStyle(fontSize: 16)))]
+                                : allTags.map((tag) => ListTile(
+                                    leading: (word['tags'] ?? []).contains(tag) ? const Icon(Icons.check, size: 20) : null,
+                                    title: Text(tag, style: const TextStyle(fontSize: 16)),
+                                    onTap: () {
+                                      setState(() {
+                                        if ((word['tags'] ?? []).contains(tag)) {
+                                          _removeTag(tag);
+                                        } else {
+                                          _addTag(tag);
+                                        }
+                                      });
+                                      // _hideTagPopup();
+                                      setPopupState(() {});
+
+                                    },
+                                  )).toList()),
+                          )
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.check),
-                        onPressed: () {
-                          _addTag(_tagController.text);
-                        },
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              }
             ),
           ),
         ],
@@ -117,6 +155,7 @@ class _WordDetailstate extends State<WordDetails> {
   void _addTag(String value) {
     if (value.trim().isEmpty) return;
     setState(() {
+      allTags.add(value.trim()); // <-- update allTags
       word['tags'] ??= [];
       if (!word['tags'].contains(value.trim())) {
         word['tags'].add(value.trim());
@@ -124,14 +163,15 @@ class _WordDetailstate extends State<WordDetails> {
         writeData(widget.words, append: false);
       }
     });
-
-    _hideTagPopup();
   }
+
   void _removeTag(String tag) {
     setState(() {
       word['tags']?.remove(tag);
       widget.words[widget.wordId] = word;
       writeData(widget.words, append: false);
+      // Optionally, update allTags if you want to remove tags not used anywhere
+      // allTags = widget.words.values.expand((w) => w['tags'] ?? []).toSet();
     });
   }
 
@@ -170,11 +210,20 @@ class _WordDetailstate extends State<WordDetails> {
                         child: CompositedTransformTarget(
                           link: _layerLink,
                           child: Wrap(
-                            spacing: 8,
+                            spacing: 6,
                             runSpacing: -4,
                             children: [
                               for (var tag in word['tags'] ?? [])
-                                tagChip(tag),
+                              Chip(
+                                label: MWTaggedText(
+                                  tag,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                side: BorderSide.none,
+                                labelPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                              ),
                               IconButton(
                                 style: ButtonStyle(
                                   backgroundColor: WidgetStateProperty.all<Color>(
@@ -455,59 +504,6 @@ class _WordDetailstate extends State<WordDetails> {
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget tagChip(tag) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: AnimatedSize(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        alignment: Alignment.centerLeft,
-        child: Container(
-          height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 19, 54, 79),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                capitalise(tag),
-                style: const TextStyle(fontSize: 16, color: Colors.white),
-              ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: editMode ? 8 : 0, // Animate spacing
-                curve: Curves.easeInOut,
-              ),
-              AnimatedOpacity(
-                duration: const Duration(milliseconds: 200),
-                opacity: editMode ? 1.0 : 0.0,
-                curve: Curves.easeInOut,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: editMode ? 18 : 0, // Animate icon width
-                  curve: Curves.easeInOut,
-                  child: editMode
-                      ? GestureDetector(
-                          onTap: () => _removeTag(tag),
-                          child: const Icon(
-                            Icons.close,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
