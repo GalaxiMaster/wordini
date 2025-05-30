@@ -137,6 +137,7 @@ class _WordListState extends State<WordList> {
   void _hideTagPopup() {
     _tagOverlayEntry?.remove();
     _tagOverlayEntry = null;
+    setState(() {});
   }
 
   @override
@@ -151,21 +152,22 @@ class _WordListState extends State<WordList> {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
         Map words = snapshot.data!;
+        debugPrint('mytest ${selectedTags.toString()}');
         List filteredWords = words.keys.where((word) {
           final matchesSearch = word.toLowerCase().contains(searchTerm.toLowerCase());
           final selectedTypes = filters['wordTypes'] as List;
-          if (selectedTypes.isEmpty) return matchesSearch;
+          final wordTags = (words[word]['tags'] ?? []).cast<String>().toSet();
+          final matchesTags = selectedTags.isEmpty || wordTags.intersection(selectedTags.cast<String>()).isNotEmpty;
+          if (selectedTypes.isEmpty) return matchesSearch && matchesTags;
           final wordTypes = getWordType(words[word]).map((e) => e.toLowerCase()).toList();
 
           bool matchesType;
           if (filters['wordTypeMode'] == '∩') {
-            // Intersect: must match ALL selected types
             matchesType = selectedTypes.every((type) => wordTypes.contains(type));
           } else {
-            // Union: must match AT LEAST ONE selected type
             matchesType = selectedTypes.any((type) => wordTypes.contains(type));
           }
-          return matchesSearch && matchesType;
+          return matchesSearch && matchesType && matchesTags;
         }).toList();
         allTags = words.values
           .expand((w) => w['tags'] ?? [])
@@ -223,7 +225,7 @@ class _WordListState extends State<WordList> {
                   bottomRight: Radius.circular(16),
                 ),
               ),
-              height: _showBar ? 60 : 10, // Animate between 60 and 5
+              height: _showBar ? 60 : 10, // Animate between 60 and 10
               child: _showBar
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
