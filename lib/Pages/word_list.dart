@@ -19,7 +19,7 @@ class _WordListState extends State<WordList> {
     'selectedTags': <String>{},
     'selectedTagsMode': 'any',
   };
-  bool _showBar = true;
+  bool _showBar = false;
 
   OverlayEntry? _tagOverlayEntry;
   final TextEditingController _tagController = TextEditingController();
