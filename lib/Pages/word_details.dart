@@ -315,70 +315,92 @@ class _WordDetailstate extends State<WordDetails> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              editMode ? ReorderableListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  onReorder: (oldIndex, newIndex) {
-                                    setState(() {
-                                      // ADD perma move
-                                      if (newIndex > oldIndex) newIndex -= 1;
-                                      final item = speechType.value['details'].removeAt(oldIndex);
-                                      speechType.value['details'].insert(newIndex, item);
-                                    });
-                                  },
-                                  itemCount: speechType.value['details'].length,
-                                  itemBuilder: (context, index) {
-                                    var entry = speechType.value['details'][index];
-                                    return ListTile(
-                                      key: ValueKey("definition_$index"),
-                                      leading: const Icon(Icons.drag_handle),
-                                      title: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          for (var definition in entry['definitions'].asMap().entries)
-                                            Padding(
-                                              padding: const EdgeInsets.only(bottom: 4),
-                                              child: MWTaggedText(
-                                                "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}",
-                                                style: const TextStyle(fontSize: 16),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                )
-                              : Column(
-                                  children: speechType.value['details'].asMap().entries.map<Widget>((entry) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(bottom: 6),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          MWTaggedText(
-                                            "${entry.key + 1}. ",
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                          ),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                              editMode
+                                  ? ReorderableListView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      onReorder: (oldIndex, newIndex) {
+                                        setState(() {
+                                          if (newIndex > oldIndex) newIndex -= 1;
+                                          final item = speechType.value['details'].removeAt(oldIndex);
+                                          speechType.value['details'].insert(newIndex, item);
+                                        });
+                                      },
+                                      itemCount: speechType.value['details'].length,
+                                      itemBuilder: (context, index) {
+                                        var entry = speechType.value['details'][index];
+                                        return Column(
+                                          key: ValueKey("definition_$index"),
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
                                               children: [
-                                                for (var definition in entry.value['definitions'].asMap().entries)
-                                                  Padding(
-                                                    padding: const EdgeInsets.only(bottom: 4),
-                                                    child: MWTaggedText(
-                                                      "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}", // Currently set to only show the first wording of it
-                                                      style: const TextStyle(fontSize: 16),
-                                                    ),
-                                                  ),
+                                                const Icon(Icons.drag_handle),
+                                                MWTaggedText(
+                                                  "${index + 1}.",
+                                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                                ),
                                               ],
                                             ),
+                                            // ReorderableListView for definitions within this numbered definition
+                                            ReorderableListView.builder(
+                                              shrinkWrap: true,
+                                              physics: const NeverScrollableScrollPhysics(),
+                                              onReorder: (oldDefIndex, newDefIndex) {
+                                                setState(() {
+                                                  if (newDefIndex > oldDefIndex) newDefIndex -= 1;
+                                                  final defItem = entry['definitions'].removeAt(oldDefIndex);
+                                                  entry['definitions'].insert(newDefIndex, defItem);
+                                                });
+                                              },
+                                              itemCount: entry['definitions'].length,
+                                              itemBuilder: (context, defIndex) {
+                                                var definition = entry['definitions'][defIndex];
+                                                return ListTile(
+                                                  key: ValueKey("def_${index}_$defIndex"),
+                                                  leading: const Icon(Icons.drag_indicator, size: 18),
+                                                  title: MWTaggedText(
+                                                    "{b}${indexToLetter(defIndex)}){/b} ${definition[0]['definition']}",
+                                                    style: const TextStyle(fontSize: 16),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    )
+                                  : Column(
+                                      children: speechType.value['details'].asMap().entries.map<Widget>((entry) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(bottom: 6),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              MWTaggedText(
+                                                "${entry.key + 1}. ",
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                              ),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    for (var definition in entry.value['definitions'].asMap().entries)
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(bottom: 4),
+                                                        child: MWTaggedText(
+                                                          "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}", // Currently set to only show the first wording of it
+                                                          style: const TextStyle(fontSize: 16),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
+                                        );
+                                      }).toList(),
+                                    ),
                               const SizedBox(height: 18),
                                                          // Synonyms Section
                               if (speechType.value['synonyms'] != null && speechType.value['synonyms'].isNotEmpty) ...[
