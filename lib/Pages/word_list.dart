@@ -26,8 +26,9 @@ class _WordListState extends State<WordList> {
   final LayerLink _typeLayerLink = LayerLink();
   final LayerLink _tagLayerLink = LayerLink();
   final FocusNode _tagFocusNode = FocusNode();
+  
   late Set allTags;
-
+  late Set allTypes;
   @override
   void initState() {
     super.initState();
@@ -164,7 +165,7 @@ class _WordListState extends State<WordList> {
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                               children: (
-                                ['Noun', 'Verb', 'Adjective'].map((type) => ListTile(
+                                allTypes.map((type) => ListTile(
                                   leading: (filters['wordTypes']).contains(type) ? const Icon(Icons.check, size: 20) : null,
                                   title: Text(type, style: const TextStyle(fontSize: 16)),
                                   onTap: () {
@@ -244,6 +245,9 @@ class _WordListState extends State<WordList> {
 
         allTags = words.values
           .expand((w) => w['tags'] ?? [])
+          .toSet();
+        allTypes = words.values
+          .expand((w) => w['entries'].keys.toList() ?? [])
           .toSet();
         return Column(
           mainAxisSize: MainAxisSize.min,
