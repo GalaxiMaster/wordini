@@ -23,7 +23,8 @@ class _WordListState extends State<WordList> {
 
   OverlayEntry? _tagOverlayEntry;
   final TextEditingController _tagController = TextEditingController();
-  final LayerLink _layerLink = LayerLink();
+  final LayerLink _typeLayerLink = LayerLink();
+  final LayerLink _tagLayerLink = LayerLink();
   final FocusNode _tagFocusNode = FocusNode();
   late Set allTags;
 
@@ -32,11 +33,10 @@ class _WordListState extends State<WordList> {
     super.initState();
     _wordsFuture = readData();
   }
-  void _showTagPopup(BuildContext context) {
+  void _showTagPopup(BuildContext context, bool tagMode) {
     if (_tagOverlayEntry != null) return;
     final overlay = Overlay.of(context);
     _tagController.clear();
-
     _tagOverlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
@@ -54,9 +54,9 @@ class _WordListState extends State<WordList> {
           ),
           // The popup itself
           CompositedTransformFollower(
-            link: _layerLink,
+            link: tagMode ? _tagLayerLink : _typeLayerLink,
             showWhenUnlinked: false,
-            offset: const Offset(-100, 50),
+            offset: tagMode ? const Offset(-100, 50) : const Offset(-10, 50),
             child: StatefulBuilder(
               builder: (context,setPopupState) {
                 return Material(
@@ -69,59 +69,115 @@ class _WordListState extends State<WordList> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          SizedBox(
-                            height: 44,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _tagController,
-                                    focusNode: _tagFocusNode,
-                                    autofocus: true,
-                                    decoration: const InputDecoration(
-                                      hintText: "Search tag...",
-                                      border: InputBorder.none,
+                          if (tagMode)...[
+                            SizedBox(
+                              height: 44,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _tagController,
+                                      focusNode: _tagFocusNode,
+                                      autofocus: true,
+                                      decoration: const InputDecoration(
+                                        hintText: "Search tag...",
+                                        border: InputBorder.none,
+                                      ),
+                                      onSubmitted: (value) {
+                                      },
                                     ),
-                                    onSubmitted: (value) {
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.check),
+                                    onPressed: () {
                                     },
                                   ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.check),
-                                  onPressed: () {
-                                  },
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          AnimatedToggleSwitch(
-                            options: const ['Any', 'All'],
-                            initialIndex: filters['selectedTagsMode'] == 'any' ? 0 : 1,
-                            onToggle: (index) {
-                              filters['selectedTagsMode'] = index == 0 ? 'any' : 'all';
-                              setPopupState(() {});
-                            },
-                          ),
-                          Divider(color: Colors.white,),
-                          ListView(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            children: (allTags.isEmpty
-                                ? [const ListTile(title: Text("No tags available", style: TextStyle(fontSize: 16)))]
-                                : allTags.map((tag) => ListTile(
-                                    leading: (filters['selectedTags']).contains(tag) ? const Icon(Icons.check, size: 20) : null,
-                                    title: Text(tag, style: const TextStyle(fontSize: 16)),
-                                    onTap: () {
-                                      if (!(filters['selectedTags']).contains(tag)) {
-                                        filters['selectedTags'].add(tag);
-                                      } else {
-                                        filters['selectedTags'].remove(tag);
-                                      }
-                                      setPopupState(() {});
+                            AnimatedToggleSwitch(
+                              options: const ['Any', 'All'],
+                              initialIndex: filters['selectedTagsMode'] == 'any' ? 0 : 1,
+                              onToggle: (index) {
+                                filters['selectedTagsMode'] = index == 0 ? 'any' : 'all';
+                                setPopupState(() {});
+                              },
+                            ),
+                            Divider(color: Colors.white,),
+                            ListView(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              children: (allTags.isEmpty
+                                  ? [const ListTile(title: Text("No tags available", style: TextStyle(fontSize: 16)))]
+                                  : allTags.map((tag) => ListTile(
+                                      leading: (filters['selectedTags']).contains(tag) ? const Icon(Icons.check, size: 20) : null,
+                                      title: Text(tag, style: const TextStyle(fontSize: 16)),
+                                      onTap: () {
+                                        if (!(filters['selectedTags']).contains(tag)) {
+                                          filters['selectedTags'].add(tag);
+                                        } else {
+                                          filters['selectedTags'].remove(tag);
+                                        }
+                                        setPopupState(() {});
+                                      },
+                                    )).toList()),
+                            )
+                          ],
+                          if (!tagMode)...[
+                            SizedBox(
+                              height: 44,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _tagController,
+                                      focusNode: _tagFocusNode,
+                                      autofocus: true,
+                                      decoration: const InputDecoration(
+                                        hintText: "Search type...",
+                                        border: InputBorder.none,
+                                      ),
+                                      onSubmitted: (value) {
+                                      },
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.check),
+                                    onPressed: () {
                                     },
-                                  )).toList()),
-                          )
+                                  ),
+                                ],
+                              ),
+                            ),
+                            AnimatedToggleSwitch(
+                              options: const ['Any', 'All'],
+                              initialIndex: filters['wordTypeMode'] == 'any' ? 0 : 1,
+                              onToggle: (index) {
+                                filters['wordTypeMode'] = index == 0 ? 'any' : 'all';
+                                setPopupState(() {});
+                              },
+                            ),
+                            Divider(color: Colors.white,),
+                            ListView(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              children: (
+                                ['Noun', 'Verb', 'Adjective'].map((type) => ListTile(
+                                  leading: (filters['wordTypes']).contains(type) ? const Icon(Icons.check, size: 20) : null,
+                                  title: Text(type, style: const TextStyle(fontSize: 16)),
+                                  onTap: () {
+                                    if (!(filters['wordTypes']).contains(type)) {
+                                      filters['wordTypes'].add(type);
+                                    } else {
+                                      filters['wordTypes'].remove(type);
+                                    }
+                                    setPopupState(() {});
+                                  },
+                                )).toList()),
+                            )
+                          ]
                         ],
                       ),
                     ),
@@ -170,9 +226,9 @@ class _WordListState extends State<WordList> {
 
           bool matchesType;
           if (filters['wordTypeMode'] == 'all') {
-            matchesType = selectedTypes.isEmpty || selectedTypes.every((type) => wordTypes.contains(type));
+            matchesType = selectedTypes.isEmpty || selectedTypes.every((type) => wordTypes.contains(type.toLowerCase()));
           } else {
-            matchesType = selectedTypes.isEmpty || selectedTypes.any((type) => wordTypes.contains(type));
+            matchesType = selectedTypes.isEmpty || selectedTypes.any((type) => wordTypes.contains(type.toLowerCase()));
           }
 
           final bool matchesTags;
@@ -247,22 +303,8 @@ class _WordListState extends State<WordList> {
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[900],
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 50),
-                            elevation: 0,
-                          ),
-                          onPressed: () {
-                          },
-                          child: const Text('Types'),
-                        ),
                         CompositedTransformTarget(
-                          link: _layerLink,
+                          link: _typeLayerLink,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.grey[900],
@@ -274,7 +316,25 @@ class _WordListState extends State<WordList> {
                               elevation: 0,
                             ),
                             onPressed: () {
-                              _showTagPopup(context);
+                              _showTagPopup(context, false);
+                            },
+                            child: const Text('Types'),
+                          ),
+                        ),
+                        CompositedTransformTarget(
+                          link: _tagLayerLink,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[900],
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 50),
+                              elevation: 0,
+                            ),
+                            onPressed: () {
+                              _showTagPopup(context, true);
                             },
                             child: const Text('Tags'),
                           ),
