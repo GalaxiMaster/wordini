@@ -359,9 +359,44 @@ class _WordDetailstate extends State<WordDetails> {
                                                 return ListTile(
                                                   key: ValueKey("def_${index}_$defIndex"),
                                                   leading: const Icon(Icons.drag_indicator, size: 18),
-                                                  title: MWTaggedText(
-                                                    "{b}${indexToLetter(defIndex)}){/b} ${definition[0]['definition']}",
-                                                    style: const TextStyle(fontSize: 16),
+                                                  title: Padding(
+                                                    padding: const EdgeInsets.only(bottom: 4),
+                                                    child: Row(
+                                                      children: [
+                                                        MWTaggedText(
+                                                          "{b}${indexToLetter(defIndex)}){/b} ",
+                                                          style: const TextStyle(fontSize: 16),
+                                                        ),
+                                                        Expanded(
+                                                          child: TextFormField(
+                                                            initialValue: "{b}${indexToLetter(defIndex)}){/b} ${definition[0]['definition']}",
+                                                            style: const TextStyle(fontSize: 16),
+                                                            decoration: const InputDecoration(
+                                                              isDense: true,
+                                                              contentPadding: EdgeInsets.symmetric(vertical: 4),
+                                                            ),
+                                                            onChanged: (val) {
+                                                              setState(() {
+                                                                entry['definitions'][defIndex][0]['definition'] = val;
+                                                                widget.words[widget.wordId] = word;
+                                                                writeData(widget.words, append: false);
+                                                              });
+                                                            },
+                                                          ),
+                                                        ),
+                                                        IconButton(
+                                                          icon: const Icon(Icons.delete, size: 18),
+                                                          tooltip: "Delete definition",
+                                                          onPressed: () {
+                                                            setState(() {
+                                                              entry['definitions'].removeAt(defIndex);
+                                                              widget.words[widget.wordId] = word;
+                                                              writeData(widget.words, append: false);
+                                                            });
+                                                          },
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 );
                                               },
