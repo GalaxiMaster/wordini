@@ -5,7 +5,7 @@ import 'package:vocab_app/Pages/home.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:vocab_app/Pages/quizzes.dart';
-import 'package:vocab_app/notificationController.dart';
+import 'package:vocab_app/notification_controller.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 

@@ -7,7 +7,7 @@ class LoadingOverlay {
     _overlayEntry = OverlayEntry(
       builder: (context) => Positioned.fill(
         child: Material(
-          color: Colors.black.withOpacity(0.5),
+          color: Colors.black.withValues(alpha: 255/2),
           child: Center(
             child: CircularProgressIndicator(),
           ),
@@ -269,11 +269,11 @@ class AnimatedToggleSwitch extends StatefulWidget {
   final int initialIndex;
 
   const AnimatedToggleSwitch({
-    Key? key,
+    super.key,
     required this.options,
     required this.onToggle,
     this.initialIndex = 0,
-  }) : super(key: key);
+  });
 
   @override
   State<AnimatedToggleSwitch> createState() => _AnimatedToggleSwitchState();
@@ -361,7 +361,7 @@ class _AnimatedToggleSwitchState extends State<AnimatedToggleSwitch>
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.blue.withOpacity(0.3),
+                              color: Colors.blue.withValues(alpha: 255/3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),

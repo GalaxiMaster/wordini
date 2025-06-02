@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vocab_app/file_handling.dart';
-import 'package:vocab_app/notificationController.dart';
+import 'package:vocab_app/notification_controller.dart';
 import 'package:vocab_app/widgets.dart';
 import 'package:vocab_app/word_functions.dart';
 
