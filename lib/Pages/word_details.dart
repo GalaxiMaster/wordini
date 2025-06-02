@@ -409,7 +409,47 @@ class _WordDetailstate extends State<WordDetails> {
                                                         });
                                                       }
                                                       else if (value == 'edit') {
-                                                        // ADD edit screen
+                                                        // Show popup to edit the definition
+                                                        showDialog(
+                                                          context: context,
+                                                          builder: (context) {
+                                                            final TextEditingController editController = TextEditingController(
+                                                              text: entry['definitions'][defIndex][0]['definition'],
+                                                            );
+                                                            return AlertDialog(
+                                                              title: const Text('Edit Definition'),
+                                                              content: SizedBox(
+                                                                width: double.infinity,
+                                                                child: TextField(
+                                                                  controller: editController,
+                                                                  autofocus: true,
+                                                                  maxLines: null,
+                                                                  decoration: const InputDecoration(
+                                                                    labelText: 'Definition',
+                                                                    border: OutlineInputBorder(),
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              actions: [
+                                                                TextButton(
+                                                                  onPressed: () => Navigator.of(context).pop(),
+                                                                  child: const Text('Cancel'),
+                                                                ),
+                                                                ElevatedButton(
+                                                                  onPressed: () {
+                                                                    setState(() {
+                                                                      entry['definitions'][defIndex][0]['definition'] = editController.text;
+                                                                      widget.words[widget.wordId] = word;
+                                                                      writeData(widget.words, append: false);
+                                                                    });
+                                                                    Navigator.of(context).pop();
+                                                                  },
+                                                                  child: const Text('Save'),
+                                                                ),
+                                                              ],
+                                                            );
+                                                          },
+                                                        );
                                                       }
                                                     },
                                                     itemBuilder: (context) => [
@@ -460,7 +500,7 @@ class _WordDetailstate extends State<WordDetails> {
                                                   children: [
                                                     for (var definition in entry.value['definitions'].asMap().entries)
                                                       Padding(
-                                                        padding: const EdgeInsets.only(bottom: 4),
+                                                        padding: const EdgeInsets.symmetric(vertical: 4),
                                                         child: MWTaggedText(
                                                           "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}", // Currently set to only show the first wording of it
                                                           style: const TextStyle(fontSize: 16),
