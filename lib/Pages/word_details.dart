@@ -358,45 +358,83 @@ class _WordDetailstate extends State<WordDetails> {
                                                 var definition = entry['definitions'][defIndex];
                                                 return ListTile(
                                                   key: ValueKey("def_${index}_$defIndex"),
+                                                  dense: true,
+                                                  contentPadding: EdgeInsets.zero,
                                                   leading: const Icon(Icons.drag_indicator, size: 18),
                                                   title: Padding(
-                                                    padding: const EdgeInsets.only(bottom: 4),
+                                                    padding: EdgeInsets.zero, // Remove padding from the title
                                                     child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.start,
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
                                                         MWTaggedText(
                                                           "{b}${indexToLetter(defIndex)}){/b} ",
                                                           style: const TextStyle(fontSize: 16),
                                                         ),
+                                                        SizedBox(width: 2,),
                                                         Expanded(
-                                                          child: TextFormField(
-                                                            initialValue: "{b}${indexToLetter(defIndex)}){/b} ${definition[0]['definition']}",
+                                                          child: MWTaggedText(
+                                                            "${definition[0]['definition']}",
                                                             style: const TextStyle(fontSize: 16),
-                                                            decoration: const InputDecoration(
-                                                              isDense: true,
-                                                              contentPadding: EdgeInsets.symmetric(vertical: 4),
-                                                            ),
-                                                            onChanged: (val) {
-                                                              setState(() {
-                                                                entry['definitions'][defIndex][0]['definition'] = val;
-                                                                widget.words[widget.wordId] = word;
-                                                                writeData(widget.words, append: false);
-                                                              });
-                                                            },
-                                                          ),
-                                                        ),
-                                                        IconButton(
-                                                          icon: const Icon(Icons.delete, size: 18),
-                                                          tooltip: "Delete definition",
-                                                          onPressed: () {
-                                                            setState(() {
-                                                              entry['definitions'].removeAt(defIndex);
-                                                              widget.words[widget.wordId] = word;
-                                                              writeData(widget.words, append: false);
-                                                            });
-                                                          },
+                                                          )
+                                                          // TextFormField(
+                                                          //   initialValue: "{b}${indexToLetter(defIndex)}){/b} ${definition[0]['definition']}",
+                                                          //   style: const TextStyle(fontSize: 16),
+                                                          //   decoration: const InputDecoration(
+                                                          //     isDense: true,
+                                                          //     contentPadding: EdgeInsets.zero, // Remove padding inside the TextFormField
+                                                          //     // border: InputBorder.none,
+                                                          //   ),
+                                                          //   onChanged: (val) {
+                                                          //     setState(() {
+                                                          //       entry['definitions'][defIndex][0]['definition'] = val;
+                                                          //       widget.words[widget.wordId] = word;
+                                                          //       writeData(widget.words, append: false);
+                                                          //     });
+                                                          //   },
+                                                          // ),
                                                         ),
                                                       ],
                                                     ),
+                                                  ),
+                                                  trailing: PopupMenuButton<String>(
+                                                    icon: const Icon(Icons.more_vert, size: 18),
+                                                    tooltip: "More actions",
+                                                    onSelected: (value) {
+                                                      if (value == 'delete') {
+                                                        setState(() {
+                                                          entry['definitions'].removeAt(defIndex);
+                                                          widget.words[widget.wordId] = word;
+                                                          writeData(widget.words, append: false);
+                                                        });
+                                                      }
+                                                      else if (value == 'edit') {
+                                                        // ADD edit screen
+                                                      }
+                                                    },
+                                                    itemBuilder: (context) => [
+                                                      const PopupMenuItem(
+                                                        value: 'edit',
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(Icons.edit, size: 18, color: Colors.white),
+                                                            SizedBox(width: 8),
+                                                            Text('Edit'),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const PopupMenuItem(
+                                                        value: 'delete',
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(Icons.delete, size: 18, color: Colors.red),
+                                                            SizedBox(width: 8),
+                                                            Text('Delete'),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      // Add more PopupMenuItem widgets here for more actions
+                                                    ],
                                                   ),
                                                 );
                                               },
