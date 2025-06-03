@@ -19,11 +19,15 @@ class _QuizzesState extends State<Quizzes> {
   int questionsDone = 0;
   int questionsRight = 0;
   final TextEditingController entryController = TextEditingController();
+  final FocusNode _entryFocusNode = FocusNode();
   @override
   void initState() {
     super.initState();
     final data = readData();
     words = randomise(data);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _entryFocusNode.requestFocus();
+    });
   }
   @override
   Widget build(BuildContext context) {
@@ -101,6 +105,7 @@ class _QuizzesState extends State<Quizzes> {
                       ),
                       const SizedBox(height: 20),
                       TextField(
+                        focusNode: _entryFocusNode,
                         controller: entryController,
                         decoration: InputDecoration(
                           labelStyle: TextStyle(

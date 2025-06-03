@@ -12,7 +12,15 @@ class AddWord extends StatefulWidget {
 }
 
 class _AddWordState extends State<AddWord> {
-@override
+  FocusNode _addWordTextBoxFN = FocusNode();
+  initState() {
+    super.initState();
+    // Focus on the text box when the page is opened
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _addWordTextBoxFN.requestFocus();
+    });
+  }
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SizedBox(
@@ -30,6 +38,7 @@ class _AddWordState extends State<AddWord> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 75),
                 child: TextField(
+                  focusNode: _addWordTextBoxFN,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 20,
