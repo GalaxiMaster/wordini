@@ -52,7 +52,7 @@ Future<Map> getWordDetails(String word) async {
                 'etymology': '',
                 'partOfSpeech': partOfSpeech,
                 'quotes': [],
-                'details': [] 
+                'details': []
               };
             }
             wordDetails['entries'][partOfSpeech]['synonyms'].addAll(parseSynonyms(mainData));
@@ -78,6 +78,7 @@ Future<Map> getWordDetails(String word) async {
     }
 
     debugPrint(response.toString());
+    wordDetails['entries'] = validateWordData(wordDetails['entries']);
     return wordDetails;
   } catch (e) {
     if (e is FormatException) rethrow;
@@ -88,6 +89,16 @@ Future<Map> getWordDetails(String word) async {
       'entries': {},
     };
   }
+}
+
+Map validateWordData(Map data){
+  for (MapEntry speechType in data['entries'].entries){
+    speechType.value['selected'] = data['entries'].keys.toList().indexOf(speechType.key) == 0 ? true : false;
+    // speechType.value['synonyms'] ??= {};
+    // speechType.value['etymology'] ??= '';
+    // speechType.value['details'] ??= [];
+  }
+  return data;
 }
 
 Map<String, Map<String, dynamic>> parseSynonyms(Map entry) {

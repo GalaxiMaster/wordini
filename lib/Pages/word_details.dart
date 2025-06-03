@@ -23,6 +23,7 @@ class _WordDetailstate extends State<WordDetails> {
   final TextEditingController _tagController = TextEditingController();
   final FocusNode _tagFocusNode = FocusNode();
   late Set allTags = {};
+
   @override
   void initState() {
     super.initState();
@@ -312,6 +313,24 @@ class _WordDetailstate extends State<WordDetails> {
                                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                                     ),
                                   ),
+                                  Spacer(),
+                                  if (editMode && word['entries'].length > 1)
+                                  AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 250),
+                                    transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+                                      child: IconButton(
+                                        key: ValueKey(speechType.value['selected']), // Important for AnimatedSwitcher to know the icon changed
+                                        onPressed: () {
+                                          setState(() {
+                                            speechType.value['selected'] = !speechType.value['selected'];
+                                          });
+                                        },
+                                        icon: Icon(
+                                          speechType.value['selected'] ? Icons.check : Icons.close,
+                                          color: speechType.value['selected'] ? Colors.green : Colors.red,
+                                        ),
+                                      ),
+                                  )
                                 ],
                               ),
                               const SizedBox(height: 8),
