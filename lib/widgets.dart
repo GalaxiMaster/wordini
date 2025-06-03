@@ -361,7 +361,7 @@ class _AnimatedToggleSwitchState extends State<AnimatedToggleSwitch>
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.blue.withValues(alpha: 255/3),
+                              color: Colors.blue.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
