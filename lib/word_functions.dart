@@ -55,15 +55,20 @@ Future<Map> getWordDetails(String word) async {
                 'details': []
               };
             }
-            wordDetails['entries'][partOfSpeech]['synonyms'].addAll(parseSynonyms(mainData));
-            wordDetails['entries'][partOfSpeech]['etymology'] += mainData['et']?[0]?[1] ?? '';
-            wordDetails['entries'][partOfSpeech]['partOfSpeech'] = mainData['fl'] ?? '';
-            wordDetails['entries'][partOfSpeech]['quotes'].addAll(mainData['quotes'] ?? []);
             wordDeets['definitions'] = parseDefinitions(mainData['def'][0]);
+            if (wordDeets['definitions'].isEmpty) {
+              debugPrint('No definitions found for "$word" in part of speech "$partOfSpeech".');
+              continue; // Skip if no definitions found
+            }
             wordDeets['shortDefs'] = mainData['shortdef'] ?? [];
             wordDeets['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
             wordDeets['stems'] = mainData['meta']?['stems'] ?? [];
             wordDeets['homograph'] = mainData['hom'] ?? wordDetails['entries'][partOfSpeech]['details'].length + 1;
+
+            wordDetails['entries'][partOfSpeech]['synonyms'].addAll(parseSynonyms(mainData));
+            wordDetails['entries'][partOfSpeech]['etymology'] += mainData['et']?[0]?[1] ?? '';
+            wordDetails['entries'][partOfSpeech]['partOfSpeech'] = mainData['fl'] ?? '';
+            wordDetails['entries'][partOfSpeech]['quotes'].addAll(mainData['quotes'] ?? []);
 
             wordDetails['entries'][partOfSpeech]['details'].add(wordDeets);
           } catch (e) {
@@ -194,12 +199,12 @@ List parseDefinitions(Map data){
     }
     definitions.add(groupList);
   }
-    for (var i = 0; i < definitions.length; i++) {
-    for (var j = 0; j < definitions[i].length; j++) {
-      debugPrint('definition[$i][$j]["definition"] = ${definitions[i][j]["definition"]}');
-      debugPrint('definition[$i][$j]["example"] = ${definitions[i][j]["example"]}\n');
-    }
-  }
+  // for (var i = 0; i < definitions.length; i++) {
+  //   for (var j = 0; j < definitions[i].length; j++) {
+  //     debugPrint('definition[$i][$j]["definition"] = ${definitions[i][j]["definition"]}');
+  //     debugPrint('definition[$i][$j]["example"] = ${definitions[i][j]["example"]}\n');
+  //   }
+  // }
   return definitions;
 }
 
