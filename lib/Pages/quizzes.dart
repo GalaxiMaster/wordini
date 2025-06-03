@@ -45,15 +45,30 @@ class _QuizzesState extends State<Quizzes> {
             children: [
               Positioned(
                 top: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(30),
-                  child: Text(
-                    '$questionsRight / $questionsDone',
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                    ),
+                child: SizedBox(
+                  height: 50,
+                  width: MediaQuery.of(context).size.width,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.lightbulb),
+                        onPressed: () {
+                          final message = currentWord['entries'].entries.first.value['details'].first['definitions'].first.first['example'].first;
+                          errorOverlay(context, message);
+                        },
+                      ),
+                      Spacer(),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          '$questionsRight / $questionsDone',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 )
               ),
