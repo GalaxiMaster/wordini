@@ -44,7 +44,7 @@ class _QuizzesState extends State<Quizzes> {
           return Stack(
             children: [
               Positioned(
-                top: 0,
+                top: 5,
                 child: SizedBox(
                   height: 50,
                   width: MediaQuery.of(context).size.width,
@@ -103,7 +103,10 @@ class _QuizzesState extends State<Quizzes> {
                       TextField(
                         controller: entryController,
                         decoration: InputDecoration(
-                          labelText: 'Search for a word',
+                          labelStyle: TextStyle(
+                            color: Colors.grey[400],
+                          ),
+                          labelText: 'Enter definition',
                         ),
                         onSubmitted: (value) async{
                           value = value.trim();
