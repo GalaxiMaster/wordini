@@ -92,8 +92,8 @@ Future<Map> getWordDetails(String word) async {
 }
 
 Map validateWordData(Map data){
-  for (MapEntry speechType in data['entries'].entries){
-    speechType.value['selected'] = data['entries'].keys.toList().indexOf(speechType.key) == 0 ? true : false;
+  for (MapEntry speechType in data.entries){
+    speechType.value['selected'] = data.keys.toList().indexOf(speechType.key) == 0 ? true : false;
     // speechType.value['synonyms'] ??= {};
     // speechType.value['etymology'] ??= '';
     // speechType.value['details'] ??= [];
