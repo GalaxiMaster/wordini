@@ -56,10 +56,6 @@ Future<Map> getWordDetails(String word) async {
               };
             }
             wordDeets['definitions'] = parseDefinitions(mainData['def'][0]);
-            if (wordDeets['definitions'].isEmpty) {
-              debugPrint('No definitions found for "$word" in part of speech "$partOfSpeech".');
-              continue; // Skip if no definitions found
-            }
             wordDeets['shortDefs'] = mainData['shortdef'] ?? [];
             wordDeets['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
             wordDeets['stems'] = mainData['meta']?['stems'] ?? [];
@@ -69,7 +65,11 @@ Future<Map> getWordDetails(String word) async {
             wordDetails['entries'][partOfSpeech]['etymology'] += mainData['et']?[0]?[1] ?? '';
             wordDetails['entries'][partOfSpeech]['partOfSpeech'] = mainData['fl'] ?? '';
             wordDetails['entries'][partOfSpeech]['quotes'].addAll(mainData['quotes'] ?? []);
-
+            
+            if (wordDeets['definitions'].isEmpty) {
+              debugPrint('No definitions found for "$word" in part of speech "$partOfSpeech".');
+              continue; // Skip if no definitions found
+            }
             wordDetails['entries'][partOfSpeech]['details'].add(wordDeets);
           } catch (e) {
             throw FormatException('Error parsing word details: $e');
