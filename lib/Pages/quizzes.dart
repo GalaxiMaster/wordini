@@ -18,185 +18,169 @@ class _QuizzesState extends State<Quizzes> {
   // session stats
   int questionsDone = 0;
   int questionsRight = 0;
+
   final TextEditingController entryController = TextEditingController();
   final FocusNode _entryFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
     final data = readData();
-    words = randomise(data);
+    words = gatherSelectedDefinitions(data).then((selected) => randomise(selected));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _entryFocusNode.requestFocus();
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder(
-      future: words,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error loading data ${snapshot.error}'));
-        } else if (snapshot.hasData) {
-          Map words = snapshot.data!;
-          if (words.isEmpty) {
-            return const Center(child: Text('No words added'));
-          }
-          currentWord = words[words.keys.elementAt(_currentIndex)];
-          return Stack(
-            children: [
-              Positioned(
-                top: 5,
-                child: SizedBox(
-                  height: 50,
-                  width: MediaQuery.of(context).size.width,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.lightbulb),
-                        onPressed: () {
-                          String message;
-                          try {
-                            message = currentWord['entries'].entries.first.value['details'].first['definitions'].first.first['example'].first;
-                          } on StateError {
-                            message = 'No example available';
-                          }
-                          errorOverlay(context, message);
-                        },
-                      ),
-                      Spacer(),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          '$questionsRight / $questionsDone',
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
+      body: FutureBuilder<Map>(
+        future: words,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error loading data ${snapshot.error}'));
+          } else if (snapshot.hasData) {
+            Map words = snapshot.data!;
+            if (words.isEmpty) {
+              return const Center(child: Text('No words added'));
+            }
+            currentWord = words[words.keys.elementAt(_currentIndex)];
+            return Stack(
+              children: [
+                Positioned(
+                  top: 5,
+                  child: SizedBox(
+                    height: 50,
+                    width: MediaQuery.of(context).size.width,
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.lightbulb),
+                          onPressed: () {
+                            String message;
+                            try {
+                              message = currentWord['entries'].entries.first.value['details'].first['definitions'].first.first['example'].first;
+                            } on StateError {
+                              message = 'No example available';
+                            }
+                            errorOverlay(context, message);
+                          },
+                        ),
+                        const Spacer(),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            '$questionsRight / $questionsDone',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                      ),
-                      if (_currentIndex < words.length -1)
-                      IconButton(
-                        icon: const Icon(Icons.arrow_forward),
-                        onPressed: () {
-                          setState(() {
-                            _currentIndex++;
-                          });
-                          entryController.clear();
-                          
-                          questionsDone++; // up counter in the top right
-                        },
-                      ),
-                    ],
-                  ),
-                )
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 25),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        capitalise(currentWord['word']),
-                        style: TextStyle(fontSize: 24),
-                      ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        focusNode: _entryFocusNode,
-                        controller: entryController,
-                        decoration: InputDecoration(
-                          labelStyle: TextStyle(
-                            color: Colors.grey[400],
-                          ),
-                          labelText: 'Enter definition',
-                        ),
-                        onSubmitted: (value) async{
-                          value = value.trim();
-                          if (value.toLowerCase() == currentWord['word'].toLowerCase()) return;
-
-                          bool? correct = await checkDefinition(currentWord['word'], value, '', context);//currentWord['definitions'].first['definition']
-                          
-                          if (correct == null) return;
-
-                          if (correct) { // ! On Correct
-                            // move to next word
-                            if (_currentIndex < words.length -1) {
+                        if (_currentIndex < words.length - 1)
+                          IconButton(
+                            icon: const Icon(Icons.arrow_forward),
+                            onPressed: () {
                               setState(() {
                                 _currentIndex++;
                               });
                               entryController.clear();
-                            }
-                            removeNotif(currentWord['word']);
-                            questionsRight++;
-                            // TODO some sort of correct answer animation
-                          }
-                          else{
-                            errorOverlay(context, 'Wrong answer');
-                          }
-                          questionsDone++;
-                          words[currentWord['word']]['inputs'] ??= [];
-                          words[currentWord['word']]['inputs'].add({
-                            'guess': value,
-                            'correct': correct,
-                            'date': DateTime.now().toString(),
-                          });
-
-                          writeData(words, append: false);
-                        },
-                      ),
-                    ],
+                              questionsDone++; // up counter in the top right
+                            },
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          );
-        } else {
-          return const Center(child: Text('No data available'));
-        }
-      },
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          capitalise(currentWord['word']),
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                        const SizedBox(height: 20),
+                        TextField(
+                          focusNode: _entryFocusNode,
+                          controller: entryController,
+                          decoration: InputDecoration(
+                            labelStyle: TextStyle(
+                              color: Colors.grey[400],
+                            ),
+                            labelText: 'Enter definition',
+                          ),
+                          onSubmitted: (value) async {
+                            value = value.trim();
+                            if (value.toLowerCase() == currentWord['word'].toLowerCase()) return; // ADD error message for this
+
+                            bool? correct = await checkDefinition(currentWord['word'], value, '', context);
+
+                            if (correct == null) return;
+
+                            if (correct) {
+                              if (_currentIndex < words.length - 1) {
+                                setState(() {
+                                  _currentIndex++;
+                                });
+                                entryController.clear();
+                              }
+                              removeNotif(currentWord['word']);
+                              questionsRight++;
+                              // TODO some sort of correct answer animation
+                            } else {
+                              errorOverlay(context, 'Wrong answer');
+                            }
+                            questionsDone++;
+                            words[currentWord['word']]['inputs'] ??= [];
+                            words[currentWord['word']]['inputs'].add({
+                              'guess': value,
+                              'correct': correct,
+                              'date': DateTime.now().toString(),
+                            });
+
+                            writeData(words, append: false);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          } else {
+            return const Center(child: Text('No data available'));
+          }
+        },
       ),
     );
   }
-  
-  Future<Map> randomise(Future<Map> data) {
-    // return data.then((value) {
-    //   List keys = value.keys.toList();
-    //   keys.shuffle();
-    //   Map<String, dynamic> shuffledData = {};
-    //   for (String key in keys) {
-    //     shuffledData[key] = value[key];
-    //   }
-    //   return shuffledData;
-    // });
-    return data.then((words) {
-        Map weightings = generateWieightings(words);
-        // Create a list of keys sorted by their weighting
-        List sortedKeys = weightings.keys.toList()
-          ..sort((a, b) => (weightings[a]['weight'] as double).compareTo(weightings[b]['weight'] as double));
-        // Build a new map with sorted keys
-        Map sortedWords = { for (var k in sortedKeys) k : words[k] };
-        return sortedWords;
-    });
+
+  Map randomise(List data) {
+    // Map weightings = generateWeightings(data);
+    // List sortedKeys = weightings.keys.toList()
+    //   ..sort((a, b) => (weightings[a]['weight'] as double).compareTo(weightings[b]['weight'] as double));
+    // Map sortedWords = { for (var k in sortedKeys) k : data[k] };
+    return {};
   }
-  Map generateWieightings(Map data){
-    // last time checked
-    // last time value
-    // how many times checked / right percentage
+
+  Map generateWeightings(Map data) {
     double doubleMaxTimesChecked = 0;
     double doubleMaxTimesRight = 0;
     double doubleMaxPercentage = 0;
     Map weightings = {};
     for (var key in data.keys) {
-
       int timesChecked = data[key]['inputs']?.length ?? 0;
       int timesRight = data[key]['inputs']?.where((entry) => entry['correct'] == true).length ?? 0;
       DateTime? lastChecked;
       bool? lastTimeValue;
-      if (timesChecked != 0){
-        lastChecked = DateTime.parse(data[key]['inputs']?.last['date'] ?? '');
+      if (timesChecked != 0) {
+        lastChecked = DateTime.tryParse(data[key]['inputs']?.last['date'] ?? '');
         lastTimeValue = data[key]['inputs']?.last['correct'];
       }
 
@@ -219,19 +203,38 @@ class _QuizzesState extends State<Quizzes> {
       };
     }
 
-    
     for (MapEntry weight in weightings.entries) {
       late double value;
-      if (weight.value['timesChecked'] == 0){
+      if (weight.value['timesChecked'] == 0) {
         value = 1;
-      } else{
-        value = weight.value['timesChecked'] / doubleMaxTimesChecked / 2;
-        value += weight.value['percentage'] / doubleMaxPercentage / 2;
-        value += weight.value['lastChecked']!.difference(DateTime.now()).inDays / 60;
+      } else {
+        value = weight.value['timesChecked'] / (doubleMaxTimesChecked == 0 ? 1 : doubleMaxTimesChecked) / 2;
+        value += weight.value['percentage'] / (doubleMaxPercentage == 0 ? 1 : doubleMaxPercentage) / 2;
+        if (weight.value['lastChecked'] != null) {
+          value += (weight.value['lastChecked'] as DateTime).difference(DateTime.now()).inDays / 60;
+        }
         value = value.clamp(0, 0.99);
       }
       weightings[weight.key]['weight'] = value;
     }
     return weightings;
   }
+}
+
+Future<List> gatherSelectedDefinitions(Future<Map> data) {
+  return data.then((words) {
+    List<Map> selectedWords = [];
+    for (var word in words.entries) {
+      Map wordData = Map<String, dynamic>.from(word.value);
+      wordData.remove('entries');
+      for (var speechType in word.value['entries'].entries) {
+        if (speechType.value['selected']){
+          speechType.value.remove('selected');
+          wordData.addAll(speechType.value);
+          selectedWords.add(wordData);
+        }
+      }
+    }
+    return selectedWords;
+  });
 }
