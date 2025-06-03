@@ -68,6 +68,18 @@ class _QuizzesState extends State<Quizzes> {
                           ),
                         ),
                       ),
+                      if (_currentIndex < words.length -1)
+                      IconButton(
+                        icon: const Icon(Icons.arrow_forward),
+                        onPressed: () {
+                          setState(() {
+                            _currentIndex++;
+                          });
+                          entryController.clear();
+                          
+                          questionsDone++; // up counter in the top right
+                        },
+                      ),
                     ],
                   ),
                 )
