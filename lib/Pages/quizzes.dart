@@ -53,7 +53,12 @@ class _QuizzesState extends State<Quizzes> {
                       IconButton(
                         icon: const Icon(Icons.lightbulb),
                         onPressed: () {
-                          final message = currentWord['entries'].entries.first.value['details'].first['definitions'].first.first['example'].first;
+                          String message;
+                          try {
+                            message = currentWord['entries'].entries.first.value['details'].first['definitions'].first.first['example'].first;
+                          } on StateError {
+                            message = 'No example available';
+                          }
                           errorOverlay(context, message);
                         },
                       ),
@@ -101,10 +106,13 @@ class _QuizzesState extends State<Quizzes> {
                           labelText: 'Search for a word',
                         ),
                         onSubmitted: (value) async{
+                          value = value.trim();
+                          if (value.toLowerCase() == currentWord['word'].toLowerCase()) return;
+
                           bool? correct = await checkDefinition(currentWord['word'], value, '', context);//currentWord['definitions'].first['definition']
-                          if (correct == null) {
-                            return;
-                          }
+                          
+                          if (correct == null) return;
+
                           if (correct) { // ! On Correct
                             // move to next word
                             if (_currentIndex < words.length -1) {
