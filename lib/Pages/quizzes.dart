@@ -242,7 +242,7 @@ class _QuizzesState extends State<Quizzes> {
     for (var word in weightings.entries) {
       final key = word.key;
       var w = weightings[key];
-      double value = w['timesCheck ed'] == 0
+      double value = w['timesChecked'] == 0
           ? 1.1
           : (((1/w['timesChecked']) / (maxChecked == 0 ? 1 : maxChecked) / 4)
             + ((1/w['percentage']) / (maxPct == 0 ? 1 : maxPct) / 4)
