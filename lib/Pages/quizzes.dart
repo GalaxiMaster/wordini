@@ -234,8 +234,8 @@ class _QuizzesState extends State<Quizzes> {
       var w = weightings[key];
       double value = w['timesChecked'] == 0
           ? 1.1
-          : ((w['timesChecked'] / (maxChecked == 0 ? 1 : maxChecked) / 2)
-            + (w['percentage'] / (maxPct == 0 ? 1 : maxPct) / 2)
+          : (((1/w['timesChecked']) / (maxChecked == 0 ? 1 : maxChecked) / 4)
+            + ((1/w['percentage']) / (maxPct == 0 ? 1 : maxPct) / 4)
             + ((w['lastChecked'] != null) ? (w['lastChecked'] as DateTime).difference(DateTime.now()).inDays / 60 : 0)).clamp(0, 1);
       weightings[key]['weight'] = value;
     }
