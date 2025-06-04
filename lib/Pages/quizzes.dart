@@ -115,6 +115,16 @@ class _QuizzesState extends State<Quizzes> {
                               });
                               entryController.clear();
                               questionsDone++; // up counter in the top right
+                              words[currentWord['word']]['attributes']['inputs'] ??= [];
+                              words[currentWord['word']]['attributes']['inputs'].add({
+                                'guess': null,
+                                'correct': null,
+                                'skipped': true,
+                                'date': DateTime.now().toString(),
+                              });
+                              rawWords[currentWord['word']]['entries'][partOfSpeech] = words[currentWord['word']]['attributes'];
+
+                              writeData(rawWords, append: false);
                             },
                           ),
                       ],
