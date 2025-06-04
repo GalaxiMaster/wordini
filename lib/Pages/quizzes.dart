@@ -115,14 +115,13 @@ class _QuizzesState extends State<Quizzes> {
                               });
                               entryController.clear();
                               questionsDone++; // up counter in the top right
-                              words[currentWord['word']]['attributes']['inputs'] ??= [];
-                              words[currentWord['word']]['attributes']['inputs'].add({
+                              rawWords[currentWord['word']]['entries'][partOfSpeech]['inputs'] ??= [];
+                              rawWords[currentWord['word']]['entries'][partOfSpeech]['inputs'].insert(0, {
                                 'guess': null,
                                 'correct': null,
                                 'skipped': true,
                                 'date': DateTime.now().toString(),
                               });
-                              rawWords[currentWord['word']]['entries'][partOfSpeech] = words[currentWord['word']]['attributes'];
 
                               writeData(rawWords, append: false);
                             },
@@ -185,13 +184,14 @@ class _QuizzesState extends State<Quizzes> {
                               errorOverlay(context, 'Wrong answer');
                             }
                             questionsDone++;
-                            words[currentWord['word']]['attributes']['inputs'] ??= [];
-                            words[currentWord['word']]['attributes']['inputs'].add({
-                              'guess': value,
-                              'correct': correct,
-                              'date': DateTime.now().toString(),
-                            });
-                            rawWords[currentWord['word']]['entries'][partOfSpeech] = words[currentWord['word']]['attributes'];
+                            rawWords[currentWord['word']]['entries'][partOfSpeech]['inputs'] ??= [];
+                            rawWords[currentWord['word']]['entries'][partOfSpeech]['inputs'].insert(
+                              0, 
+                              {
+                                'skipped': true,
+                                'date': DateTime.now().toString(),
+                              }
+                            );
 
                             writeData(rawWords, append: false);
                           },

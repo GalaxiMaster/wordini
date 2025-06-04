@@ -622,7 +622,40 @@ class _WordDetailstate extends State<WordDetails> {
                                       ),
                                     ),
                                   ),
-                                ]
+                                ],
+                              ],
+                              if (speechType.value['inputs'] != null && speechType.value['inputs'].isNotEmpty) ...[
+                                Divider(),
+                                Row(
+                                  children: const [
+                                    Icon(Icons.history, color: Color.fromARGB(255, 7, 255, 48), size: 22),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Quiz History",
+                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                ListView.builder(
+                                  shrinkWrap: true,
+                                  padding: const EdgeInsets.symmetric(horizontal: 17),
+                                  itemCount: speechType.value['inputs'].length,
+                                  itemBuilder: (context, index){
+                                    final Map entry = speechType.value['inputs'].reversed.toList()[index];
+                                    if (!entry.containsKey('guess') || entry['guess'] == null){
+                                      return Text('skipped');
+                                    }
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        
+                                      ),
+                                      child: Text(
+                                        entry['guess']
+                                      ),
+                                    );
+                                  },
+                                ),
                               ],
                             ],
                           ),
