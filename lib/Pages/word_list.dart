@@ -11,7 +11,7 @@ class WordList extends StatefulWidget {
 }
 
 class _WordListState extends State<WordList> {
-  late Future<Map> _wordsFuture;
+  late Future<Map<String, dynamic>> _wordsFuture;
   String searchTerm = '';
   Map filters = {
     'wordTypes': [],
@@ -209,7 +209,7 @@ class _WordListState extends State<WordList> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map>(
+    return FutureBuilder<Map<String, dynamic>>(
       future: _wordsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -218,7 +218,7 @@ class _WordListState extends State<WordList> {
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
-        Map words = snapshot.data!;
+        Map<String, dynamic> words = snapshot.data!;
 
         List filteredWords = words.keys.where((word) {
           final matchesSearch = word.toLowerCase().contains(searchTerm.toLowerCase());

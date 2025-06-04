@@ -5,7 +5,7 @@ import 'package:vocab_app/word_functions.dart';
 import 'package:intl/intl.dart';
 
 class WordDetails extends StatefulWidget {
-  final Map words;
+  final Map<String, dynamic> words;
   final String wordId;
   final bool addWordMode;
   const WordDetails({super.key, required this.words, required this.wordId, this.addWordMode = false});

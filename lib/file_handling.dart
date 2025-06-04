@@ -1,63 +1,37 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-Future<Map> readData({String path = 'words'}) async{
-  Map jsonData= {};
-  debugPrint("${path}id");
-  final dir = await getApplicationDocumentsDirectory();
-  String filepath = '${dir.path}/$path.json';
-  debugPrint(filepath);
-  var file = File(filepath);
-  var exists = await file.exists();
-  debugPrint(exists.toString());
-  // Read the file as a string
-  if (await file.exists()) {
-    String contents = await file.readAsString();
-    if (contents.isNotEmpty){
-      jsonData = jsonDecode(contents);
-    }    
-    debugPrint("${jsonData}json data");
-  }
-  return jsonData;
+Future<Map<String, dynamic>> readData({String path = 'words'}) async {
+  final box = await Hive.openBox(path);
+  return Map<String, dynamic>.from(box.toMap());
 }
 
-Future<void> writeData(Map newData, {String path = 'words', bool append = true}) async {
-  try {
-    final dir = await getApplicationDocumentsDirectory();
+Future<void> writeData(
+  Map<String, dynamic> newData, {
+  String path = 'words',
+  bool append = true,
+}) async {
+  final box = await Hive.openBox(path);
 
-    // Path handling: split the provided path into directory and file name components
-    List<String> pathComponents = path.split('/');
-    String directoryPath = '${dir.path}/${pathComponents.sublist(0, pathComponents.length - 1).join('/')}';
-    String filePath = '${dir.path}/$path.json';
-
-    // If appending is enabled, merge existing data with new data
-    if (append) {
-      Map existingData = await readData(path: path);
-      newData = Map<String, dynamic>.from(newData)..addAll(Map<String, dynamic>.from(existingData));
-    }
-
-    // Ensure the directory exists, create it if not
-    Directory routineDir = Directory(directoryPath);
-    if (!routineDir.existsSync()) {
-      await routineDir.create(recursive: true);  // Create directory recursively if necessary
-    }
-
-    // Convert map data to JSON string
-    String jsonString = jsonEncode(newData);
-
-    // Write the JSON data to the file
-    File file = File(filePath);
-    await file.writeAsString(jsonString);
-
-    debugPrint('Data has been written to the file: $filePath');
-
-  } catch (e) {
-    // Catch and report any errors
-    debugPrint('Error writing data: $e');
+  if (!append) {
+    await box.clear();
   }
-  
+
+  await box.putAll(newData);
+  debugPrint('✅ Data written to Hive box: $path');
+}
+/// Deletes a word from the Hive box.
+Future<void> deleteWord(String word, {String path = 'words'}) async {
+  final box = await Hive.openBox('words');
+  await box.delete(word);
+  debugPrint('🗑️ Deleted word "$word" from box "$path"');
+}
+/// Reads a single word's data from the given Hive box.
+Future<dynamic> readOneWord(String word, {String path = 'words'}) async {
+  final box = await Hive.openBox(path);
+  return box.get(word);
 }
 
 Future<void> resetData(bool output, bool current, bool records) async {

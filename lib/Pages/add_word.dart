@@ -86,7 +86,7 @@ void addWordToList(String word, context) {
 
     data[word] = wordDetails;
     loadingOverlay.removeLoadingOverlay();
-    final Map allData = await readData();
+    final Map<String, dynamic> allData = await readData();
     allData[word] = wordDetails;
     bool? result = await Navigator.push(
       context,

@@ -18,7 +18,7 @@ class _QuizzesState extends State<Quizzes> {
   // session stats
   int questionsDone = 0;
   int questionsRight = 0;
-  Map rawWords = {};
+  Map<String, dynamic> rawWords = {};
 
   final TextEditingController entryController = TextEditingController();
   final FocusNode _entryFocusNode = FocusNode();

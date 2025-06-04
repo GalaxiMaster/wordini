@@ -3,7 +3,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
-import 'package:vocab_app/file_handling.dart';
 import 'package:vocab_app/widgets.dart';
 import 'dart:convert';
 
@@ -215,14 +214,6 @@ String cleanText(String input) {
   String noTags = input.replaceAll(tagRegex, '');
   String cleaned = noTags.replaceAll(punctuationRegex, '');
   return cleaned.trim(); // <-- trim whitespace
-}
-
-void deleteWord(word) {
-  readData().then((data) async{
-    data.remove(word);
-    await writeData(data, append: false);
-  });
-  debugPrint('deleted $word');
 }
 
 Map organiseToSpeechPart(List wordDetails) {
