@@ -205,7 +205,7 @@ class _QuizzesState extends State<Quizzes> {
     data.sort((a, b) {
       final aWeight = weightings[a['word']]?['weight'] ?? 1.0;
       final bWeight = weightings[b['word']]?['weight'] ?? 1.0;
-      return aWeight.compareTo(bWeight);
+      return bWeight.compareTo(aWeight);
     });
     return { for (var w in data) w['word']: w };
   }
@@ -215,9 +215,9 @@ class _QuizzesState extends State<Quizzes> {
     Map<String, dynamic> weightings = {};
     for (var wordData in data) {
       final key = wordData['word'];
-      int checked = wordData['inputs']?.length ?? 0;
-      int right = wordData['inputs']?.where((e) => e['correct'] == true).length ?? 0;
-      DateTime? lastChecked = checked != 0 ? DateTime.tryParse(wordData['inputs']?.last['date'] ?? '') : null;
+      int checked = wordData['attributes']['inputs']?.length ?? 0;
+      int right = wordData['attributes']['inputs']?.where((e) => e['correct'] == true).length ?? 0;
+      DateTime? lastChecked = checked != 0 ? DateTime.tryParse(wordData['attributes']['inputs']?.last['date'] ?? '') : null;
       double pct = checked > 0 ? (right / checked) : 0.0;
       if (checked > maxChecked) maxChecked = checked.toDouble();
       if (right > maxRight) maxRight = right.toDouble();
@@ -233,11 +233,11 @@ class _QuizzesState extends State<Quizzes> {
       final key = wordData['word'];
       var w = weightings[key];
       double value = w['timesChecked'] == 0
-          ? 1
-          : (w['timesChecked'] / (maxChecked == 0 ? 1 : maxChecked) / 2)
+          ? 1.1
+          : ((w['timesChecked'] / (maxChecked == 0 ? 1 : maxChecked) / 2)
             + (w['percentage'] / (maxPct == 0 ? 1 : maxPct) / 2)
-            + ((w['lastChecked'] != null) ? (w['lastChecked'] as DateTime).difference(DateTime.now()).inDays / 60 : 0);
-      weightings[key]['weight'] = value.clamp(0, 0.99);
+            + ((w['lastChecked'] != null) ? (w['lastChecked'] as DateTime).difference(DateTime.now()).inDays / 60 : 0)).clamp(0, 1);
+      weightings[key]['weight'] = value;
     }
     return weightings;
   }
