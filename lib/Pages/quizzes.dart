@@ -73,6 +73,7 @@ class _QuizzesState extends State<Quizzes> {
               return const Center(child: Text('No words added'));
             }
             currentWord = words[words.keys.elementAt(_currentIndex)];
+            String partOfSpeech = currentWord['attributes']['partOfSpeech'] ?? 'unknown';
             return Stack(
               children: [
                 Positioned(
@@ -126,9 +127,21 @@ class _QuizzesState extends State<Quizzes> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          capitalise(currentWord['word']),
-                          style: const TextStyle(fontSize: 24),
+                        Column(
+                          children: [
+                            Text(
+                              capitalise(currentWord['word']),
+                              style: const TextStyle(fontSize: 26),
+                            ),
+                            Text(
+                              capitalise(partOfSpeech),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 20),
                         TextField(
@@ -162,7 +175,6 @@ class _QuizzesState extends State<Quizzes> {
                               errorOverlay(context, 'Wrong answer');
                             }
                             questionsDone++;
-                            String partOfSpeech = currentWord['attributes']['partOfSpeech'] ?? 'unknown';
                             words[currentWord['word']]['attributes']['inputs'] ??= [];
                             words[currentWord['word']]['attributes']['inputs'].add({
                               'guess': value,
