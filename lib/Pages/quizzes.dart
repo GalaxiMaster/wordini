@@ -12,7 +12,7 @@ class Quizzes extends StatefulWidget {
 }
 
 class _QuizzesState extends State<Quizzes> {
-  Future<Map>? words; // Make nullable to avoid LateInitializationError
+  Future<List>? words; // Make nullable to avoid LateInitializationError
   int _currentIndex = 0;
   Map currentWord = {};
   // session stats
@@ -56,7 +56,7 @@ class _QuizzesState extends State<Quizzes> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder<Map>(
+      body: FutureBuilder<List>(
         future: words,
         builder: (context, snapshot) {
           if (words == null) {
@@ -68,11 +68,11 @@ class _QuizzesState extends State<Quizzes> {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error loading data ${snapshot.error}'));
           } else if (snapshot.hasData) {
-            Map words = snapshot.data!;
+            List words = snapshot.data!;
             if (words.isEmpty) {
               return const Center(child: Text('No words added'));
             }
-            currentWord = words[words.keys.elementAt(_currentIndex)];
+            currentWord = words.elementAt(_currentIndex);
             String partOfSpeech = currentWord['attributes']['partOfSpeech'] ?? 'unknown';
             return Stack(
               children: [
@@ -200,21 +200,21 @@ class _QuizzesState extends State<Quizzes> {
     );
   }
 
-  Map randomise(List<Map> data) {
+  List randomise(List<Map> data) {
     Map weightings = generateWeightings(data);
     data.sort((a, b) {
       final aWeight = weightings[a['word']]?['weight'] ?? 1.0;
       final bWeight = weightings[b['word']]?['weight'] ?? 1.0;
       return bWeight.compareTo(aWeight);
     });
-    return { for (var w in data) w['word']: w };
+    return data;
   }
 
   Map generateWeightings(List<Map> data) {
     double maxChecked = 0, maxRight = 0, maxPct = 0;
     Map<String, dynamic> weightings = {};
     for (var wordData in data) {
-      final key = wordData['word'];
+      final key = '${wordData['word']} (${wordData['attributes']['partOfSpeech']})';
       int checked = wordData['attributes']['inputs']?.length ?? 0;
       int right = wordData['attributes']['inputs']?.where((e) => e['correct'] == true).length ?? 0;
       DateTime? lastChecked = checked != 0 ? DateTime.tryParse(wordData['attributes']['inputs']?.last['date'] ?? '') : null;
@@ -229,10 +229,11 @@ class _QuizzesState extends State<Quizzes> {
         'percentage': pct,
       };
     }
-    for (var wordData in data) {
-      final key = wordData['word'];
+    // ADD skipping counts & ability to spread to 
+    for (var word in weightings.entries) {
+      final key = word.key;
       var w = weightings[key];
-      double value = w['timesChecked'] == 0
+      double value = w['timesCheck ed'] == 0
           ? 1.1
           : (((1/w['timesChecked']) / (maxChecked == 0 ? 1 : maxChecked) / 4)
             + ((1/w['percentage']) / (maxPct == 0 ? 1 : maxPct) / 4)
