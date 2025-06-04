@@ -88,7 +88,7 @@ class _QuizzesState extends State<Quizzes> {
                           onPressed: () {
                             String message;
                             try {
-                              message = currentWord['entries'].entries.first.value['details'].first['definitions'].first.first['example'].first;
+                              message = currentWord['attributes']['details'].first['definitions'].first.first['example'].first;
                             } on StateError {
                               message = 'No example available';
                             }
