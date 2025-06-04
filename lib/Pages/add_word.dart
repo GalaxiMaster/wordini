@@ -12,7 +12,8 @@ class AddWord extends StatefulWidget {
 }
 
 class _AddWordState extends State<AddWord> {
-  FocusNode _addWordTextBoxFN = FocusNode();
+  final FocusNode _addWordTextBoxFN = FocusNode();
+  @override
   initState() {
     super.initState();
     // Focus on the text box when the page is opened
