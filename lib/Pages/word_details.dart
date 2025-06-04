@@ -643,12 +643,34 @@ class _WordDetailstate extends State<WordDetails> {
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                   itemCount: speechType.value['inputs'].length,
                                   itemBuilder: (context, index) {
-                                    final Map entry = speechType.value['inputs'].reversed.toList()[index];
+                                    final Map entry = speechType.value['inputs'][index];
 
                                     if (!entry.containsKey('guess') || entry['guess'] == null) {
-                                      return const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 6),
-                                        child: Text('Skipped', style: TextStyle(color: Colors.grey)),
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 6),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: const Color.fromARGB(255, 156, 2, 2),
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  'SKIPPED', 
+                                                  style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2)
+                                                ),
+                                                Text(
+                                                  ' — ${DateFormat('d MMM yyyy, h:mm a').format(DateTime.parse(entry['date']))}',
+                                                  style: const TextStyle(fontSize: 13, color: Colors.white70),
+                                                ),
+                                              ],
+                                            ),
+                                          )
+                                        ),
                                       );
                                     }
 
