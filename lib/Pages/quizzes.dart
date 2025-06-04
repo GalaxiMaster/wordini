@@ -117,8 +117,6 @@ class _QuizzesState extends State<Quizzes> {
                               questionsDone++; // up counter in the top right
                               rawWords[currentWord['word']]['entries'][partOfSpeech]['inputs'] ??= [];
                               rawWords[currentWord['word']]['entries'][partOfSpeech]['inputs'].insert(0, {
-                                'guess': null,
-                                'correct': null,
                                 'skipped': true,
                                 'date': DateTime.now().toString(),
                               });
@@ -188,7 +186,8 @@ class _QuizzesState extends State<Quizzes> {
                             rawWords[currentWord['word']]['entries'][partOfSpeech]['inputs'].insert(
                               0, 
                               {
-                                'skipped': true,
+                                'guess': value,
+                                'correct': correct,
                                 'date': DateTime.now().toString(),
                               }
                             );
