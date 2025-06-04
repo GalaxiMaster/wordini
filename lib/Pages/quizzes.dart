@@ -12,24 +12,45 @@ class Quizzes extends StatefulWidget {
 }
 
 class _QuizzesState extends State<Quizzes> {
-  late Future<Map> words;
+  Future<Map>? words; // Make nullable to avoid LateInitializationError
   int _currentIndex = 0;
   Map currentWord = {};
   // session stats
   int questionsDone = 0;
   int questionsRight = 0;
+  Map rawWords = {};
 
   final TextEditingController entryController = TextEditingController();
   final FocusNode _entryFocusNode = FocusNode();
-
   @override
   void initState() {
     super.initState();
-    final data = readData();
-    words = gatherSelectedDefinitions(data).then((selected) => randomise(selected));
+    readData().then((data) {
+      rawWords = data; // store the raw data for later use
+      setState(() {
+        words = Future.value(randomise(_gatherSelectedDefinitions(data)));
+      });
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _entryFocusNode.requestFocus();
     });
+  }
+
+  // Gather selected definitions from the data (returns a List)
+  List<Map> _gatherSelectedDefinitions(Map words) {
+    List<Map> selectedWords = [];
+    for (var word in words.entries) {
+      Map wordData = Map<String, dynamic>.from(word.value);
+      wordData.remove('entries');
+      for (var speechType in word.value['entries'].entries) {
+        if (speechType.value['selected'] == true) {
+          Map<String, dynamic> merged = Map<String, dynamic>.from(wordData);
+          merged['attributes'] = Map<String, dynamic>.from(speechType.value);
+          selectedWords.add(merged);
+        }
+      }
+    }
+    return selectedWords;
   }
 
   @override
@@ -38,6 +59,10 @@ class _QuizzesState extends State<Quizzes> {
       body: FutureBuilder<Map>(
         future: words,
         builder: (context, snapshot) {
+          if (words == null) {
+            // words is not initialized yet
+            return const Center(child: CircularProgressIndicator());
+          }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
@@ -137,14 +162,16 @@ class _QuizzesState extends State<Quizzes> {
                               errorOverlay(context, 'Wrong answer');
                             }
                             questionsDone++;
-                            words[currentWord['word']]['inputs'] ??= [];
-                            words[currentWord['word']]['inputs'].add({
+                            String partOfSpeech = currentWord['attributes']['partOfSpeech'] ?? 'unknown';
+                            words[currentWord['word']]['attributes']['inputs'] ??= [];
+                            words[currentWord['word']]['attributes']['inputs'].add({
                               'guess': value,
                               'correct': correct,
                               'date': DateTime.now().toString(),
                             });
+                            rawWords[currentWord['word']]['entries'][partOfSpeech] = words[currentWord['word']]['attributes'];
 
-                            writeData(words, append: false);
+                            writeData(rawWords, append: false);
                           },
                         ),
                       ],
@@ -161,80 +188,45 @@ class _QuizzesState extends State<Quizzes> {
     );
   }
 
-  Map randomise(List data) {
-    // Map weightings = generateWeightings(data);
-    // List sortedKeys = weightings.keys.toList()
-    //   ..sort((a, b) => (weightings[a]['weight'] as double).compareTo(weightings[b]['weight'] as double));
-    // Map sortedWords = { for (var k in sortedKeys) k : data[k] };
-    return {};
+  Map randomise(List<Map> data) {
+    Map weightings = generateWeightings(data);
+    data.sort((a, b) {
+      final aWeight = weightings[a['word']]?['weight'] ?? 1.0;
+      final bWeight = weightings[b['word']]?['weight'] ?? 1.0;
+      return aWeight.compareTo(bWeight);
+    });
+    return { for (var w in data) w['word']: w };
   }
 
-  Map generateWeightings(Map data) {
-    double doubleMaxTimesChecked = 0;
-    double doubleMaxTimesRight = 0;
-    double doubleMaxPercentage = 0;
-    Map weightings = {};
-    for (var key in data.keys) {
-      int timesChecked = data[key]['inputs']?.length ?? 0;
-      int timesRight = data[key]['inputs']?.where((entry) => entry['correct'] == true).length ?? 0;
-      DateTime? lastChecked;
-      bool? lastTimeValue;
-      if (timesChecked != 0) {
-        lastChecked = DateTime.tryParse(data[key]['inputs']?.last['date'] ?? '');
-        lastTimeValue = data[key]['inputs']?.last['correct'];
-      }
-
-      double percentage = timesChecked > 0 ? (timesRight / timesChecked) : 0.0;
-      if (timesChecked > doubleMaxTimesChecked) {
-        doubleMaxTimesChecked = timesChecked.toDouble();
-      }
-      if (timesRight > doubleMaxTimesRight) {
-        doubleMaxTimesRight = timesRight.toDouble();
-      }
-      if (percentage > doubleMaxPercentage) {
-        doubleMaxPercentage = percentage;
-      }
+  Map generateWeightings(List<Map> data) {
+    double maxChecked = 0, maxRight = 0, maxPct = 0;
+    Map<String, dynamic> weightings = {};
+    for (var wordData in data) {
+      final key = wordData['word'];
+      int checked = wordData['inputs']?.length ?? 0;
+      int right = wordData['inputs']?.where((e) => e['correct'] == true).length ?? 0;
+      DateTime? lastChecked = checked != 0 ? DateTime.tryParse(wordData['inputs']?.last['date'] ?? '') : null;
+      double pct = checked > 0 ? (right / checked) : 0.0;
+      if (checked > maxChecked) maxChecked = checked.toDouble();
+      if (right > maxRight) maxRight = right.toDouble();
+      if (pct > maxPct) maxPct = pct;
       weightings[key] = {
-        'timesChecked': timesChecked,
-        'timesRight': timesRight,
+        'timesChecked': checked,
+        'timesRight': right,
         'lastChecked': lastChecked,
-        'lastTimeValue': lastTimeValue,
-        'percentage': percentage,
+        'percentage': pct,
       };
     }
-
-    for (MapEntry weight in weightings.entries) {
-      late double value;
-      if (weight.value['timesChecked'] == 0) {
-        value = 1;
-      } else {
-        value = weight.value['timesChecked'] / (doubleMaxTimesChecked == 0 ? 1 : doubleMaxTimesChecked) / 2;
-        value += weight.value['percentage'] / (doubleMaxPercentage == 0 ? 1 : doubleMaxPercentage) / 2;
-        if (weight.value['lastChecked'] != null) {
-          value += (weight.value['lastChecked'] as DateTime).difference(DateTime.now()).inDays / 60;
-        }
-        value = value.clamp(0, 0.99);
-      }
-      weightings[weight.key]['weight'] = value;
+    for (var wordData in data) {
+      final key = wordData['word'];
+      var w = weightings[key];
+      double value = w['timesChecked'] == 0
+          ? 1
+          : (w['timesChecked'] / (maxChecked == 0 ? 1 : maxChecked) / 2)
+            + (w['percentage'] / (maxPct == 0 ? 1 : maxPct) / 2)
+            + ((w['lastChecked'] != null) ? (w['lastChecked'] as DateTime).difference(DateTime.now()).inDays / 60 : 0);
+      weightings[key]['weight'] = value.clamp(0, 0.99);
     }
     return weightings;
   }
-}
-
-Future<List> gatherSelectedDefinitions(Future<Map> data) {
-  return data.then((words) {
-    List<Map> selectedWords = [];
-    for (var word in words.entries) {
-      Map wordData = Map<String, dynamic>.from(word.value);
-      wordData.remove('entries');
-      for (var speechType in word.value['entries'].entries) {
-        if (speechType.value['selected']){
-          speechType.value.remove('selected');
-          wordData.addAll(speechType.value);
-          selectedWords.add(wordData);
-        }
-      }
-    }
-    return selectedWords;
-  });
 }
