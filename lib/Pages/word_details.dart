@@ -323,6 +323,8 @@ class _WordDetailstate extends State<WordDetails> {
                                         onPressed: () {
                                           setState(() {
                                             speechType.value['selected'] = !speechType.value['selected'];
+                                            widget.words[widget.wordId] = word;
+                                            writeData(widget.words, append: false);                                          
                                           });
                                         },
                                         icon: Icon(
