@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:vocab_app/file_handling.dart';
 import 'package:vocab_app/widgets.dart';
 import 'package:vocab_app/word_functions.dart';
+import 'package:intl/intl.dart';
 
 class WordDetails extends StatefulWidget {
   final Map words;
@@ -636,22 +637,55 @@ class _WordDetailstate extends State<WordDetails> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 4),
                                 ListView.builder(
                                   shrinkWrap: true,
-                                  padding: const EdgeInsets.symmetric(horizontal: 17),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                   itemCount: speechType.value['inputs'].length,
-                                  itemBuilder: (context, index){
+                                  itemBuilder: (context, index) {
                                     final Map entry = speechType.value['inputs'].reversed.toList()[index];
-                                    if (!entry.containsKey('guess') || entry['guess'] == null){
-                                      return Text('skipped');
+
+                                    if (!entry.containsKey('guess') || entry['guess'] == null) {
+                                      return const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 6),
+                                        child: Text('Skipped', style: TextStyle(color: Colors.grey)),
+                                      );
                                     }
-                                    return Container(
-                                      decoration: BoxDecoration(
-                                        
-                                      ),
-                                      child: Text(
-                                        entry['guess']
+
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 6),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: const Color.fromARGB(255, 19, 54, 79),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  entry['correct'] ? Icons.check_circle : Icons.cancel,
+                                                  color: entry['correct'] ? Colors.green : Colors.red,
+                                                  size: 20,
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Expanded(
+                                                  child: Text(
+                                                    entry['guess'],
+                                                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              ' — ${DateFormat('d MMM yyyy, h:mm a').format(DateTime.parse(entry['date']))}',
+                                              style: const TextStyle(fontSize: 12, color: Colors.white70),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     );
                                   },
