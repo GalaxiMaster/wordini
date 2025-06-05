@@ -180,7 +180,9 @@ class MWTaggedText extends StatelessWidget {
     }
   }
   String parseMerriamWebsterTags(String input) {
-    final tagPattern = RegExp(r'\{([^|{}]+)\|([^|{}]*)\|([^|{}]*)\|?([^|{}]*)\}');
+    final tagPattern = RegExp(
+      r'\{([^|{}]+)\|([^|{}]*)(?:\|([^|{}]*))?(?:\|([^|{}]*))?\}'
+    );
     return input.replaceAllMapped(tagPattern, (match) {
       final type = match[1];
       final part1 = match[2];
