@@ -84,19 +84,17 @@ void addWordToList(String word, context) {
       return;
     }
 
-    data[word] = wordDetails;
     loadingOverlay.removeLoadingOverlay();
-    final Map<String, dynamic> allData = await readData();
-    allData[word] = wordDetails;
+    final Set allTags = await gatherTags();
     bool? result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => WordDetails(words: allData, wordId: word, addWordMode: true,))
+      MaterialPageRoute(builder: (context) => WordDetails(word: wordDetails, addWordMode: true, allTags: allTags,))
     );
     if (!(result ?? false)) {
       return;
     }
     Navigator.pop(context);
 
-    writeData(data, append: false);
+    writeWord(word, wordDetails);
   });
 }

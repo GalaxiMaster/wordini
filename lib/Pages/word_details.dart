@@ -5,10 +5,11 @@ import 'package:vocab_app/word_functions.dart';
 import 'package:intl/intl.dart';
 
 class WordDetails extends StatefulWidget {
-  final Map<String, dynamic> words;
-  final String wordId;
   final bool addWordMode;
-  const WordDetails({super.key, required this.words, required this.wordId, this.addWordMode = false});
+  final Map word;
+  final Set allTags;
+  const WordDetails({super.key, required this.word, required this.allTags, this.addWordMode = false});
+  
   @override
   // ignore: library_private_types_in_public_api
   _WordDetailstate createState() => _WordDetailstate();
@@ -28,17 +29,15 @@ class _WordDetailstate extends State<WordDetails> {
   @override
   void initState() {
     super.initState();
-    word = widget.words[widget.wordId];
-    allTags = widget.words.values
-        .expand((w) => w['tags'] ?? [])
-        .toSet(); // Collect all unique tags from all words
+    word = widget.word;
+    allTags = widget.allTags;
     _controller.addListener(() {
       setState(() {
         currentPage = _controller.page ?? 0;
       });
     });
   }
-
+  
   void _showTagPopup(BuildContext context) {
     if (_tagOverlayEntry != null) return;
     final overlay = Overlay.of(context);
@@ -161,8 +160,7 @@ class _WordDetailstate extends State<WordDetails> {
       word['tags'] ??= [];
       if (!word['tags'].contains(value.trim())) {
         word['tags'].add(value.trim());
-        widget.words[widget.wordId] = word;
-        writeData(widget.words, append: false);
+       writeWord(word['word'], word);
       }
     });
   }
@@ -170,8 +168,7 @@ class _WordDetailstate extends State<WordDetails> {
   void _removeTag(String tag) {
     setState(() {
       word['tags']?.remove(tag);
-      widget.words[widget.wordId] = word;
-      writeData(widget.words, append: false);
+      writeWord(word['word'], word);
       // Optionally, update allTags if you want to remove tags not used anywhere
       // allTags = widget.words.values.expand((w) => w['tags'] ?? []).toSet();
     });
@@ -324,8 +321,7 @@ class _WordDetailstate extends State<WordDetails> {
                                         onPressed: () {
                                           setState(() {
                                             speechType.value['selected'] = !speechType.value['selected'];
-                                            widget.words[widget.wordId] = word;
-                                            writeData(widget.words, append: false);                                          
+                                            writeWord(word['word'], word);
                                           });
                                         },
                                         icon: Icon(
@@ -426,8 +422,7 @@ class _WordDetailstate extends State<WordDetails> {
                                                       if (value == 'delete') {
                                                         setState(() {
                                                           entry['definitions'].removeAt(defIndex);
-                                                          widget.words[widget.wordId] = word;
-                                                          writeData(widget.words, append: false);
+                                                          writeWord(word['word'], word);
                                                         });
                                                       }
                                                       else if (value == 'edit') {
@@ -461,8 +456,7 @@ class _WordDetailstate extends State<WordDetails> {
                                                                   onPressed: () {
                                                                     setState(() {
                                                                       entry['definitions'][defIndex][0]['definition'] = editController.text;
-                                                                      widget.words[widget.wordId] = word;
-                                                                      writeData(widget.words, append: false);
+                                                                      writeWord(word['word'], word);
                                                                     });
                                                                     Navigator.of(context).pop();
                                                                   },

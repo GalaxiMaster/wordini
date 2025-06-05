@@ -354,7 +354,7 @@ class _WordListState extends State<WordList> {
                   padding: EdgeInsets.zero, // Remove default padding
                   itemCount: filteredWords.length,
                   itemBuilder: (context, index) {
-                    final word = filteredWords[index];
+                    final String word = filteredWords[index];
                     return InkWell(
                       onLongPress: () async {
                         deleteWord(word);
@@ -366,7 +366,7 @@ class _WordListState extends State<WordList> {
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => WordDetails(words: words, wordId: word),
+                            builder: (context) => WordDetails(word: words[word], allTags: allTags),
                           ),
                         );
                         setState(() {
