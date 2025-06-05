@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:vocab_app/Pages/add_word.dart';
 import 'package:vocab_app/Pages/quizzes.dart';
+import 'package:vocab_app/Pages/settings.dart';
 import 'package:vocab_app/Pages/word_list.dart';
 
 class HomePage extends StatefulWidget {
@@ -64,7 +65,24 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: _pages[_currentIndex],
+      body: Stack(
+        children: [
+          Positioned(
+            right: 0,
+            child: IconButton(
+              padding: EdgeInsets.all(20),
+              onPressed: (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsPage())
+                );
+              }, 
+              icon: Icon(Icons.settings)
+            )
+          ),
+          _pages[_currentIndex],
+        ],
+      ),
     );
   }
 }
