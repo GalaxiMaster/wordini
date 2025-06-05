@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 Future<Map<String, dynamic>> readData({String path = 'words'}) async {
   final box = await Hive.openBox(path);
@@ -58,4 +63,35 @@ Future<void> addInputEntry(String word, String partOfSpeech, Map entry) async{
   data[partOfSpeech] ??= [];
   data[partOfSpeech].insert(0, entry);
   box.put(word, data);
+}
+
+Future<void> exportJson({String boxName = 'words'}) async {
+  try {
+    final box = await Hive.openBox(boxName);
+    final data = Map<String, dynamic>.from(box.toMap());
+
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/$boxName-export.json';
+
+    final file = File(path);
+
+    // Write the JSON to a file
+    final jsonString = const JsonEncoder.withIndent('  ').convert(data);
+    await file.writeAsString(jsonString);
+
+    // Share the file
+    if (await file.exists()) {
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(path)],
+          text: '📚 Exported data from "$boxName"',
+        ),
+      );
+
+    } else {
+      debugPrint('Error: Exported JSON file does not exist');
+    }
+  } catch (e) {
+    debugPrint('Error exporting JSON: $e');
+  }
 }
