@@ -170,8 +170,9 @@ Future<void> importData(BuildContext context) async {
       _showErrorDialog(context, "Invalid JSON file.");
       return;
     }
-
-    await writeData(jsonData, append: true);
+    for (String key in jsonData.keys){
+      await writeData(jsonData[key], append: true, path: key);
+    }
 
     if (!context.mounted) return; // resolves build_context_synchronously warning
     _showSuccessDialog(context);

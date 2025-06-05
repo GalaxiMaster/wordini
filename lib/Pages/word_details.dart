@@ -649,7 +649,6 @@ class _WordDetailstate extends State<WordDetails> {
                                   itemCount: inputs[speechType.value['partOfSpeech']].length,
                                   itemBuilder: (context, index) {
                                     final Map entry = inputs[speechType.value['partOfSpeech']][index];
-
                                     if (!entry.containsKey('guess') || entry['guess'] == null) {
                                       return Padding(
                                         padding: const EdgeInsets.symmetric(vertical: 6),
