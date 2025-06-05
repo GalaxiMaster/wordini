@@ -191,6 +191,7 @@ class MWTaggedText extends StatelessWidget {
             // {sx|fashion||} → "fashion"
             return '— $part1';
           case 'a_link':
+            return part1;
           case 'd_link':
           case 'i_link':
           case 'et_link':
