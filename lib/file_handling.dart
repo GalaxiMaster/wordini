@@ -45,10 +45,17 @@ Future<dynamic> readKey(String key, {String path = 'words'}) async {
   return box.get(key);
 }
 
-Future<void> resetData({String path = 'words',}) async {
-  final box = await Hive.openBox(path);
-
-  await box.clear();
+Future<void> resetData(context, {String? path}) async {
+  List choices;
+  if (path != null){
+    choices = [path];
+  }else {
+    choices = await getChoices(context);
+  }
+  for (String choice in choices){
+    final box = await Hive.openBox(choice);
+    await box.clear();
+  }
 }
 
 Future<Set> gatherTags() async{
@@ -72,7 +79,7 @@ Future<void> exportJson(BuildContext context) async {
   LoadingOverlay loadingOverlay = LoadingOverlay();
   try {
 
-    List exportChoices = await getExportChoices(context);
+    List exportChoices = await getChoices(context);
     if (context.mounted) loadingOverlay.showLoadingOverlay(context);
     Map data = {};
     for (String choice in exportChoices){
@@ -108,7 +115,7 @@ Future<void> exportJson(BuildContext context) async {
   }
   loadingOverlay.removeLoadingOverlay();
 }
-Future<List> getExportChoices(context) async{
+Future<List> getChoices(context) async{
   final List choices = await showDialog(
     context: context,
     builder: (context) {
@@ -167,7 +174,7 @@ Future<void> importData(BuildContext context) async {
 
     final jsonData = _parseJson(content);
     if (jsonData == null) {
-      _showErrorDialog(context, "Invalid JSON file.");
+      if (context.mounted) _showErrorDialog(context, "Invalid JSON file.");
       return;
     }
     for (String key in jsonData.keys){

@@ -43,6 +43,13 @@ class SettingsPageState extends State<SettingsPage> {
                     await importData(context);
                   },
                 ),
+                _buildSettingsTile(
+                  icon: Icons.restart_alt,
+                  label: 'Reset Data',
+                  function: () async {
+                    await resetData(context);
+                  },
+                ),
               ],
             );
           } else {
