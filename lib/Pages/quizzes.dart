@@ -165,7 +165,7 @@ class _QuizzesState extends State<Quizzes> {
                             value = value.trim();
                             if (value.toLowerCase() == currentWord['word'].toLowerCase()) return; // ADD error message for this
 
-                            bool? correct = await checkDefinition(currentWord['word'], value, '', context);
+                            bool? correct = await checkDefinition(currentWord['word'], value, currentWord['attributes']['partOfSpeech'], context);
 
                             if (correct == null) return;
 

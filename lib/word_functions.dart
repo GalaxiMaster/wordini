@@ -239,7 +239,7 @@ Map organiseToSpeechPart(List wordDetails) {
   return organised;
 }
 
-Future<bool?> checkDefinition(word, userDef, actualDef, context) async{
+Future<bool?> checkDefinition(word, userDef, partOfSpeech, context) async{
   // the system message that will be sent to the request.
   final systemMessage = OpenAIChatCompletionChoiceMessageModel(
     content: [
@@ -255,7 +255,7 @@ Future<bool?> checkDefinition(word, userDef, actualDef, context) async{
 
     content: [
       OpenAIChatCompletionChoiceMessageContentItemModel.text(
-        "Does the user's definition '$userDef' correctly define the word '$word'", // , whose definition is '$actualDef'? // ! TODO this doesnt account for multiple definitions so its out currently
+        "Does the user's definition '$userDef' correctly define the $partOfSpeech '$word'", // , whose definition is '$actualDef'? // ! TODO this doesnt account for multiple definitions so its out currently
       ),
     ],
     role: OpenAIChatMessageRole.user,
