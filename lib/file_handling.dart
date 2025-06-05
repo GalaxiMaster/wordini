@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:vocab_app/widgets.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:vocab_app/word_functions.dart';
 
 Future<Map<String, dynamic>> readData({String path = 'words'}) async {
   final box = await Hive.openBox(path);
@@ -67,15 +68,22 @@ Future<void> addInputEntry(String word, String partOfSpeech, Map entry) async{
   box.put(word, data);
 }
 
-Future<void> exportJson(BuildContext context, {String boxName = 'words'}) async {
+Future<void> exportJson(BuildContext context) async {
   LoadingOverlay loadingOverlay = LoadingOverlay();
   try {
-    loadingOverlay.showLoadingOverlay(context);
-    final box = await Hive.openBox(boxName);
-    final data = Map<String, dynamic>.from(box.toMap());
+
+    List exportChoices = await getExportChoices(context);
+    if (context.mounted) loadingOverlay.showLoadingOverlay(context);
+    Map data = {};
+    for (String choice in exportChoices){
+      final box = await Hive.openBox(choice);
+      final boxData = Map<String, dynamic>.from(box.toMap());
+      data[choice] = boxData;
+    }
+
 
     final directory = await getApplicationDocumentsDirectory();
-    final path = '${directory.path}/$boxName-export.json';
+    final path = '${directory.path}/export.json';
 
     final file = File(path);
 
@@ -100,7 +108,55 @@ Future<void> exportJson(BuildContext context, {String boxName = 'words'}) async 
   }
   loadingOverlay.removeLoadingOverlay();
 }
-
+Future<List> getExportChoices(context) async{
+  final List choices = await showDialog(
+    context: context,
+    builder: (context) {
+      Map options = {
+        'words': true,
+        'inputs': true,
+        // 'settings': true
+      };
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Data to export:'),
+            content: IntrinsicHeight(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (String option in options.keys)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(capitalise(option)),
+                        Switch.adaptive(
+                          value: options[option],
+                          onChanged: (value) {
+                            debugPrint('balls $value ${options[option]}');
+                            setState(() {
+                              options[option] = value;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(options.entries.where((entry) => entry.value).map((entry)=> entry.key).toList()),
+                child: const Text('OK!'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+  return choices;
+}
 Future<void> importData(BuildContext context) async {
   try {
     final result = await _pickJsonFile();

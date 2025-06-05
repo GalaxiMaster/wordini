@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
 
 class LoadingOverlay {
-  late OverlayEntry _overlayEntry;
-
-  void showLoadingOverlay(BuildContext context) {
-    _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned.fill(
-        child: Material(
-          color: Colors.black.withValues(alpha: 255/2),
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
+  final OverlayEntry _overlayEntry = OverlayEntry(
+    builder: (context) => Positioned.fill(
+      child: Material(
+        color: Colors.black.withValues(alpha: 255/2),
+        child: Center(
+          child: CircularProgressIndicator(),
         ),
       ),
-    );
+    ),
+  );
+  bool overlayOn = false;
+  void showLoadingOverlay(BuildContext context) {
+    if (overlayOn) return;
     Overlay.of(context).insert(_overlayEntry);
+    overlayOn = true;
   }
 
   // Remove loading overlay
   void removeLoadingOverlay() {
+    if (!overlayOn) return;
     _overlayEntry.remove();
+    _overlayEntry.dispose();
+    overlayOn = false;
   }
 }
 void errorOverlay(context, String message) {
