@@ -115,13 +115,13 @@ class _QuizzesState extends State<Quizzes> {
                               });
                               entryController.clear();
                               questionsDone++; // up counter in the top right
-                              rawWords[currentWord['word']]['entries'][partOfSpeech]['inputs'] ??= [];
-                              rawWords[currentWord['word']]['entries'][partOfSpeech]['inputs'].insert(0, {
-                                'skipped': true,
-                                'date': DateTime.now().toString(),
-                              });
-
-                              writeData(rawWords, append: false);
+                              addInputEntry(
+                                currentWord['word'], 
+                                {
+                                  'skipped': true,
+                                  'date': DateTime.now().toString(),
+                                }
+                              );
                             },
                           ),
                       ],
@@ -182,17 +182,14 @@ class _QuizzesState extends State<Quizzes> {
                               errorOverlay(context, 'Wrong answer');
                             }
                             questionsDone++;
-                            rawWords[currentWord['word']]['entries'][partOfSpeech]['inputs'] ??= [];
-                            rawWords[currentWord['word']]['entries'][partOfSpeech]['inputs'].insert(
-                              0, 
+                            addInputEntry(
+                              currentWord['word'], 
                               {
                                 'guess': value,
                                 'correct': correct,
                                 'date': DateTime.now().toString(),
                               }
                             );
-
-                            writeData(rawWords, append: false);
                           },
                         ),
                       ],

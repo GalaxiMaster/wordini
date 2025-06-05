@@ -25,6 +25,7 @@ class _WordDetailstate extends State<WordDetails> {
   final TextEditingController _tagController = TextEditingController();
   final FocusNode _tagFocusNode = FocusNode();
   late Set allTags = {};
+  late List inputs  = [];
 
   @override
   void initState() {
@@ -36,6 +37,7 @@ class _WordDetailstate extends State<WordDetails> {
         currentPage = _controller.page ?? 0;
       });
     });
+    getInputs();
   }
   
   void _showTagPopup(BuildContext context) {
@@ -172,6 +174,15 @@ class _WordDetailstate extends State<WordDetails> {
       // Optionally, update allTags if you want to remove tags not used anywhere
       // allTags = widget.words.values.expand((w) => w['tags'] ?? []).toSet();
     });
+  }
+  
+  void getInputs() async {
+    final data = await readKey(word['word'], path: 'inputs');
+    if (data != null){
+      setState(() {
+        inputs = data;
+      });
+    }
   }
 
   @override
@@ -619,7 +630,7 @@ class _WordDetailstate extends State<WordDetails> {
                                   ),
                                 ],
                               ],
-                              if (speechType.value['inputs'] != null && speechType.value['inputs'].isNotEmpty) ...[
+                              if (inputs.isNotEmpty) ...[
                                 Divider(),
                                 Row(
                                   children: const [
@@ -635,9 +646,9 @@ class _WordDetailstate extends State<WordDetails> {
                                 ListView.builder(
                                   shrinkWrap: true,
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                  itemCount: speechType.value['inputs'].length,
+                                  itemCount: inputs.length,
                                   itemBuilder: (context, index) {
-                                    final Map entry = speechType.value['inputs'][index];
+                                    final Map entry = inputs[index];
 
                                     if (!entry.containsKey('guess') || entry['guess'] == null) {
                                       return Padding(
@@ -748,5 +759,6 @@ class _WordDetailstate extends State<WordDetails> {
       ),
     );
   }
+  
 }
 

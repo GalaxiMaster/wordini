@@ -32,9 +32,9 @@ Future<void> writeWord(String key, Map data, {String path = 'words',}) async {
   box.put(key, data);
 }
 
-Future<dynamic> readWord(String word, {String path = 'words'}) async {
+Future<dynamic> readKey(String key, {String path = 'words'}) async {
   final box = await Hive.openBox(path);
-  return box.get(word);
+  return box.get(key);
 }
 
 Future<void> resetData({String path = 'words',}) async {
@@ -50,4 +50,11 @@ Future<Set> gatherTags() async{
     .expand((w) => w['tags'] ?? [])
     .toSet(); // Collect all unique tags from all words
   return allTags;
+}
+
+Future<void> addInputEntry(String word, Map entry) async{
+  final Box box = await Hive.openBox('inputs');
+  List data = box.get(word, defaultValue: []);
+  data.insert(0, entry);
+  box.put(word, data);
 }
