@@ -646,7 +646,7 @@ class _WordDetailstate extends State<WordDetails> {
                                 ListView.builder(
                                   shrinkWrap: true,
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                  itemCount: inputs.length,
+                                  itemCount: inputs[speechType.value['partOfSpeech']].length,
                                   itemBuilder: (context, index) {
                                     final Map entry = inputs[speechType.value['partOfSpeech']][index];
 
