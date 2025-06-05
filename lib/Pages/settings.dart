@@ -32,7 +32,9 @@ class SettingsPageState extends State<SettingsPage> {
                 _buildSettingsTile(
                   icon: Icons.upload_rounded,
                   label: 'Export Data',
-                  function: exportJson,
+                  function: () async {
+                    await exportJson(context);
+                  },
                 ),
               ],
             );

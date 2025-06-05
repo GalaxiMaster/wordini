@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:vocab_app/widgets.dart';
 
 Future<Map<String, dynamic>> readData({String path = 'words'}) async {
   final box = await Hive.openBox(path);
@@ -65,8 +66,10 @@ Future<void> addInputEntry(String word, String partOfSpeech, Map entry) async{
   box.put(word, data);
 }
 
-Future<void> exportJson({String boxName = 'words'}) async {
+Future<void> exportJson(BuildContext context, {String boxName = 'words'}) async {
+  LoadingOverlay loadingOverlay = LoadingOverlay();
   try {
+    loadingOverlay.showLoadingOverlay(context);
     final box = await Hive.openBox(boxName);
     final data = Map<String, dynamic>.from(box.toMap());
 
@@ -94,4 +97,5 @@ Future<void> exportJson({String boxName = 'words'}) async {
   } catch (e) {
     debugPrint('Error exporting JSON: $e');
   }
+  loadingOverlay.removeLoadingOverlay();
 }
