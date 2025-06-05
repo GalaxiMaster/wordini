@@ -344,8 +344,7 @@ class _WordDetailstate extends State<WordDetails> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              editMode
-                                  ? ReorderableListView.builder(
+                              if (editMode) ReorderableListView.builder(
                                       shrinkWrap: true,
                                       physics: const NeverScrollableScrollPhysics(),
                                       onReorder: (oldIndex, newIndex) {
@@ -385,6 +384,7 @@ class _WordDetailstate extends State<WordDetails> {
                                               itemCount: entry['definitions'].length,
                                               itemBuilder: (context, defIndex) {
                                                 var definition = entry['definitions'][defIndex];
+                                                debugPrint("${definition}test");
                                                 return ListTile(
                                                   key: ValueKey("def_${index}_$defIndex"),
                                                   dense: true,
@@ -392,36 +392,43 @@ class _WordDetailstate extends State<WordDetails> {
                                                   leading: const Icon(Icons.drag_indicator, size: 18),
                                                   title: Padding(
                                                     padding: EdgeInsets.zero, // Remove padding from the title
-                                                    child: Row(
-                                                      mainAxisAlignment: MainAxisAlignment.start,
+                                                    child: Column(
                                                       crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
-                                                        MWTaggedText(
-                                                          "{b}${indexToLetter(defIndex)}){/b} ",
-                                                          style: const TextStyle(fontSize: 16),
+                                                        Row(
+                                                          mainAxisAlignment: MainAxisAlignment.start,
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            MWTaggedText(
+                                                              "{b}${indexToLetter(defIndex)}){/b} ",
+                                                              style: const TextStyle(fontSize: 16),
+                                                            ),
+                                                            SizedBox(width: 2,),
+                                                            Expanded(
+                                                              child: MWTaggedText(
+                                                                "${definition[0]['definition']}",
+                                                                style: const TextStyle(fontSize: 16),
+                                                              )
+                                                            ),
+                                                          ],
                                                         ),
-                                                        SizedBox(width: 2,),
-                                                        Expanded(
-                                                          child: MWTaggedText(
-                                                            "${definition[0]['definition']}",
-                                                            style: const TextStyle(fontSize: 16),
-                                                          )
-                                                          // TextFormField(
-                                                          //   initialValue: "{b}${indexToLetter(defIndex)}){/b} ${definition[0]['definition']}",
-                                                          //   style: const TextStyle(fontSize: 16),
-                                                          //   decoration: const InputDecoration(
-                                                          //     isDense: true,
-                                                          //     contentPadding: EdgeInsets.zero, // Remove padding inside the TextFormField
-                                                          //     // border: InputBorder.none,
-                                                          //   ),
-                                                          //   onChanged: (val) {
-                                                          //     setState(() {
-                                                          //       entry['definitions'][defIndex][0]['definition'] = val;
-                                                          //       widget.words[widget.wordId] = word;
-                                                          //       writeData(widget.words, append: false);
-                                                          //     });
-                                                          //   },
-                                                          // ),
+                                                        for (String example in definition[0]['example'])
+                                                        Padding(
+                                                          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
+                                                          child: Container(
+                                                            decoration: BoxDecoration(
+                                                              border: Border(
+                                                                left: BorderSide(
+                                                                  color: Colors.blue.shade300,
+                                                                  width: 4,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                                                            child: MWTaggedText(
+                                                              capitalise(example),
+                                                            ),
+                                                          ),
                                                         ),
                                                       ],
                                                     ),
@@ -509,8 +516,7 @@ class _WordDetailstate extends State<WordDetails> {
                                           ],
                                         );
                                       },
-                                    )
-                                  : Column(
+                                    ) else Column(
                                       children: speechType.value['details'].asMap().entries.map<Widget>((entry) {
                                         return Padding(
                                           padding: const EdgeInsets.only(bottom: 6),
@@ -526,12 +532,35 @@ class _WordDetailstate extends State<WordDetails> {
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
                                                     for (var definition in entry.value['definitions'].asMap().entries)
-                                                      Padding(
-                                                        padding: const EdgeInsets.symmetric(vertical: 4),
-                                                        child: MWTaggedText(
-                                                          "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}", // Currently set to only show the first wording of it
-                                                          style: const TextStyle(fontSize: 16),
+                                                      Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Padding(
+                                                            padding: const EdgeInsets.symmetric(vertical: 4),
+                                                            child: MWTaggedText(
+                                                              "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}", // Currently set to only show the first wording of it
+                                                              style: const TextStyle(fontSize: 16),
+                                                            ),
+                                                          ),
+                                                          for (String example in definition.value[0]['example'])
+                                                        Padding(
+                                                          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
+                                                          child: Container(
+                                                            decoration: BoxDecoration(
+                                                              border: Border(
+                                                                left: BorderSide(
+                                                                  color: Colors.blue.shade300,
+                                                                  width: 4,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                                                            child: MWTaggedText(
+                                                              capitalise(example),
+                                                            ),
+                                                          ),
                                                         ),
+                                                        ],
                                                       ),
                                                   ],
                                                 ),
