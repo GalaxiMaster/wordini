@@ -117,6 +117,7 @@ class _QuizzesState extends State<Quizzes> {
                               questionsDone++; // up counter in the top right
                               addInputEntry(
                                 currentWord['word'], 
+                                currentWord['attributes']['partOfSpeech'], 
                                 {
                                   'skipped': true,
                                   'date': DateTime.now().toString(),
@@ -183,7 +184,8 @@ class _QuizzesState extends State<Quizzes> {
                             }
                             questionsDone++;
                             addInputEntry(
-                              currentWord['word'], 
+                              currentWord['word'],
+                              currentWord['attributes']['partOfSpeech'], 
                               {
                                 'guess': value,
                                 'correct': correct,

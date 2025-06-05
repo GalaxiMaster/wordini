@@ -25,7 +25,7 @@ class _WordDetailstate extends State<WordDetails> {
   final TextEditingController _tagController = TextEditingController();
   final FocusNode _tagFocusNode = FocusNode();
   late Set allTags = {};
-  late List inputs  = [];
+  late Map inputs  = {};
 
   @override
   void initState() {
@@ -37,7 +37,6 @@ class _WordDetailstate extends State<WordDetails> {
         currentPage = _controller.page ?? 0;
       });
     });
-    getInputs();
   }
   
   void _showTagPopup(BuildContext context) {
@@ -307,6 +306,7 @@ class _WordDetailstate extends State<WordDetails> {
                       itemCount: word['entries'].length,
                       itemBuilder: (context, index) {
                         MapEntry speechType = word['entries'].entries.toList().elementAt(index);
+                        getInputs();
                         return SingleChildScrollView(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -630,7 +630,7 @@ class _WordDetailstate extends State<WordDetails> {
                                   ),
                                 ],
                               ],
-                              if (inputs.isNotEmpty) ...[
+                              if (inputs[speechType.value['partOfSpeech']] != null && inputs[speechType.value['partOfSpeech']].isNotEmpty) ...[
                                 Divider(),
                                 Row(
                                   children: const [
@@ -648,7 +648,7 @@ class _WordDetailstate extends State<WordDetails> {
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                   itemCount: inputs.length,
                                   itemBuilder: (context, index) {
-                                    final Map entry = inputs[index];
+                                    final Map entry = inputs[speechType.value['partOfSpeech']][index];
 
                                     if (!entry.containsKey('guess') || entry['guess'] == null) {
                                       return Padding(
