@@ -3,103 +3,80 @@ import 'package:vocab_app/file_handling.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
   @override
-  // ignore: library_private_types_in_public_api
   SettingsPageState createState() => SettingsPageState();
 }
 
 class SettingsPageState extends State<SettingsPage> {
   @override
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text('Settings'),
+        centerTitle: true,
+      ),
       body: FutureBuilder(
-      future: readData(path: 'settings'),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return const Center(child: Text('Error loading data'));
-        } else if (snapshot.hasData) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              settingsheader('Functions'),
-              _buildSettingsBox(
-                icon: Icons.upload,
-                label: 'Export data',
-                function: exportJson,
-              )
-            ],
-          );
-        } else {
-          return const Center(child: Text('No data available'));
-        }
-      },
+        future: readData(path: 'settings'),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return const Center(child: Text('Error loading data'));
+          } else if (snapshot.hasData) {
+            return ListView(
+              padding: const EdgeInsets.all(16.0),
+              children: [
+                settingsHeader('Functions'),
+                const SizedBox(height: 8),
+                _buildSettingsTile(
+                  icon: Icons.upload_rounded,
+                  label: 'Export Data',
+                  function: exportJson,
+                ),
+              ],
+            );
+          } else {
+            return const Center(child: Text('No data available'));
+          }
+        },
       ),
     );
   }
 
-  Padding settingsheader(String header) {
+  Widget settingsHeader(String header) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.only(left: 4, top: 16, bottom: 8),
       child: Text(
-        header,
-        textAlign: TextAlign.left,
-        style: const TextStyle(
-          fontSize: 16,
-          color: Colors.grey,
-          fontWeight: FontWeight.bold,
-          letterSpacing: .8
-        ),
+        header.toUpperCase(),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.0,
+            ),
       ),
     );
   }
-  Divider setttingDividor() => Divider(
-        thickness: .3,
-        color: Colors.grey.withValues(alpha: 0.5),
-        height: 1,
-      );
-}
-Widget _buildSettingsBox({
+
+  Widget _buildSettingsTile({
     required IconData icon,
     required String label,
     required VoidCallback? function,
-    Widget? rightside
+    Widget? rightside,
   }) {
-    return GestureDetector(
-      onTap: function,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(8.0),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 173, 173, 173).withOpacity(0.1), // Background color for the whole box
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 1,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: ListTile(
+        onTap: function,
+        leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+        title: Text(
+          label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
-        child: Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: Row(
-            children: [
-              Icon(icon),
-              const SizedBox(width: 8.0),
-              Text(
-                label,
-                style: const TextStyle(
-                   fontSize: 23,
-                ),
-              ),
-              const Spacer(),
-              rightside ??
-                Container(
-                  padding: const EdgeInsets.all(6.0),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_forward_ios),
-                ),
-            ],
-          ),
-        ),
+        trailing: rightside ?? const Icon(Icons.arrow_forward_ios_rounded, size: 16),
       ),
     );
   }
+}
