@@ -36,6 +36,13 @@ class SettingsPageState extends State<SettingsPage> {
                     await exportJson(context);
                   },
                 ),
+                _buildSettingsTile(
+                  icon: Icons.download_rounded,
+                  label: 'Import Data',
+                  function: () async {
+                    await importData(context);
+                  },
+                ),
               ],
             );
           } else {

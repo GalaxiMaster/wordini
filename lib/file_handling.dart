@@ -6,6 +6,7 @@ import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:vocab_app/widgets.dart';
+import 'package:file_picker/file_picker.dart';
 
 Future<Map<String, dynamic>> readData({String path = 'words'}) async {
   final box = await Hive.openBox(path);
@@ -87,7 +88,7 @@ Future<void> exportJson(BuildContext context, {String boxName = 'words'}) async 
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(path)],
-          text: '📚 Exported data from "$boxName"',
+          text: 'Exported data from vocab app',
         ),
       );
 
@@ -98,4 +99,92 @@ Future<void> exportJson(BuildContext context, {String boxName = 'words'}) async 
     debugPrint('Error exporting JSON: $e');
   }
   loadingOverlay.removeLoadingOverlay();
+}
+
+Future<void> importData(BuildContext context) async {
+  try {
+    final result = await _pickJsonFile();
+    if (result == null) return;
+
+    final content = await _readFileContent(result);
+    if (content == null) return;
+
+    final jsonData = _parseJson(content);
+    if (jsonData == null) {
+      _showErrorDialog(context, "Invalid JSON file.");
+      return;
+    }
+
+    await writeData(jsonData, append: true);
+
+    if (!context.mounted) return; // resolves build_context_synchronously warning
+    _showSuccessDialog(context);
+
+    debugPrint("Parsed JSON data: $jsonData");
+  } catch (e) {
+    debugPrint("Error during import: $e");
+    if (context.mounted) {
+      _showErrorDialog(context, "Failed to import data. $e");
+    }
+  }
+}
+
+Future<File?> _pickJsonFile() async {
+  final result = await FilePicker.platform.pickFiles(
+    type: FileType.custom,
+    allowedExtensions: ['json'],
+  );
+  if (result == null || result.files.isEmpty) return null;
+
+  final path = result.files.single.path;
+  return path != null ? File(path) : null;
+}
+
+Future<String?> _readFileContent(File file) async {
+  try {
+    return await file.readAsString();
+  } catch (e) {
+    debugPrint("Failed to read file: $e");
+    return null;
+  }
+}
+
+Map<String, dynamic>? _parseJson(String content) {
+  try {
+    return jsonDecode(content) as Map<String, dynamic>;
+  } catch (e) {
+    debugPrint("JSON decode error: $e");
+    return null;
+  }
+}
+
+void _showSuccessDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Data Imported'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('OK'),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showErrorDialog(BuildContext context, String message) {
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Error'),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('OK'),
+        ),
+      ],
+    ),
+  );
 }
