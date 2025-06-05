@@ -13,6 +13,7 @@ class AddWord extends StatefulWidget {
 
 class _AddWordState extends State<AddWord> {
   final FocusNode _addWordTextBoxFN = FocusNode();
+  final TextEditingController _addWordTextBoxController = TextEditingController();
   @override
   initState() {
     super.initState();
@@ -43,15 +44,47 @@ class _AddWordState extends State<AddWord> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 75),
-                child: TextField(
-                  focusNode: _addWordTextBoxFN,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 20,
-                  ), 
-                  onSubmitted: (value) {
-                    addWordToList(value, context);
-                  },
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _addWordTextBoxController,
+                      focusNode: _addWordTextBoxFN,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 20,
+                      ), 
+                      onSubmitted: (value) {
+                        addWordToList(value, context);
+                      },
+                      onChanged: (value) => setState(() {}), // TODO optomise
+                    ),
+                    SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () async{
+                        if (_addWordTextBoxController.text.isNotEmpty){
+                          final allTags = await gatherTags();
+                          if (!context.mounted) return;
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => WordDetails(
+                              word: {'word': _addWordTextBoxController.text, 'entries': {}}, 
+                              allTags: allTags
+                            ))
+                          );
+                        }
+                        
+                      },
+                      child: Text(
+                        'Word not found? Add manually',
+                        style: TextStyle(
+                          color: _addWordTextBoxController.text.isNotEmpty ? Colors.blue : Colors.grey,
+                          // decoration: TextDecoration.underline,
+                          // decorationColor: Colors.blue,
+                          // decorationStyle: TextDecorationStyle.dotted
+                        ),
+                      ),
+                    )
+                  ],
                 ),
               ),
             ],
