@@ -35,6 +35,12 @@ class _QuizzesState extends State<Quizzes> {
       _entryFocusNode.requestFocus();
     });
   }
+    @override
+  void dispose() {
+    entryController.dispose();
+    _entryFocusNode.dispose();
+    super.dispose();
+  }
 
   // Gather selected definitions from the data (returns a List)
   List<Map> _gatherSelectedDefinitions(Map words) {

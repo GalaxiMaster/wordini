@@ -21,6 +21,11 @@ class _AddWordState extends State<AddWord> {
       _addWordTextBoxFN.requestFocus();
     });
   }
+    @override
+  void dispose() {
+    _addWordTextBoxFN.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(

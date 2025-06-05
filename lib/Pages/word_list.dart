@@ -206,7 +206,12 @@ class _WordListState extends State<WordList> {
     _tagOverlayEntry = null;
     setState(() {});
   }
-
+  @override
+  void dispose() {
+    _tagController.dispose();
+    _tagFocusNode.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
