@@ -685,7 +685,7 @@ class _WordDetailState extends State<WordDetails> {
                                             entry['definitions'].insert(newDefIndex, defItem);
                                           });
                                         },
-                                        itemCount: entry['definitions'].length,
+                                        itemCount: entry['definitions']?.length ?? 0,
                                         itemBuilder: (context, defIndex) {
                                           var definition = entry['definitions'][defIndex];
                                           return ListTile(
@@ -834,7 +834,7 @@ class _WordDetailState extends State<WordDetails> {
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              for (var definition in entry.value['definitions'].asMap().entries)
+                                              for (var definition in (entry.value['definitions'] ?? []).asMap().entries)
                                                 Column(
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [

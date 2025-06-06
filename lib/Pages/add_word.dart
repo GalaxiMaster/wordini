@@ -71,29 +71,29 @@ class _AddWordState extends State<AddWord> {
                                 "word": _addWordTextBoxController.text,
                                 "dateAdded": DateTime.now().toString(),
                                 "entries": {
-                                  "noun": {
-                                    "synonyms": {},
-                                    "etymology": "",
-                                    "partOfSpeech": "",
-                                    "quotes": [],
-                                    "details": [
-                                      {
-                                        "definitions": [
-                                          // [
-                                          //   {
-                                          //     "definition": "",
-                                          //     "example": []
-                                          //   }
-                                          // ],
-                                        ],
-                                        "shortDefs": [],
-                                        "firstUsed": "",
-                                        "stems": [],
-                                        "homograph": 1
-                                      },
-                                    ],
-                                    "selected": true
-                                  },
+                                  // "": {
+                                  //   "synonyms": {},
+                                  //   "etymology": "",
+                                  //   "partOfSpeech": "",
+                                  //   "quotes": [],
+                                  //   "details": [
+                                  //     {
+                                  //       // "definitions": [
+                                  //       //   // [
+                                  //       //   //   {
+                                  //       //   //     "definition": "",
+                                  //       //   //     "example": []
+                                  //       //   //   }
+                                  //       //   // ],
+                                  //       // ],
+                                  //       // "shortDefs": [],
+                                  //       // "firstUsed": "",
+                                  //       // "stems": [],
+                                  //       // "homograph": 1
+                                  //     },
+                                  //   ],
+                                  //   "selected": true
+                                  // },
                                 }
                               }, 
                               
