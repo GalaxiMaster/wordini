@@ -96,7 +96,7 @@ class _AddWordState extends State<AddWord> {
                                   // },
                                 }
                               }, 
-                              
+                              editModeState: true,
                               allTags: allTags,
                               addWordMode: true,
                             ))

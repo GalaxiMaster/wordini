@@ -8,7 +8,8 @@ class WordDetails extends StatefulWidget {
   final bool addWordMode;
   final Map word;
   final Set allTags;
-  const WordDetails({super.key, required this.word, required this.allTags, this.addWordMode = false});
+  final bool editModeState;
+  const WordDetails({super.key, required this.word, required this.allTags, this.addWordMode = false, this.editModeState = false});
   
   @override
   // ignore: library_private_types_in_public_api
@@ -38,6 +39,15 @@ class _WordDetailState extends State<WordDetails> {
       });
     });
     getInputs();
+    if (widget.editModeState){
+      editMode = widget.editModeState;
+      // start by opening the new entry popup (designed for coming from manual entry)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _addSpeechPart();
+        }
+      });
+    }
   }
 
   void _addSpeechPart() {
