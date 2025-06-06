@@ -68,18 +68,35 @@ class _AddWordState extends State<AddWord> {
                             context,
                             MaterialPageRoute(builder: (context) => WordDetails(
                               word: {
-                                'word': _addWordTextBoxController.text, 
-                                'entries': {
-                                  'speechPart': {
-                                    'partOfSpeech': '', // FIX 
-                                    'selected': true,
-                                    'details': [],
-                                    'synonyms': {},
-                                    'etymology': '',
-                                    'quotes': [],
-                                  }
+                                "word": _addWordTextBoxController.text,
+                                "dateAdded": DateTime.now().toString(),
+                                "entries": {
+                                  "noun": {
+                                    "synonyms": {},
+                                    "etymology": "",
+                                    "partOfSpeech": "",
+                                    "quotes": [],
+                                    "details": [
+                                      {
+                                        "definitions": [
+                                          // [
+                                          //   {
+                                          //     "definition": "",
+                                          //     "example": []
+                                          //   }
+                                          // ],
+                                        ],
+                                        "shortDefs": [],
+                                        "firstUsed": "",
+                                        "stems": [],
+                                        "homograph": 1
+                                      },
+                                    ],
+                                    "selected": true
+                                  },
                                 }
                               }, 
+                              
                               allTags: allTags,
                               addWordMode: true,
                             ))

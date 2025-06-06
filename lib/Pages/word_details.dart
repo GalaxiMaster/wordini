@@ -87,7 +87,7 @@ class _WordDetailstate extends State<WordDetails> {
   }
 
   // Add new definition to current speech part
-  void _addDefinition(Map speechTypeValue) {
+  void _addDefinitionEntry(Map speechTypeValue, index) {
     showDialog(
       context: context,
       builder: (context) {
@@ -128,20 +128,14 @@ class _WordDetailstate extends State<WordDetails> {
                 final definition = definitionController.text.trim();
                 if (definition.isNotEmpty) {
                   setState(() {
-                    final newDefinition = {
-                      'definitions': [
-                        [
-                          {
-                            'definition': definition,
-                            'example': exampleController.text.trim().isEmpty 
-                                ? [] 
-                                : [exampleController.text.trim()],
-                          }
-                        ]
-                      ]
-                    };
-                    speechTypeValue['details'].add(newDefinition);
-                    writeWord(word['word'], word);
+                    final newDefinition = [{
+                      'definition': definition,
+                      'example': exampleController.text.trim().isEmpty 
+                          ? [] 
+                          : [exampleController.text.trim()],
+                    }];
+                    speechTypeValue['details'][index]['definitions'].add(newDefinition);
+                    // writeWord(word['word'], word);
                   });
                 }
                 Navigator.of(context).pop();
@@ -611,7 +605,7 @@ void _showTagPopup(BuildContext context) {
                                   ),
                                   if (editMode)
                                     IconButton(
-                                      onPressed: () => _addDefinition(speechType.value),
+                                      onPressed: () => _addDefinition(speechType.key),
                                       icon: const Icon(Icons.add, color: Colors.teal),
                                       tooltip: 'Add Definition',
                                     ),
@@ -661,6 +655,12 @@ void _showTagPopup(BuildContext context) {
                                                   "${index + 1}.",
                                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                                 ),
+                                                Spacer(),
+                                                IconButton(
+                                                  onPressed: () => _addDefinitionEntry(speechType.value, index),
+                                                  icon: const Icon(Icons.add, color: Colors.white),
+                                                  tooltip: 'Add Definition',
+                                                ),
                                               ],
                                             ),
                                             // ReorderableListView for definitions within this numbered definition
@@ -677,7 +677,6 @@ void _showTagPopup(BuildContext context) {
                                               itemCount: entry['definitions'].length,
                                               itemBuilder: (context, defIndex) {
                                                 var definition = entry['definitions'][defIndex];
-                                                debugPrint("${definition}test");
                                                 return ListTile(
                                                   key: ValueKey("def_${index}_$defIndex"),
                                                   dense: true,
@@ -1004,8 +1003,7 @@ void _showTagPopup(BuildContext context) {
                                 ],
                               ],
                               
-                              // Quiz History section remains the same...
-if ((inputs[speechType.value['partOfSpeech']] != null && inputs[speechType.value['partOfSpeech']].isNotEmpty) || editMode) ...[
+                              if ((inputs[speechType.value['partOfSpeech']] != null && inputs[speechType.value['partOfSpeech']].isNotEmpty) || editMode) ...[
                                 Divider(),
                                 Row(
                                   children: const [
@@ -1114,6 +1112,8 @@ if ((inputs[speechType.value['partOfSpeech']] != null && inputs[speechType.value
                     ),
                   ),
                   onPressed: () {
+                    writeWord(word['word'], word);
+                    Navigator.pop(context, true);
                     Navigator.pop(context, true);
                   },
                   child: const Padding(
@@ -1132,5 +1132,17 @@ if ((inputs[speechType.value['partOfSpeech']] != null && inputs[speechType.value
         ),
       ),
     );
+  }
+  
+  void _addDefinition(speechPart) {
+    setState((){
+      word['entries'][speechPart]['details'].add({
+        'definitions': [],
+        'shortDefs': [],
+        'firstUsed': "",
+        'stems': [],
+        'homograph': 1
+      });
+    });
   }
 }

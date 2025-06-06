@@ -360,6 +360,7 @@ class _WordListState extends State<WordList> {
                   itemCount: filteredWords.length,
                   itemBuilder: (context, index) {
                     final String word = filteredWords[index];
+                    final Map firstWordDetails = words[word]['entries']?.entries?.first?.value['details']?.first;
                     return InkWell(
                       onLongPress: () async {
                         deleteWord(word);
@@ -404,7 +405,7 @@ class _WordListState extends State<WordList> {
                           ],
                         ),
                         subtitle: Text(
-                          words[word]['entries'].entries.first.value['details'].first['shortDefs'][0],
+                          firstWordDetails['shortDefs'].isNotEmpty ? firstWordDetails['shortDefs'].first : firstWordDetails['definitions'].first.first['definition'] ,
                         ),
                       ),
                     );
