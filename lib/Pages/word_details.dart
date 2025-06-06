@@ -72,7 +72,7 @@ class _WordDetailstate extends State<WordDetails> {
                       'etymology': '',
                       'quotes': [],
                     };
-                    writeWord(word['word'], word);
+                    saveWord();
                   });
                 }
                 Navigator.of(context).pop();
@@ -145,7 +145,7 @@ class _WordDetailstate extends State<WordDetails> {
                           : [exampleController.text.trim()],
                     }];
                     speechTypeValue['details'][index]['definitions'].add(newDefinition);
-                    // writeWord(word['word'], word);
+                    // saveWord();
                   });
                 }
                 Navigator.of(context).pop();
@@ -185,7 +185,7 @@ class _WordDetailstate extends State<WordDetails> {
                   setState(() {
                     speechTypeValue['synonyms'] ??= {};
                     speechTypeValue['synonyms'][synonym] = {};
-                    writeWord(word['word'], word);
+                    saveWord();
                   });
                 }
                 Navigator.of(context).pop();
@@ -225,7 +225,7 @@ class _WordDetailstate extends State<WordDetails> {
               onPressed: () {
                 setState(() {
                   speechTypeValue['etymology'] = etymologyController.text.trim();
-                  writeWord(word['word'], word);
+                  saveWord();
                 });
                 Navigator.of(context).pop();
               },
@@ -297,7 +297,7 @@ class _WordDetailstate extends State<WordDetails> {
                         'aqdate': date.isEmpty ? 'Unknown' : date,
                       }
                     });
-                    writeWord(word['word'], word);
+                    saveWord();
                   });
                 }
                 Navigator.of(context).pop();
@@ -313,14 +313,14 @@ class _WordDetailstate extends State<WordDetails> {
   void _deleteSynonym(Map speechTypeValue, String synonym) {
     setState(() {
       speechTypeValue['synonyms']?.remove(synonym);
-      writeWord(word['word'], word);
+      saveWord();
     });
   }
 
   void _deleteQuote(Map speechTypeValue, int index) {
     setState(() {
       speechTypeValue['quotes']?.removeAt(index);
-      writeWord(word['word'], word);
+      saveWord();
     });
   }
 
@@ -446,7 +446,7 @@ class _WordDetailstate extends State<WordDetails> {
       word['tags'] ??= [];
       if (!word['tags'].contains(value.trim())) {
         word['tags'].add(value.trim());
-        writeWord(word['word'], word);
+        saveWord();
       }
     });
   }
@@ -454,7 +454,7 @@ class _WordDetailstate extends State<WordDetails> {
   void _removeTag(String tag) {
     setState(() {
       word['tags']?.remove(tag);
-      writeWord(word['word'], word);
+      saveWord();
     });
   }
 
@@ -467,6 +467,11 @@ class _WordDetailstate extends State<WordDetails> {
     }
   }
   
+  void saveWord(){
+    if (!widget.addWordMode){
+      writeWord(word['word'], word);
+    }
+  }
   @override
   void dispose() {
     _controller.dispose();
@@ -621,7 +626,7 @@ class _WordDetailstate extends State<WordDetails> {
                                         onPressed: () {
                                           setState(() {
                                             speechType.value['selected'] = !speechType.value['selected'];
-                                            writeWord(word['word'], word);
+                                            saveWord();
                                           });
                                         },
                                         icon: Icon(
@@ -734,7 +739,7 @@ class _WordDetailstate extends State<WordDetails> {
                                                 if (value == 'delete') {
                                                   setState(() {
                                                     entry['definitions'].removeAt(defIndex);
-                                                    writeWord(word['word'], word);
+                                                    saveWord();
                                                   });
                                                 }
                                                 else if (value == 'edit') {
@@ -768,7 +773,7 @@ class _WordDetailstate extends State<WordDetails> {
                                                             onPressed: () {
                                                               setState(() {
                                                                 entry['definitions'][defIndex][0]['definition'] = editController.text;
-                                                                writeWord(word['word'], word);
+                                                                saveWord(); 
                                                               });
                                                               Navigator.of(context).pop();
                                                             },
