@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:vocab_app/file_handling.dart';
 import 'package:vocab_app/widgets.dart';
 import 'package:vocab_app/word_functions.dart';
-import 'package:intl/intl.dart';
 
 class WordDetails extends StatefulWidget {
   final bool addWordMode;
@@ -25,7 +25,7 @@ class _WordDetailstate extends State<WordDetails> {
   final TextEditingController _tagController = TextEditingController();
   final FocusNode _tagFocusNode = FocusNode();
   late Set allTags = {};
-  late Map inputs  = {};
+  late Map inputs = {};
 
   @override
   void initState() {
@@ -38,8 +38,294 @@ class _WordDetailstate extends State<WordDetails> {
       });
     });
   }
-  
-  void _showTagPopup(BuildContext context) {
+
+  // Add new speech part
+  void _addSpeechPart() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController speechPartController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Add Speech Part'),
+          content: TextField(
+            controller: speechPartController,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Speech Part (e.g., noun, verb, adjective)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final speechPart = speechPartController.text.trim().toLowerCase();
+                if (speechPart.isNotEmpty && !word['entries'].containsKey(speechPart)) {
+                  setState(() {
+                    word['entries'][speechPart] = {
+                      'partOfSpeech': speechPart,
+                      'selected': false,
+                      'details': [],
+                      'synonyms': {},
+                      'etymology': '',
+                      'quotes': [],
+                    };
+                    writeWord(word['word'], word);
+                  });
+                }
+                Navigator.of(context).pop();
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Add new definition to current speech part
+  void _addDefinition(Map speechTypeValue) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController definitionController = TextEditingController();
+        final TextEditingController exampleController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Add Definition'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: definitionController,
+                autofocus: true,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Definition',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: exampleController,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Example (optional)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final definition = definitionController.text.trim();
+                if (definition.isNotEmpty) {
+                  setState(() {
+                    final newDefinition = {
+                      'definitions': [
+                        [
+                          {
+                            'definition': definition,
+                            'example': exampleController.text.trim().isEmpty 
+                                ? [] 
+                                : [exampleController.text.trim()],
+                          }
+                        ]
+                      ]
+                    };
+                    speechTypeValue['details'].add(newDefinition);
+                    writeWord(word['word'], word);
+                  });
+                }
+                Navigator.of(context).pop();
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Add synonym
+  void _addSynonym(Map speechTypeValue) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController synonymController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Add Synonym'),
+          content: TextField(
+            controller: synonymController,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Synonym',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final synonym = synonymController.text.trim();
+                if (synonym.isNotEmpty) {
+                  setState(() {
+                    speechTypeValue['synonyms'] ??= {};
+                    speechTypeValue['synonyms'][synonym] = {};
+                    writeWord(word['word'], word);
+                  });
+                }
+                Navigator.of(context).pop();
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Edit etymology
+  void _editEtymology(Map speechTypeValue) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController etymologyController = TextEditingController(
+          text: speechTypeValue['etymology'] ?? '',
+        );
+        return AlertDialog(
+          title: const Text('Edit Etymology'),
+          content: TextField(
+            controller: etymologyController,
+            autofocus: true,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              labelText: 'Etymology',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  speechTypeValue['etymology'] = etymologyController.text.trim();
+                  writeWord(word['word'], word);
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Add quote
+  void _addQuote(Map speechTypeValue) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController quoteController = TextEditingController();
+        final TextEditingController authorController = TextEditingController();
+        final TextEditingController dateController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Add Quote'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: quoteController,
+                autofocus: true,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Quote',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: authorController,
+                decoration: const InputDecoration(
+                  labelText: 'Author',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: dateController,
+                decoration: const InputDecoration(
+                  labelText: 'Date/Year',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final quote = quoteController.text.trim();
+                final author = authorController.text.trim();
+                final date = dateController.text.trim();
+                
+                if (quote.isNotEmpty && author.isNotEmpty) {
+                  setState(() {
+                    speechTypeValue['quotes'] ??= [];
+                    speechTypeValue['quotes'].add({
+                      't': quote,
+                      'aq': {
+                        'auth': author,
+                        'aqdate': date.isEmpty ? 'Unknown' : date,
+                      }
+                    });
+                    writeWord(word['word'], word);
+                  });
+                }
+                Navigator.of(context).pop();
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Delete synonym
+  void _deleteSynonym(Map speechTypeValue, String synonym) {
+    setState(() {
+      speechTypeValue['synonyms']?.remove(synonym);
+      writeWord(word['word'], word);
+    });
+  }
+
+  // Delete quote
+  void _deleteQuote(Map speechTypeValue, int index) {
+    setState(() {
+      speechTypeValue['quotes']?.removeAt(index);
+      writeWord(word['word'], word);
+    });
+  }
+
+void _showTagPopup(BuildContext context) {
     if (_tagOverlayEntry != null) return;
     final overlay = Overlay.of(context);
     _tagController.clear();
@@ -157,11 +443,11 @@ class _WordDetailstate extends State<WordDetails> {
   void _addTag(String value) {
     if (value.trim().isEmpty) return;
     setState(() {
-      allTags.add(value.trim()); // <-- update allTags
+      allTags.add(value.trim());
       word['tags'] ??= [];
       if (!word['tags'].contains(value.trim())) {
         word['tags'].add(value.trim());
-       writeWord(word['word'], word);
+        writeWord(word['word'], word);
       }
     });
   }
@@ -170,14 +456,12 @@ class _WordDetailstate extends State<WordDetails> {
     setState(() {
       word['tags']?.remove(tag);
       writeWord(word['word'], word);
-      // Optionally, update allTags if you want to remove tags not used anywhere
-      // allTags = widget.words.values.expand((w) => w['tags'] ?? []).toSet();
     });
   }
-  
+
   void getInputs() async {
     final data = await readKey(word['word'], path: 'inputs');
-    if (data != null){
+    if (data != null) {
       setState(() {
         inputs = data;
       });
@@ -203,7 +487,7 @@ class _WordDetailstate extends State<WordDetails> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Word Title
+                  // Word Title and Add Speech Part Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -223,36 +507,42 @@ class _WordDetailstate extends State<WordDetails> {
                             runSpacing: -4,
                             children: [
                               for (var tag in word['tags'] ?? [])
-                              Chip(
-                                label: MWTaggedText(
-                                  tag,
-                                  style: const TextStyle(fontSize: 16),
+                                Chip(
+                                  label: MWTaggedText(
+                                    tag,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  side: BorderSide.none,
+                                  labelPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
                                 ),
-                                backgroundColor: const Color.fromARGB(255, 19, 54, 79),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                side: BorderSide.none,
-                                labelPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
-                              ),
                               if (editMode)
-                              IconButton(
-                                style: ButtonStyle(
-                                  backgroundColor: WidgetStateProperty.all<Color>(
-                                      const Color.fromARGB(255, 19, 54, 79)),
-                                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                IconButton(
+                                  style: ButtonStyle(
+                                    backgroundColor: WidgetStateProperty.all<Color>(
+                                        const Color.fromARGB(255, 19, 54, 79)),
+                                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
                                     ),
                                   ),
+                                  onPressed: () {
+                                    _showTagPopup(context);
+                                  },
+                                  icon: const Icon(Icons.add),
                                 ),
-                                onPressed: () {
-                                  _showTagPopup(context);
-                                },
-                                icon: const Icon(Icons.add),
-                              ),
                             ],
                           ),
                         ),
                       ),
+                      if (editMode)
+                        IconButton(
+                          onPressed: _addSpeechPart,
+                          icon: const Icon(Icons.add_box, size: 30),
+                          tooltip: 'Add Speech Part',
+                        ),
                       GestureDetector(
                         onTap: () {
                           setState(() {
@@ -267,7 +557,6 @@ class _WordDetailstate extends State<WordDetails> {
                     ],
                   ),
                   const SizedBox(height: 18),
-                  // Page indicator
                   SizedBox(
                     height: 10,
                     child: LayoutBuilder(
@@ -275,7 +564,7 @@ class _WordDetailstate extends State<WordDetails> {
                         double width = constraints.maxWidth;
                         int totalPages = word['entries'].length;
                         double indicatorWidth = width / (totalPages == 0 ? 1 : totalPages);
-            
+
                         return Stack(
                           children: [
                             Container(
@@ -299,7 +588,6 @@ class _WordDetailstate extends State<WordDetails> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // PageView for speech types
                   Expanded(
                     child: PageView.builder(
                       controller: _controller,
@@ -311,7 +599,6 @@ class _WordDetailstate extends State<WordDetails> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Definition Section
                               Row(
                                 children: [
                                   const Icon(Icons.menu_book_rounded, color: Colors.teal, size: 24),
@@ -322,13 +609,18 @@ class _WordDetailstate extends State<WordDetails> {
                                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                                     ),
                                   ),
-                                  Spacer(),
+                                  if (editMode)
+                                    IconButton(
+                                      onPressed: () => _addDefinition(speechType.value),
+                                      icon: const Icon(Icons.add, color: Colors.teal),
+                                      tooltip: 'Add Definition',
+                                    ),
                                   if (editMode && word['entries'].length > 1)
-                                  AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 250),
-                                    transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+                                    AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 250),
+                                      transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
                                       child: IconButton(
-                                        key: ValueKey(speechType.value['selected']), // Important for AnimatedSwitcher to know the icon changed
+                                        key: ValueKey(speechType.value['selected']),
                                         onPressed: () {
                                           setState(() {
                                             speechType.value['selected'] = !speechType.value['selected'];
@@ -340,22 +632,23 @@ class _WordDetailstate extends State<WordDetails> {
                                           color: speechType.value['selected'] ? Colors.green : Colors.red,
                                         ),
                                       ),
-                                  )
+                                    )
                                 ],
                               ),
                               const SizedBox(height: 8),
+                              // Existing definition display logic...
                               if (editMode) ReorderableListView.builder(
-                                      shrinkWrap: true,
-                                      physics: const NeverScrollableScrollPhysics(),
-                                      onReorder: (oldIndex, newIndex) {
-                                        setState(() {
-                                          if (newIndex > oldIndex) newIndex -= 1;
-                                          final item = speechType.value['details'].removeAt(oldIndex);
-                                          speechType.value['details'].insert(newIndex, item);
-                                        });
-                                      },
-                                      itemCount: speechType.value['details'].length,
-                                      itemBuilder: (context, index) {
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  onReorder: (oldIndex, newIndex) {
+                                    setState(() {
+                                      if (newIndex > oldIndex) newIndex -= 1;
+                                      final item = speechType.value['details'].removeAt(oldIndex);
+                                      speechType.value['details'].insert(newIndex, item);
+                                    });
+                                  },
+                                  itemCount: speechType.value['details'].length,
+                                  itemBuilder: (context, index) {
                                         var entry = speechType.value['details'][index];
                                         return Column(
                                           key: ValueKey("definition_$index"),
@@ -571,75 +864,113 @@ class _WordDetailstate extends State<WordDetails> {
                                       }).toList(),
                                     ),
                               const SizedBox(height: 18),
-                                                         // Synonyms Section
+                              
                               if ((speechType.value['synonyms'] != null && speechType.value['synonyms'].isNotEmpty) || editMode) ...[
                                 Divider(),
                                 Row(
-                                  children: const [
-                                    Icon(Icons.local_florist_rounded, color: Colors.green, size: 22),
-                                    SizedBox(width: 8),
-                                    Text(
+                                  children: [
+                                    const Icon(Icons.local_florist_rounded, color: Colors.green, size: 22),
+                                    const SizedBox(width: 8),
+                                    const Text(
                                       "Synonyms",
                                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                     ),
+                                    if (editMode) ...[
+                                      const Spacer(),
+                                      IconButton(
+                                        onPressed: () => _addSynonym(speechType.value),
+                                        icon: const Icon(Icons.add, color: Colors.green),
+                                        tooltip: 'Add Synonym',
+                                      ),
+                                    ],
                                   ],
                                 ),
                                 const SizedBox(height: 8),
                                 Wrap(
                                   spacing: 8,
-                                  children: speechType.value['synonyms'].entries
-                                    .where((synonym) => synonym.key.toLowerCase() != word['word'].toLowerCase())
-                                    .map<Widget>(
-                                      (synonym) => Chip(
-                                        label: MWTaggedText(
-                                          capitalise(synonym.key),
-                                          style: const TextStyle(fontSize: 16),
-                                        ),
-                                        backgroundColor: const Color.fromARGB(255, 19, 54, 79),
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                        side: BorderSide.none,
-                                      ),
-                                    ).toList(),
+                                  children: (speechType.value['synonyms'] ?? {}).entries
+                                      .where((synonym) => synonym.key.toLowerCase() != word['word'].toLowerCase())
+                                      .map<Widget>(
+                                        (synonym) => editMode
+                                            ? Chip(
+                                                label: MWTaggedText(
+                                                  capitalise(synonym.key),
+                                                  style: const TextStyle(fontSize: 16),
+                                                ),
+                                                backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                side: BorderSide.none,
+                                                deleteIcon: const Icon(Icons.close, size: 18),
+                                                onDeleted: () => _deleteSynonym(speechType.value, synonym.key),
+                                              )
+                                            : Chip(
+                                                label: MWTaggedText(
+                                                  capitalise(synonym.key),
+                                                  style: const TextStyle(fontSize: 16),
+                                                ),
+                                                backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                side: BorderSide.none,
+                                              ),
+                                      ).toList(),
                                 ),
                               ],
-                              // Etymology Section
+                              
+                              // Enhanced Etymology Section
                               if ((speechType.value['etymology'] != null && speechType.value['etymology'].isNotEmpty) || editMode) ...[
                                 Divider(),
                                 Row(
-                                  children: const [
-                                    Icon(Icons.biotech, color: Colors.amber, size: 22),
-                                    SizedBox(width: 8),
-                                    Text(
+                                  children: [
+                                    const Icon(Icons.biotech, color: Colors.amber, size: 22),
+                                    const SizedBox(width: 8),
+                                    const Text(
                                       "Etymology",
                                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                     ),
+                                    if (editMode) ...[
+                                      const Spacer(),
+                                      IconButton(
+                                        onPressed: () => _editEtymology(speechType.value),
+                                        icon: const Icon(Icons.edit, color: Colors.amber),
+                                        tooltip: 'Edit Etymology',
+                                      ),
+                                    ],
                                   ],
                                 ),
-                                if (speechType.value['etymology'].isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 8),
-                                  child: MWTaggedText(
-                                    speechType.value['etymology'],
-                                    style: const TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                                if (speechType.value['etymology']?.isNotEmpty == true)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 8),
+                                    child: MWTaggedText(
+                                      speechType.value['etymology'],
+                                      style: const TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                                    ),
                                   ),
-                                ),
                                 const SizedBox(height: 10),
                               ],
-                              // Quotes Section
+                              
+                              // Enhanced Quotes Section
                               if ((speechType.value['quotes'] != null && speechType.value['quotes'].isNotEmpty) || editMode) ...[
                                 Divider(),
                                 Row(
-                                  children: const [
-                                    Icon(Icons.format_quote_rounded, color: Colors.lightBlue, size: 22),
-                                    SizedBox(width: 8),
-                                    Text(
+                                  children: [
+                                    const Icon(Icons.format_quote_rounded, color: Colors.lightBlue, size: 22),
+                                    const SizedBox(width: 8),
+                                    const Text(
                                       "Quotes",
                                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                     ),
+                                    if (editMode) ...[
+                                      const Spacer(),
+                                      IconButton(
+                                        onPressed: () => _addQuote(speechType.value),
+                                        icon: const Icon(Icons.add, color: Colors.lightBlue),
+                                        tooltip: 'Add Quote',
+                                      ),
+                                    ],
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                for (var quote in speechType.value['quotes']) ...[
+                                for (int i = 0; i < (speechType.value['quotes'] ?? []).length; i++) ...[
                                   Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
                                     child: Container(
@@ -652,14 +983,29 @@ class _WordDetailstate extends State<WordDetails> {
                                         ),
                                       ),
                                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                                      child: MWTaggedText(
-                                        '"${quote['t']}"\n - {it}${quote['aq']['auth']} (${quote['aq']['aqdate']}){/it}',
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: MWTaggedText(
+                                              '"${speechType.value['quotes'][i]['t']}"\n - {it}${speechType.value['quotes'][i]['aq']['auth']} (${speechType.value['quotes'][i]['aq']['aqdate']}){/it}',
+                                            ),
+                                          ),
+                                          if (editMode)
+                                            IconButton(
+                                              onPressed: () => _deleteQuote(speechType.value, i),
+                                              icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                                              tooltip: 'Delete Quote',
+                                            ),
+                                        ],
                                       ),
                                     ),
                                   ),
                                 ],
                               ],
-                              if ((inputs[speechType.value['partOfSpeech']] != null && inputs[speechType.value['partOfSpeech']].isNotEmpty) || editMode) ...[
+                              
+                              // Quiz History section remains the same...
+if ((inputs[speechType.value['partOfSpeech']] != null && inputs[speechType.value['partOfSpeech']].isNotEmpty) || editMode) ...[
                                 Divider(),
                                 Row(
                                   children: const [
@@ -787,6 +1133,4 @@ class _WordDetailstate extends State<WordDetails> {
       ),
     );
   }
-  
 }
-
