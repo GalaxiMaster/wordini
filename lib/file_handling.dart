@@ -46,15 +46,17 @@ Future<dynamic> readKey(String key, {String path = 'words'}) async {
 }
 
 Future<void> resetData(context, {String? path}) async {
-  List choices;
+  List? choices;
   if (path != null){
     choices = [path];
   }else {
     choices = await getChoices(context);
   }
-  for (String choice in choices){
-    final box = await Hive.openBox(choice);
-    await box.clear();
+  if (choices != null){
+    for (String choice in choices){
+      final box = await Hive.openBox(choice);
+      await box.clear();
+    }
   }
 }
 
@@ -79,9 +81,10 @@ Future<void> exportJson(BuildContext context) async {
   LoadingOverlay loadingOverlay = LoadingOverlay();
   try {
 
-    List exportChoices = await getChoices(context);
+    List? exportChoices = await getChoices(context);
     if (context.mounted) loadingOverlay.showLoadingOverlay(context);
     Map data = {};
+    if (exportChoices == null) return;
     for (String choice in exportChoices){
       final box = await Hive.openBox(choice);
       final boxData = Map<String, dynamic>.from(box.toMap());
@@ -115,8 +118,8 @@ Future<void> exportJson(BuildContext context) async {
   }
   loadingOverlay.removeLoadingOverlay();
 }
-Future<List> getChoices(context) async{
-  final List choices = await showDialog(
+Future<List?> getChoices(context) async{
+  final List? choices = await showDialog(
     context: context,
     builder: (context) {
       Map options = {
