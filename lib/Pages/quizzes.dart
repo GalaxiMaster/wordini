@@ -7,11 +7,10 @@ import 'package:vocab_app/word_functions.dart';
 class Quizzes extends StatefulWidget {
   const Quizzes({super.key});
   @override
-  // ignore: library_private_types_in_public_api
-  _QuizzesState createState() => _QuizzesState();
+  QuizzesState createState() => QuizzesState();
 }
 
-class _QuizzesState extends State<Quizzes> {
+class QuizzesState extends State<Quizzes> {
   Future<List>? words; // Make nullable to avoid LateInitializationError
   int _currentIndex = 0;
   Map currentWord = {};

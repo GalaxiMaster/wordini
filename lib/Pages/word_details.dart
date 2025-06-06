@@ -12,11 +12,10 @@ class WordDetails extends StatefulWidget {
   const WordDetails({super.key, required this.word, required this.allTags, this.addWordMode = false, this.editModeState = false});
   
   @override
-  // ignore: library_private_types_in_public_api
-  _WordDetailState createState() => _WordDetailState();
+  WordDetailsState createState() => WordDetailsState();
 }
 
-class _WordDetailState extends State<WordDetails> {
+class WordDetailsState extends State<WordDetails> {
   final PageController _controller = PageController(initialPage: 0);
   double currentPage = 0;
   bool editMode = false;

@@ -7,11 +7,10 @@ import 'package:vocab_app/word_functions.dart';
 class AddWord extends StatefulWidget {
   const AddWord({super.key});
   @override
-  // ignore: library_private_types_in_public_api
-  _AddWordState createState() => _AddWordState();
+  AddWordState createState() => AddWordState();
 }
 
-class _AddWordState extends State<AddWord> {
+class AddWordState extends State<AddWord> {
   final FocusNode _addWordTextBoxFN = FocusNode();
   final TextEditingController _addWordTextBoxController = TextEditingController();
   @override

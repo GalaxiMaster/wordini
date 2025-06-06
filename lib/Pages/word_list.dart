@@ -6,11 +6,10 @@ import 'package:vocab_app/word_functions.dart';
 class WordList extends StatefulWidget {
   const WordList({super.key});
   @override
-  // ignore: library_private_types_in_public_api
-  _WordListState createState() => _WordListState();
+  WordListState createState() => WordListState();
 }
 
-class _WordListState extends State<WordList> {
+class WordListState extends State<WordList> {
   late Future<Map<String, dynamic>> _wordsFuture;
   String searchTerm = '';
   Map filters = {
