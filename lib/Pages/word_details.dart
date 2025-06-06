@@ -12,10 +12,10 @@ class WordDetails extends StatefulWidget {
   
   @override
   // ignore: library_private_types_in_public_api
-  _WordDetailstate createState() => _WordDetailstate();
+  _WordDetailState createState() => _WordDetailState();
 }
 
-class _WordDetailstate extends State<WordDetails> {
+class _WordDetailState extends State<WordDetails> {
   final PageController _controller = PageController(initialPage: 0);
   double currentPage = 0;
   bool editMode = false;
@@ -24,7 +24,7 @@ class _WordDetailstate extends State<WordDetails> {
   OverlayEntry? _tagOverlayEntry;
   final TextEditingController _tagController = TextEditingController();
   final FocusNode _tagFocusNode = FocusNode();
-  late Set allTags = {};
+  late Set allTags;
   late Map inputs = {};
 
   @override
@@ -37,6 +37,7 @@ class _WordDetailstate extends State<WordDetails> {
         currentPage = _controller.page ?? 0;
       });
     });
+    getInputs();
   }
 
   void _addSpeechPart() {
@@ -50,7 +51,7 @@ class _WordDetailstate extends State<WordDetails> {
             controller: speechPartController,
             autofocus: true,
             decoration: const InputDecoration(
-              labelText: 'Speech Part (e.g., noun, verb, adjective)',
+              labelText: 'Speech Part (e.g. noun, verb, adjective)',
               border: OutlineInputBorder(),
             ),
           ),
@@ -423,7 +424,9 @@ class _WordDetailstate extends State<WordDetails> {
         ],
       ),
     );
-
+    if (_tagOverlayEntry == null) {
+      overlay.insert(_tagOverlayEntry!);
+    }
     overlay.insert(_tagOverlayEntry!);
 
     // Focus after frame to ensure popup is built
@@ -468,10 +471,11 @@ class _WordDetailstate extends State<WordDetails> {
   }
   
   void saveWord(){
-    if (!widget.addWordMode){
+    if (!widget.addWordMode && word['word'] != null){
       writeWord(word['word'], word);
     }
   }
+  
   @override
   void dispose() {
     _controller.dispose();
@@ -596,7 +600,7 @@ class _WordDetailstate extends State<WordDetails> {
                       itemCount: word['entries'].length,
                       itemBuilder: (context, index) {
                         MapEntry speechType = word['entries'].entries.toList().elementAt(index);
-                        getInputs();
+                        // Inputs are already fetched in initState
                         return SingleChildScrollView(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -690,7 +694,7 @@ class _WordDetailstate extends State<WordDetails> {
                                             contentPadding: EdgeInsets.zero,
                                             leading: const Icon(Icons.drag_indicator, size: 18),
                                             title: Padding(
-                                              padding: EdgeInsets.zero, // Remove padding from the title
+                                              padding: EdgeInsets.zero,
                                               child: Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
