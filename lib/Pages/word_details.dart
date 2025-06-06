@@ -39,7 +39,6 @@ class _WordDetailstate extends State<WordDetails> {
     });
   }
 
-  // Add new speech part
   void _addSpeechPart() {
     showDialog(
       context: context,
@@ -85,8 +84,19 @@ class _WordDetailstate extends State<WordDetails> {
       },
     );
   }
+  
+  void _addDefinition(speechPart) {
+    setState((){
+      word['entries'][speechPart]['details'].add({
+        'definitions': [],
+        'shortDefs': [],
+        'firstUsed': "",
+        'stems': [],
+        'homograph': 1
+      });
+    });
+  }
 
-  // Add new definition to current speech part
   void _addDefinitionEntry(Map speechTypeValue, index) {
     showDialog(
       context: context,
@@ -148,7 +158,6 @@ class _WordDetailstate extends State<WordDetails> {
     );
   }
 
-  // Add synonym
   void _addSynonym(Map speechTypeValue) {
     showDialog(
       context: context,
@@ -189,7 +198,6 @@ class _WordDetailstate extends State<WordDetails> {
     );
   }
 
-  // Edit etymology
   void _editEtymology(Map speechTypeValue) {
     showDialog(
       context: context,
@@ -229,7 +237,6 @@ class _WordDetailstate extends State<WordDetails> {
     );
   }
 
-  // Add quote
   void _addQuote(Map speechTypeValue) {
     showDialog(
       context: context,
@@ -303,7 +310,6 @@ class _WordDetailstate extends State<WordDetails> {
     );
   }
 
-  // Delete synonym
   void _deleteSynonym(Map speechTypeValue, String synonym) {
     setState(() {
       speechTypeValue['synonyms']?.remove(synonym);
@@ -311,7 +317,6 @@ class _WordDetailstate extends State<WordDetails> {
     });
   }
 
-  // Delete quote
   void _deleteQuote(Map speechTypeValue, int index) {
     setState(() {
       speechTypeValue['quotes']?.removeAt(index);
@@ -319,7 +324,7 @@ class _WordDetailstate extends State<WordDetails> {
     });
   }
 
-void _showTagPopup(BuildContext context) {
+  void _showTagPopup(BuildContext context) {
     if (_tagOverlayEntry != null) return;
     final overlay = Overlay.of(context);
     _tagController.clear();
@@ -461,7 +466,7 @@ void _showTagPopup(BuildContext context) {
       });
     }
   }
-
+  
   @override
   void dispose() {
     _controller.dispose();
@@ -481,7 +486,6 @@ void _showTagPopup(BuildContext context) {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Word Title and Add Speech Part Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -558,7 +562,6 @@ void _showTagPopup(BuildContext context) {
                         double width = constraints.maxWidth;
                         int totalPages = word['entries'].length;
                         double indicatorWidth = width / (totalPages == 0 ? 1 : totalPages);
-
                         return Stack(
                           children: [
                             Container(
@@ -630,238 +633,237 @@ void _showTagPopup(BuildContext context) {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              // Existing definition display logic...
                               if (editMode) ReorderableListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  onReorder: (oldIndex, newIndex) {
-                                    setState(() {
-                                      if (newIndex > oldIndex) newIndex -= 1;
-                                      final item = speechType.value['details'].removeAt(oldIndex);
-                                      speechType.value['details'].insert(newIndex, item);
-                                    });
-                                  },
-                                  itemCount: speechType.value['details'].length,
-                                  itemBuilder: (context, index) {
-                                        var entry = speechType.value['details'][index];
-                                        return Column(
-                                          key: ValueKey("definition_$index"),
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                const Icon(Icons.drag_handle),
-                                                MWTaggedText(
-                                                  "${index + 1}.",
-                                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                                ),
-                                                Spacer(),
-                                                IconButton(
-                                                  onPressed: () => _addDefinitionEntry(speechType.value, index),
-                                                  icon: const Icon(Icons.add, color: Colors.white),
-                                                  tooltip: 'Add Definition',
-                                                ),
-                                              ],
-                                            ),
-                                            // ReorderableListView for definitions within this numbered definition
-                                            ReorderableListView.builder(
-                                              shrinkWrap: true,
-                                              physics: const NeverScrollableScrollPhysics(),
-                                              onReorder: (oldDefIndex, newDefIndex) {
-                                                setState(() {
-                                                  if (newDefIndex > oldDefIndex) newDefIndex -= 1;
-                                                  final defItem = entry['definitions'].removeAt(oldDefIndex);
-                                                  entry['definitions'].insert(newDefIndex, defItem);
-                                                });
-                                              },
-                                              itemCount: entry['definitions'].length,
-                                              itemBuilder: (context, defIndex) {
-                                                var definition = entry['definitions'][defIndex];
-                                                return ListTile(
-                                                  key: ValueKey("def_${index}_$defIndex"),
-                                                  dense: true,
-                                                  contentPadding: EdgeInsets.zero,
-                                                  leading: const Icon(Icons.drag_indicator, size: 18),
-                                                  title: Padding(
-                                                    padding: EdgeInsets.zero, // Remove padding from the title
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Row(
-                                                          mainAxisAlignment: MainAxisAlignment.start,
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          children: [
-                                                            MWTaggedText(
-                                                              "{b}${indexToLetter(defIndex)}){/b} ",
-                                                              style: const TextStyle(fontSize: 16),
-                                                            ),
-                                                            SizedBox(width: 2,),
-                                                            Expanded(
-                                                              child: MWTaggedText(
-                                                                "${definition[0]['definition']}",
-                                                                style: const TextStyle(fontSize: 16),
-                                                              )
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        for (String example in definition[0]['example'])
-                                                        Padding(
-                                                          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
-                                                          child: Container(
-                                                            decoration: BoxDecoration(
-                                                              border: Border(
-                                                                left: BorderSide(
-                                                                  color: Colors.blue.shade300,
-                                                                  width: 4,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                                                            child: MWTaggedText(
-                                                              capitalise(example),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  trailing: PopupMenuButton<String>(
-                                                    icon: const Icon(Icons.more_vert, size: 18),
-                                                    tooltip: "More actions",
-                                                    onSelected: (value) {
-                                                      if (value == 'delete') {
-                                                        setState(() {
-                                                          entry['definitions'].removeAt(defIndex);
-                                                          writeWord(word['word'], word);
-                                                        });
-                                                      }
-                                                      else if (value == 'edit') {
-                                                        // Show popup to edit the definition
-                                                        showDialog(
-                                                          context: context,
-                                                          builder: (context) {
-                                                            final TextEditingController editController = TextEditingController(
-                                                              text: entry['definitions'][defIndex][0]['definition'],
-                                                            );
-                                                            return AlertDialog(
-                                                              title: const Text('Edit Definition'),
-                                                              content: SizedBox(
-                                                                width: double.infinity,
-                                                                child: TextField(
-                                                                  controller: editController,
-                                                                  autofocus: true,
-                                                                  maxLines: null,
-                                                                  decoration: const InputDecoration(
-                                                                    labelText: 'Definition',
-                                                                    border: OutlineInputBorder(),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                              actions: [
-                                                                TextButton(
-                                                                  onPressed: () => Navigator.of(context).pop(),
-                                                                  child: const Text('Cancel'),
-                                                                ),
-                                                                ElevatedButton(
-                                                                  onPressed: () {
-                                                                    setState(() {
-                                                                      entry['definitions'][defIndex][0]['definition'] = editController.text;
-                                                                      writeWord(word['word'], word);
-                                                                    });
-                                                                    Navigator.of(context).pop();
-                                                                  },
-                                                                  child: const Text('Save'),
-                                                                ),
-                                                              ],
-                                                            );
-                                                          },
-                                                        );
-                                                      }
-                                                    },
-                                                    itemBuilder: (context) => [
-                                                      const PopupMenuItem(
-                                                        value: 'edit',
-                                                        child: Row(
-                                                          children: [
-                                                            Icon(Icons.edit, size: 18, color: Colors.white),
-                                                            SizedBox(width: 8),
-                                                            Text('Edit'),
-                                                          ],
-                                                        ),
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                onReorder: (oldIndex, newIndex) {
+                                  setState(() {
+                                    if (newIndex > oldIndex) newIndex -= 1;
+                                    final item = speechType.value['details'].removeAt(oldIndex);
+                                    speechType.value['details'].insert(newIndex, item);
+                                  });
+                                },
+                                itemCount: speechType.value['details'].length,
+                                itemBuilder: (context, index) {
+                                  var entry = speechType.value['details'][index];
+                                  return Column(
+                                    key: ValueKey("definition_$index"),
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.drag_handle),
+                                          MWTaggedText(
+                                            "${index + 1}.",
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                          ),
+                                          Spacer(),
+                                          IconButton(
+                                            onPressed: () => _addDefinitionEntry(speechType.value, index),
+                                            icon: const Icon(Icons.add, color: Colors.white),
+                                            tooltip: 'Add Definition',
+                                          ),
+                                        ],
+                                      ),
+                                      // ReorderableListView for definitions within this numbered definition
+                                      ReorderableListView.builder(
+                                        shrinkWrap: true,
+                                        physics: const NeverScrollableScrollPhysics(),
+                                        onReorder: (oldDefIndex, newDefIndex) {
+                                          setState(() {
+                                            if (newDefIndex > oldDefIndex) newDefIndex -= 1;
+                                            final defItem = entry['definitions'].removeAt(oldDefIndex);
+                                            entry['definitions'].insert(newDefIndex, defItem);
+                                          });
+                                        },
+                                        itemCount: entry['definitions'].length,
+                                        itemBuilder: (context, defIndex) {
+                                          var definition = entry['definitions'][defIndex];
+                                          return ListTile(
+                                            key: ValueKey("def_${index}_$defIndex"),
+                                            dense: true,
+                                            contentPadding: EdgeInsets.zero,
+                                            leading: const Icon(Icons.drag_indicator, size: 18),
+                                            title: Padding(
+                                              padding: EdgeInsets.zero, // Remove padding from the title
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.start,
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      MWTaggedText(
+                                                        "{b}${indexToLetter(defIndex)}){/b} ",
+                                                        style: const TextStyle(fontSize: 16),
                                                       ),
-                                                      const PopupMenuItem(
-                                                        value: 'delete',
-                                                        child: Row(
-                                                          children: [
-                                                            Icon(Icons.delete, size: 18, color: Colors.red),
-                                                            SizedBox(width: 8),
-                                                            Text('Delete'),
-                                                          ],
-                                                        ),
+                                                      SizedBox(width: 2,),
+                                                      Expanded(
+                                                        child: MWTaggedText(
+                                                          "${definition[0]['definition']}",
+                                                          style: const TextStyle(fontSize: 16),
+                                                        )
                                                       ),
-                                                      // Add more PopupMenuItem widgets here for more actions
                                                     ],
                                                   ),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    ) else Column(
-                                      children: speechType.value['details'].asMap().entries.map<Widget>((entry) {
-                                        return Padding(
-                                          padding: const EdgeInsets.only(bottom: 6),
-                                          child: Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              MWTaggedText(
-                                                "${entry.key + 1}. ",
-                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                              ),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    for (var definition in entry.value['definitions'].asMap().entries)
-                                                      Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Padding(
-                                                            padding: const EdgeInsets.symmetric(vertical: 4),
-                                                            child: MWTaggedText(
-                                                              "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}", // Currently set to only show the first wording of it
-                                                              style: const TextStyle(fontSize: 16),
-                                                            ),
+                                                  for (String example in definition[0]['example'])
+                                                  Padding(
+                                                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        border: Border(
+                                                          left: BorderSide(
+                                                            color: Colors.blue.shade300,
+                                                            width: 4,
                                                           ),
-                                                          for (String example in definition.value[0]['example'])
-                                                        Padding(
-                                                          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
-                                                          child: Container(
-                                                            decoration: BoxDecoration(
-                                                              border: Border(
-                                                                left: BorderSide(
-                                                                  color: Colors.blue.shade300,
-                                                                  width: 4,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                                                            child: MWTaggedText(
-                                                              capitalise(example),
+                                                        ),
+                                                      ),
+                                                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                                                      child: MWTaggedText(
+                                                        capitalise(example),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            trailing: PopupMenuButton<String>(
+                                              icon: const Icon(Icons.more_vert, size: 18),
+                                              tooltip: "More actions",
+                                              onSelected: (value) {
+                                                if (value == 'delete') {
+                                                  setState(() {
+                                                    entry['definitions'].removeAt(defIndex);
+                                                    writeWord(word['word'], word);
+                                                  });
+                                                }
+                                                else if (value == 'edit') {
+                                                  // Show popup to edit the definition
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (context) {
+                                                      final TextEditingController editController = TextEditingController(
+                                                        text: entry['definitions'][defIndex][0]['definition'],
+                                                      );
+                                                      return AlertDialog(
+                                                        title: const Text('Edit Definition'),
+                                                        content: SizedBox(
+                                                          width: double.infinity,
+                                                          child: TextField(
+                                                            controller: editController,
+                                                            autofocus: true,
+                                                            maxLines: null,
+                                                            decoration: const InputDecoration(
+                                                              labelText: 'Definition',
+                                                              border: OutlineInputBorder(),
                                                             ),
                                                           ),
                                                         ),
+                                                        actions: [
+                                                          TextButton(
+                                                            onPressed: () => Navigator.of(context).pop(),
+                                                            child: const Text('Cancel'),
+                                                          ),
+                                                          ElevatedButton(
+                                                            onPressed: () {
+                                                              setState(() {
+                                                                entry['definitions'][defIndex][0]['definition'] = editController.text;
+                                                                writeWord(word['word'], word);
+                                                              });
+                                                              Navigator.of(context).pop();
+                                                            },
+                                                            child: const Text('Save'),
+                                                          ),
                                                         ],
-                                                      ),
-                                                  ],
+                                                      );
+                                                    },
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder: (context) => [
+                                                const PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Icons.edit, size: 18, color: Colors.white),
+                                                      SizedBox(width: 8),
+                                                      Text('Edit'),
+                                                    ],
+                                                  ),
                                                 ),
+                                                const PopupMenuItem(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Icons.delete, size: 18, color: Colors.red),
+                                                      SizedBox(width: 8),
+                                                      Text('Delete'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                // Add more PopupMenuItem widgets here for more actions
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ) else Column(
+                                children: speechType.value['details'].asMap().entries.map<Widget>((entry) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 6),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        MWTaggedText(
+                                          "${entry.key + 1}. ",
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                        ),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              for (var definition in entry.value['definitions'].asMap().entries)
+                                                Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Padding(
+                                                      padding: const EdgeInsets.symmetric(vertical: 4),
+                                                      child: MWTaggedText(
+                                                        "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}", // Currently set to only show the first wording of it
+                                                        style: const TextStyle(fontSize: 16),
+                                                      ),
+                                                    ),
+                                                    for (String example in definition.value[0]['example'])
+                                                  Padding(
+                                                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        border: Border(
+                                                          left: BorderSide(
+                                                            color: Colors.blue.shade300,
+                                                            width: 4,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                                                      child: MWTaggedText(
+                                                        capitalise(example),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
-                                        );
-                                      }).toList(),
+                                        ),
+                                      ],
                                     ),
+                                  );
+                                }).toList(),
+                              ),
                               const SizedBox(height: 18),
                               
                               if ((speechType.value['synonyms'] != null && speechType.value['synonyms'].isNotEmpty) || editMode) ...[
@@ -888,34 +890,33 @@ void _showTagPopup(BuildContext context) {
                                 Wrap(
                                   spacing: 8,
                                   children: (speechType.value['synonyms'] ?? {}).entries
-                                      .where((synonym) => synonym.key.toLowerCase() != word['word'].toLowerCase())
-                                      .map<Widget>(
-                                        (synonym) => editMode
-                                            ? Chip(
-                                                label: MWTaggedText(
-                                                  capitalise(synonym.key),
-                                                  style: const TextStyle(fontSize: 16),
-                                                ),
-                                                backgroundColor: const Color.fromARGB(255, 19, 54, 79),
-                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                side: BorderSide.none,
-                                                deleteIcon: const Icon(Icons.close, size: 18),
-                                                onDeleted: () => _deleteSynonym(speechType.value, synonym.key),
-                                              )
-                                            : Chip(
-                                                label: MWTaggedText(
-                                                  capitalise(synonym.key),
-                                                  style: const TextStyle(fontSize: 16),
-                                                ),
-                                                backgroundColor: const Color.fromARGB(255, 19, 54, 79),
-                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                side: BorderSide.none,
-                                              ),
-                                      ).toList(),
+                                    .where((synonym) => synonym.key.toLowerCase() != word['word'].toLowerCase())
+                                    .map<Widget>(
+                                      (synonym) => editMode
+                                        ? Chip(
+                                            label: MWTaggedText(
+                                              capitalise(synonym.key),
+                                              style: const TextStyle(fontSize: 16),
+                                            ),
+                                            backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            side: BorderSide.none,
+                                            deleteIcon: const Icon(Icons.close, size: 18),
+                                            onDeleted: () => _deleteSynonym(speechType.value, synonym.key),
+                                          )
+                                        : Chip(
+                                            label: MWTaggedText(
+                                              capitalise(synonym.key),
+                                              style: const TextStyle(fontSize: 16),
+                                            ),
+                                            backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            side: BorderSide.none,
+                                          ),
+                                    ).toList(),
                                 ),
                               ],
                               
-                              // Enhanced Etymology Section
                               if ((speechType.value['etymology'] != null && speechType.value['etymology'].isNotEmpty) || editMode) ...[
                                 Divider(),
                                 Row(
@@ -947,7 +948,6 @@ void _showTagPopup(BuildContext context) {
                                 const SizedBox(height: 10),
                               ],
                               
-                              // Enhanced Quotes Section
                               if ((speechType.value['quotes'] != null && speechType.value['quotes'].isNotEmpty) || editMode) ...[
                                 Divider(),
                                 Row(
@@ -1132,17 +1132,5 @@ void _showTagPopup(BuildContext context) {
         ),
       ),
     );
-  }
-  
-  void _addDefinition(speechPart) {
-    setState((){
-      word['entries'][speechPart]['details'].add({
-        'definitions': [],
-        'shortDefs': [],
-        'firstUsed': "",
-        'stems': [],
-        'homograph': 1
-      });
-    });
   }
 }
