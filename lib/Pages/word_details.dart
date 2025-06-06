@@ -572,7 +572,7 @@ class _WordDetailstate extends State<WordDetails> {
                                     ),
                               const SizedBox(height: 18),
                                                          // Synonyms Section
-                              if (speechType.value['synonyms'] != null && speechType.value['synonyms'].isNotEmpty) ...[
+                              if ((speechType.value['synonyms'] != null && speechType.value['synonyms'].isNotEmpty) || editMode) ...[
                                 Divider(),
                                 Row(
                                   children: const [
@@ -603,7 +603,7 @@ class _WordDetailstate extends State<WordDetails> {
                                 ),
                               ],
                               // Etymology Section
-                              if (speechType.value['etymology'] != null && speechType.value['etymology'].isNotEmpty) ...[
+                              if ((speechType.value['etymology'] != null && speechType.value['etymology'].isNotEmpty) || editMode) ...[
                                 Divider(),
                                 Row(
                                   children: const [
@@ -615,18 +615,18 @@ class _WordDetailstate extends State<WordDetails> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
+                                if (speechType.value['etymology'].isNotEmpty)
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 17),
+                                  padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 8),
                                   child: MWTaggedText(
                                     speechType.value['etymology'],
                                     style: const TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
                                   ),
                                 ),
-                                const SizedBox(height: 18),
+                                const SizedBox(height: 10),
                               ],
                               // Quotes Section
-                              if (speechType.value['quotes'] != null && speechType.value['quotes'].isNotEmpty) ...[
+                              if ((speechType.value['quotes'] != null && speechType.value['quotes'].isNotEmpty) || editMode) ...[
                                 Divider(),
                                 Row(
                                   children: const [
@@ -659,7 +659,7 @@ class _WordDetailstate extends State<WordDetails> {
                                   ),
                                 ],
                               ],
-                              if (inputs[speechType.value['partOfSpeech']] != null && inputs[speechType.value['partOfSpeech']].isNotEmpty) ...[
+                              if ((inputs[speechType.value['partOfSpeech']] != null && inputs[speechType.value['partOfSpeech']].isNotEmpty) || editMode) ...[
                                 Divider(),
                                 Row(
                                   children: const [
@@ -675,7 +675,7 @@ class _WordDetailstate extends State<WordDetails> {
                                 ListView.builder(
                                   shrinkWrap: true,
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                  itemCount: inputs[speechType.value['partOfSpeech']].length,
+                                  itemCount: inputs[speechType.value['partOfSpeech']]?.length ?? 0,
                                   itemBuilder: (context, index) {
                                     final Map entry = inputs[speechType.value['partOfSpeech']][index];
                                     if (!entry.containsKey('guess') || entry['guess'] == null) {

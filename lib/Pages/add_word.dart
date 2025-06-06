@@ -67,7 +67,7 @@ class _AddWordState extends State<AddWord> {
                           await Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => WordDetails(
-                              word: {'word': _addWordTextBoxController.text, 'entries': {}}, 
+                              word: {'word': _addWordTextBoxController.text, 'entries': {'speechPart': {'details': [], 'synonyms': {}, 'etymology': '', 'quotes': []}}}, 
                               allTags: allTags
                             ))
                           );
