@@ -225,27 +225,37 @@ class WordListState extends State<WordList> {
         Map<String, dynamic> words = snapshot.data!;
 
         List filteredWords = words.keys.where((word) {
-          final matchesSearch = word.toLowerCase().contains(searchTerm.toLowerCase());
-          final selectedTypes = filters['wordTypes'] as List;
+          final lowerWord = word.toLowerCase();
+          final searchLower = searchTerm.toLowerCase();
+
+          // Search filter
+          if (!lowerWord.contains(searchLower)) return false;
+
+          // Type filter
+          final selectedTypes = (filters['wordTypes'] as List).map((e) => e.toLowerCase()).toList();
           final wordTypes = getWordType(words[word]).map((e) => e.toLowerCase()).toList();
+          final typeModeAll = filters['wordTypeMode'] == 'all';
 
-          bool matchesType;
-          if (filters['wordTypeMode'] == 'all') {
-            matchesType = selectedTypes.isEmpty || selectedTypes.every((type) => wordTypes.contains(type.toLowerCase()));
-          } else {
-            matchesType = selectedTypes.isEmpty || selectedTypes.any((type) => wordTypes.contains(type.toLowerCase()));
-          }
+          final matchesType = selectedTypes.isEmpty ||
+              (typeModeAll
+                  ? selectedTypes.every(wordTypes.contains)
+                  : selectedTypes.any(wordTypes.contains));
 
-          final bool matchesTags;
-          final wordTags = (words[word]['tags'] ?? []).cast<String>().toSet();
-          if (filters['selectedTagsMode'] == 'any') {
-            matchesTags = filters['selectedTags'].isEmpty || wordTags.intersection(filters['selectedTags'].cast<String>()).isNotEmpty;
-          }
-          else{
-            matchesTags = filters['selectedTags'].isEmpty || wordTags.intersection(filters['selectedTags'].cast<String>()).length == filters['selectedTags'].length;
-          }
-          return matchesSearch && matchesType && matchesTags;
+          if (!matchesType) return false;
+
+          // Tag filter
+          final selectedTags = filters['selectedTags'];
+          final wordTags = (words[word]['tags'] ?? <String>[]).cast<String>().toSet();
+          final tagModeAny = filters['selectedTagsMode'] == 'any';
+
+          final matchesTags = selectedTags.isEmpty ||
+              (tagModeAny
+                  ? wordTags.intersection(selectedTags).isNotEmpty
+                  : wordTags.containsAll(selectedTags));
+
+          return matchesTags;
         }).toList();
+
 
         allTags = words.values
           .expand((w) => w['tags'] ?? [])
