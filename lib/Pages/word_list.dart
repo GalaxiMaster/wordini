@@ -38,6 +38,8 @@ class WordListState extends State<WordList> {
     'wordTypeMode': 'any',
     'selectedTags': <String>{},
     'selectedTagsMode': 'any',
+    'sortBy': 'Alphabetical',
+    'sortOrder':'Ascending',
   };
   bool _showBar = false;
 
@@ -68,7 +70,7 @@ void _showTagPopup(BuildContext context, TagPopupType tagMode) {
   final bool isSortBy = tagMode == TagPopupType.sortBy;
   final bool isSortOrder = tagMode == TagPopupType.sortOrder;
 
-  final LayerLink? link = switch (tagMode) {
+  final LayerLink link = switch (tagMode) {
     TagPopupType.type => _typeLayerLink,
     TagPopupType.tag => _tagLayerLink,
     TagPopupType.sortBy => _sortByLayerLink,
@@ -93,7 +95,7 @@ void _showTagPopup(BuildContext context, TagPopupType tagMode) {
           ),
         ),
         CompositedTransformFollower(
-          link: link!,
+          link: link,
           showWhenUnlinked: false,
           offset: offset,
           child: StatefulBuilder(
@@ -151,7 +153,7 @@ void _showTagPopup(BuildContext context, TagPopupType tagMode) {
   overlay.insert(_tagOverlayEntry!);
 
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (mounted && _tagFocusNode.canRequestFocus && (isTag || isType)) {
+    if (mounted && _tagFocusNode.canRequestFocus) {
       _tagFocusNode.requestFocus();
     }
   });
@@ -503,7 +505,7 @@ Widget _buildToggleSwitch(void Function(void Function()) setState, bool isTag) {
                   padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 50),
                   elevation: 0,
                 ),
-                onPressed: ()=> box.onClick,
+                onPressed: ()=> box.onClick(),
                 child: Text(box.text),
               ),
             ),
