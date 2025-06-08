@@ -630,7 +630,7 @@ class WordDetailsState extends State<WordDetails> {
                                       icon: const Icon(Icons.add, color: Colors.teal),
                                       tooltip: 'Add Definition',
                                     ),
-                                  if (editMode && word['entries'].length > 1)
+                                  if (editMode) //  && word['entries'].length > 1
                                     AnimatedSwitcher(
                                       duration: const Duration(milliseconds: 250),
                                       transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
