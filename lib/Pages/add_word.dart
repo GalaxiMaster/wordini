@@ -53,7 +53,7 @@ class AddWordState extends State<AddWord> {
                         fontSize: 20,
                       ), 
                       onSubmitted: (value) {
-                        addWordToList(value, context);
+                        addWordToList(value.toLowerCase(), context);
                       },
                       onChanged: (value) => setState(() {}), // TODO optomise
                     ),

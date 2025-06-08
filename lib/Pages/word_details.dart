@@ -1131,8 +1131,7 @@ class WordDetailsState extends State<WordDetails> {
                   ),
                   onPressed: () {
                     writeWord(word['word'], word);
-                    Navigator.pop(context, true);
-                    Navigator.pop(context, true);
+                    Navigator.pushNamed(context, '/home');
                   },
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),

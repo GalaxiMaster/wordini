@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/Users/User Name/Desktop/Flutter/VocabApp/vocab_app/windows/runner"
+    "cmake.sourceDirectory": "C:/Users/User Name/Desktop/Flutter/VocabApp/vocab_app/windows/runner",
+    "files.exclude": {}
 }
