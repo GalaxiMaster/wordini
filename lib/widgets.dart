@@ -26,7 +26,7 @@ class LoadingOverlay {
     overlayOn = false;
   }
 }
-void errorOverlay(context, String message) {
+void errorOverlay(context, String message, {Duration duration = const Duration(seconds: 2), Color color = Colors.red}) {
   var overlay = Overlay.of(context);
   late OverlayEntry overlayEntry;
   overlayEntry = OverlayEntry(
@@ -34,6 +34,8 @@ void errorOverlay(context, String message) {
       return _AnimatedErrorOverlay(
         message: message,
         onFinish: () => overlayEntry.remove(),
+        duration: duration,
+        color: color,
       );
     },
   );
@@ -43,10 +45,14 @@ void errorOverlay(context, String message) {
 class _AnimatedErrorOverlay extends StatefulWidget {
   final String message;
   final VoidCallback onFinish;
+  final Duration duration;
+  final Color color;
 
   const _AnimatedErrorOverlay({
     required this.message,
     required this.onFinish,
+    required this.duration,
+    required this.color
   });
 
   @override
@@ -56,7 +62,7 @@ class _AnimatedErrorOverlay extends StatefulWidget {
 class _AnimatedErrorOverlayState extends State<_AnimatedErrorOverlay>
     with SingleTickerProviderStateMixin {
   double _opacity = 0.0;
-
+  
   @override
   void initState() {
     super.initState();
@@ -67,7 +73,7 @@ class _AnimatedErrorOverlayState extends State<_AnimatedErrorOverlay>
       });
     });
     // Fade out after 2 seconds
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(widget.duration, () {
       setState(() {
         _opacity = 0.0;
       });
@@ -90,7 +96,7 @@ class _AnimatedErrorOverlayState extends State<_AnimatedErrorOverlay>
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.red,
+              color: widget.color,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(widget.message),

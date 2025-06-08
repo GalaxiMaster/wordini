@@ -97,11 +97,22 @@ class QuizzesState extends State<Quizzes> {
                           onPressed: () {
                             String message;
                             try {
-                              message = currentWord['attributes']['details'].first['definitions'].first.first['example'].first;
-                            } on StateError {
+                              List examples = [];
+                              final details = currentWord['attributes']['details'] ?? {};
+                              details.forEach((value) {
+                                final definitions = value['definitions'] ?? [];
+                                for (var defGroup in definitions) {
+                                  for (var subGroup in defGroup) {
+                                    examples += subGroup['example'];
+                                  }
+                                }
+                              });
+                              message = examples[0];
+                              // message = currentWord['attributes']['details'].first['definitions'].first.first['example'].first;
+                            } on RangeError {
                               message = 'No example available';
                             }
-                            errorOverlay(context, message);
+                            errorOverlay(context, message, duration: Duration(seconds: 5), color: Color.fromARGB(255, 30, 30, 30));
                           },
                         ),
                         const Spacer(),
