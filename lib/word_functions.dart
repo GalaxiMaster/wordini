@@ -41,8 +41,11 @@ Future<Map> getWordDetails(String word) async {
       final data = json.decode(response.body);
       if (data.isNotEmpty && data[0] is Map<String, dynamic>) {
         for (Map mainData in data) {
+          // var dataWordId = mainData['meta']['id'].split(':')[0].replaceAll(RegExp(r'[\s-]+'), '').toLowerCase();
+          final bool inStems = mainData['meta']['stems'].contains(word);
+          if (!inStems) continue;
           Map wordDeets = {};
-          try {           
+          try {
             String partOfSpeech = mainData['fl'] ?? '';
             if (partOfSpeech.isEmpty) partOfSpeech = 'unknown';
             if (wordDetails['entries'][partOfSpeech] == null) {
@@ -74,6 +77,22 @@ Future<Map> getWordDetails(String word) async {
             throw FormatException('Error parsing word details: $e');
           }
         }
+        // gather all stems and intersect them and then choose the smallest one
+        Set<String>? allStems;
+
+        wordDetails['entries'].forEach((key, value) {
+          value['details'].forEach((detail) {
+            var stems = Set<String>.from(detail['stems']);
+
+            if (allStems == null) {
+              allStems = stems;
+            } else {
+              allStems = allStems!.intersection(stems);
+            }
+          });
+        });
+        word = allStems!.reduce((a, b) => a.length <= b.length ? a : b); // find smallest in list
+        wordDetails['word'] = word;
       } else {
         debugPrint('No definitions found for "$word".');
       }
