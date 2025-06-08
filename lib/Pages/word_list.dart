@@ -59,191 +59,190 @@ class WordListState extends State<WordList> {
     super.initState();
     _wordsFuture = readData();
   }
-void _showTagPopup(BuildContext context, TagPopupType tagMode) {
-  if (_tagOverlayEntry != null) return;
+  void _showTagPopup(BuildContext context, TagPopupType tagMode) {
+    if (_tagOverlayEntry != null) return;
 
-  final overlay = Overlay.of(context);
-  _tagController.clear();
+    final overlay = Overlay.of(context);
+    _tagController.clear();
 
-  final bool isTag = tagMode == TagPopupType.tag;
-  final bool isType = tagMode == TagPopupType.type;
-  final bool isSortBy = tagMode == TagPopupType.sortBy;
-  final bool isSortOrder = tagMode == TagPopupType.sortOrder;
+    final bool isTag = tagMode == TagPopupType.tag;
 
-  final LayerLink link = switch (tagMode) {
-    TagPopupType.type => _typeLayerLink,
-    TagPopupType.tag => _tagLayerLink,
-    TagPopupType.sortBy => _sortByLayerLink,
-    TagPopupType.sortOrder => _sortOrderLayerLink,
-  };
+    final LayerLink link = switch (tagMode) {
+      TagPopupType.type => _typeLayerLink,
+      TagPopupType.tag => _tagLayerLink,
+      TagPopupType.sortBy => _sortByLayerLink,
+      TagPopupType.sortOrder => _sortOrderLayerLink,
+    };
 
-  final Offset offset = switch (tagMode) {
-    TagPopupType.type => const Offset(-10, 50),
-    TagPopupType.tag => const Offset(-100, 50),
-    TagPopupType.sortBy => const Offset(-20, 50),
-    TagPopupType.sortOrder => const Offset(-20, 50),
-  };
+    final Offset offset = switch (tagMode) {
+      TagPopupType.type => const Offset(-10, 50),
+      TagPopupType.tag => const Offset(-100, 50),
+      TagPopupType.sortBy => const Offset(-20, 50),
+      TagPopupType.sortOrder => const Offset(-20, 50),
+    };
 
-  _tagOverlayEntry = OverlayEntry(
-    builder: (context) => Stack(
-      children: [
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: _hideTagPopup,
-            child: Container(color: Colors.transparent),
+    _tagOverlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: _hideTagPopup,
+              child: Container(color: Colors.transparent),
+            ),
           ),
-        ),
-        CompositedTransformFollower(
-          link: link,
-          showWhenUnlinked: false,
-          offset: offset,
-          child: StatefulBuilder(
-            builder: (context, setPopupState) {
-              final children = switch (tagMode) {
-                TagPopupType.tag || TagPopupType.type => [
-                  _buildSearchBar(setPopupState, isTag),
-                  _buildToggleSwitch(setPopupState, isTag),
-                  const Divider(color: Colors.white),
-                  _buildListItems(setPopupState, isTag),
-                ],
-                TagPopupType.sortBy => [
-                  _buildTwoOptionSelector(
-                    options: const ['Alphabetical', 'Date Added'],
-                    selected: filters['sortBy'],
-                    onSelected: (value) {
-                      filters['sortBy'] = value;
-                      setPopupState(() {});
-                    },
-                  )
-                ],
-                TagPopupType.sortOrder => [
-                  _buildTwoOptionSelector(
-                    options: const ['Ascending', 'Descending'],
-                    selected: filters['sortOrder'],
-                    onSelected: (value) {
-                      filters['sortOrder'] = value;
-                      setPopupState(() {});
-                    },
-                  )
-                ],
-              };
+          CompositedTransformFollower(
+            link: link,
+            showWhenUnlinked: false,
+            offset: offset,
+            child: StatefulBuilder(
+              builder: (context, setPopupState) {
+                final children = switch (tagMode) {
+                  TagPopupType.tag || TagPopupType.type => [
+                    _buildSearchBar(setPopupState, isTag),
+                    _buildToggleSwitch(setPopupState, isTag),
+                    const Divider(color: Colors.white),
+                    _buildListItems(setPopupState, isTag),
+                  ],
+                  TagPopupType.sortBy => [
+                    _buildTwoOptionSelector(
+                      options: const ['Alphabetical', 'Date Added'],
+                      selected: filters['sortBy'],
+                      onSelected: (value) {
+                        filters['sortBy'] = value;
+                        setPopupState(() {});
+                      },
+                    )
+                  ],
+                  TagPopupType.sortOrder => [
+                    _buildTwoOptionSelector(
+                      options: const ['Ascending', 'Descending'],
+                      selected: filters['sortOrder'],
+                      onSelected: (value) {
+                        filters['sortOrder'] = value;
+                        setPopupState(() {});
+                      },
+                    )
+                  ],
+                };
 
-              return Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(10),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: SizedBox(
-                    width: 220,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: children,
+                return Material(
+                  elevation: 4,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: SizedBox(
+                      width: 220,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: children,
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
 
-  overlay.insert(_tagOverlayEntry!);
+    overlay.insert(_tagOverlayEntry!);
 
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (mounted && _tagFocusNode.canRequestFocus) {
-      _tagFocusNode.requestFocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _tagFocusNode.canRequestFocus) {
+        _tagFocusNode.requestFocus();
+      }
+    });
+  }
+
+  Widget _buildListItems(void Function(void Function()) setState, bool isTag) {
+    final Set items = isTag ? allTags : allTypes;
+    final filterKey = isTag ? 'selectedTags' : 'wordTypes';
+    final selected = filters[filterKey];
+
+    if (items.isEmpty) {
+      return const ListTile(
+        title: Text("No items available", style: TextStyle(fontSize: 16)),
+      );
     }
-  });
-}
-Widget _buildListItems(void Function(void Function()) setState, bool isTag) {
-  final Set items = isTag ? allTags : allTypes;
-  final filterKey = isTag ? 'selectedTags' : 'wordTypes';
-  final selected = filters[filterKey];
 
-  if (items.isEmpty) {
-    return const ListTile(
-      title: Text("No items available", style: TextStyle(fontSize: 16)),
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: items.map((item) {
+        final isSelected = selected.contains(item);
+        return ListTile(
+          leading: isSelected ? const Icon(Icons.check, size: 20) : null,
+          title: Text(item, style: const TextStyle(fontSize: 16)),
+          onTap: () {
+            if (isSelected) {
+              selected.remove(item);
+            } else {
+              selected.add(item);
+            }
+            setState(() {});
+          },
+        );
+      }).toList(),
+    );
+  }
+  
+  Widget _buildTwoOptionSelector({
+    required List<String> options,
+    required String selected,
+    required void Function(String) onSelected,
+  }) {
+    return Column(
+      children: options.map((option) {
+        final isSelected = selected == option;
+        return ListTile(
+          leading: isSelected ? const Icon(Icons.check, size: 20) : null,
+          title: Text(option, style: const TextStyle(fontSize: 16)),
+          onTap: () => onSelected(option),
+        );
+      }).toList(),
+    );
+  }
+  
+  Widget _buildSearchBar(void Function(void Function()) setState, bool isTag) {
+    return SizedBox(
+      height: 44,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _tagController,
+              focusNode: _tagFocusNode,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: isTag ? "Search tag..." : "Search type...",
+                border: InputBorder.none,
+              ),
+              onSubmitted: (_) {},
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: () {},
+          ),
+        ],
+      ),
     );
   }
 
-  return ListView(
-    padding: const EdgeInsets.symmetric(horizontal: 8),
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    children: items.map((item) {
-      final isSelected = selected.contains(item);
-      return ListTile(
-        leading: isSelected ? const Icon(Icons.check, size: 20) : null,
-        title: Text(item, style: const TextStyle(fontSize: 16)),
-        onTap: () {
-          if (isSelected) {
-            selected.remove(item);
-          } else {
-            selected.add(item);
-          }
-          setState(() {});
-        },
-      );
-    }).toList(),
-  );
-}
-Widget _buildTwoOptionSelector({
-  required List<String> options,
-  required String selected,
-  required void Function(String) onSelected,
-}) {
-  return Column(
-    children: options.map((option) {
-      final isSelected = selected == option;
-      return ListTile(
-        leading: isSelected ? const Icon(Icons.check, size: 20) : null,
-        title: Text(option, style: const TextStyle(fontSize: 16)),
-        onTap: () => onSelected(option),
-      );
-    }).toList(),
-  );
-}
-Widget _buildSearchBar(void Function(void Function()) setState, bool isTag) {
-  return SizedBox(
-    height: 44,
-    child: Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _tagController,
-            focusNode: _tagFocusNode,
-            autofocus: true,
-            decoration: InputDecoration(
-              hintText: isTag ? "Search tag..." : "Search type...",
-              border: InputBorder.none,
-            ),
-            onSubmitted: (_) {},
-          ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.check),
-          onPressed: () {},
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildToggleSwitch(void Function(void Function()) setState, bool isTag) {
-  final key = isTag ? 'selectedTagsMode' : 'wordTypeMode';
-  return AnimatedToggleSwitch(
-    options: const ['Any', 'All'],
-    initialIndex: filters[key] == 'any' ? 0 : 1,
-    onToggle: (index) {
-      filters[key] = index == 0 ? 'any' : 'all';
-      setState(() {});
-    },
-  );
-}
-
+  Widget _buildToggleSwitch(void Function(void Function()) setState, bool isTag) {
+    final key = isTag ? 'selectedTagsMode' : 'wordTypeMode';
+    return AnimatedToggleSwitch(
+      options: const ['Any', 'All'],
+      initialIndex: filters[key] == 'any' ? 0 : 1,
+      onToggle: (index) {
+        filters[key] = index == 0 ? 'any' : 'all';
+        setState(() {});
+      },
+    );
+  }
 
   void _hideTagPopup() {
     _tagOverlayEntry?.remove();
@@ -269,8 +268,8 @@ Widget _buildToggleSwitch(void Function(void Function()) setState, bool isTag) {
         }
         Map<String, dynamic> words = snapshot.data!;
 
-        List filteredWords = words.keys.where((word) {
-          final lowerWord = word.toLowerCase();
+        List filteredWords = words.entries.where((word) { // all word filtering logic here
+          final lowerWord = word.key.toLowerCase();
           final searchLower = searchTerm.toLowerCase();
 
           // Search filter
@@ -278,7 +277,7 @@ Widget _buildToggleSwitch(void Function(void Function()) setState, bool isTag) {
 
           // Type filter
           final selectedTypes = (filters['wordTypes'] as List).map((e) => e.toLowerCase()).toList();
-          final wordTypes = getWordType(words[word]).map((e) => e.toLowerCase()).toList();
+          final wordTypes = getWordType(word.value).map((e) => e.toLowerCase()).toList();
           final typeModeAll = filters['wordTypeMode'] == 'all';
 
           final matchesType = selectedTypes.isEmpty ||
@@ -290,7 +289,7 @@ Widget _buildToggleSwitch(void Function(void Function()) setState, bool isTag) {
 
           // Tag filter
           final selectedTags = filters['selectedTags'];
-          final wordTags = (words[word]['tags'] ?? <String>[]).cast<String>().toSet();
+          final wordTags = (word.value['tags'] ?? <String>[]).cast<String>().toSet();
           final tagModeAny = filters['selectedTagsMode'] == 'any';
 
           final matchesTags = selectedTags.isEmpty ||
@@ -300,7 +299,17 @@ Widget _buildToggleSwitch(void Function(void Function()) setState, bool isTag) {
 
           return matchesTags;
         }).toList();
-
+        
+        // Sorting the list
+        switch (filters['sortBy']){
+          case 'Alphabetical':
+            filteredWords.sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
+          case 'Date Added':
+            filteredWords.sort((a, b) => DateTime.parse(a.value['dateAdded']).compareTo(DateTime.parse(b.value['dateAdded'])));
+        }
+        if (filters['sortOrder'] == 'Descending'){
+          filteredWords = filteredWords.reversed.toList();
+        }
 
         allTags = words.values
           .expand((w) => w['tags'] ?? [])
@@ -417,7 +426,7 @@ Widget _buildToggleSwitch(void Function(void Function()) setState, bool isTag) {
                   padding: EdgeInsets.zero, // Remove default padding
                   itemCount: filteredWords.length,
                   itemBuilder: (context, index) {
-                    final String word = filteredWords[index];
+                    final String word = filteredWords[index].value['word'];
                     final Map firstWordDetails = words[word]['entries']?.entries?.first?.value['details']?.first;
                     return InkWell(
                       onLongPress: () async {
