@@ -26,8 +26,10 @@ class QuizzesState extends State<Quizzes> {
     super.initState();
     readData().then((data) {
       rawWords = data; // store the raw data for later use
-      setState(() {
-        words = Future.value(randomise(_gatherSelectedDefinitions(data)));
+      _gatherSelectedDefinitions(data).then((selectedDefs) {
+        setState(() {
+          words = Future.value(randomise(selectedDefs));
+        });
       });
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -42,7 +44,8 @@ class QuizzesState extends State<Quizzes> {
   }
 
   // Gather selected definitions from the data (returns a List)
-  List<Map> _gatherSelectedDefinitions(Map words) {
+  Future<List<Map>> _gatherSelectedDefinitions(Map words) async{
+    Map inputs = await readData(path: 'inputs');
     List<Map> selectedWords = [];
     for (var word in words.entries) {
       Map wordData = Map<String, dynamic>.from(word.value);
@@ -51,6 +54,7 @@ class QuizzesState extends State<Quizzes> {
         if (speechType.value['selected'] == true) {
           Map<String, dynamic> merged = Map<String, dynamic>.from(wordData);
           merged['attributes'] = Map<String, dynamic>.from(speechType.value);
+          merged['attributes']['inputs'] = inputs[word.key]?[speechType.key] ?? [];
           selectedWords.add(merged);
         }
       }
@@ -216,43 +220,77 @@ class QuizzesState extends State<Quizzes> {
   List randomise(List<Map> data) {
     Map weightings = generateWeightings(data);
     data.sort((a, b) {
-      final aWeight = weightings[a['word']]?['weight'] ?? 1.0;
-      final bWeight = weightings[b['word']]?['weight'] ?? 1.0;
+      final aWeight = weightings['${a['word']} (${a['attributes']['partOfSpeech']})']?['weight'] ?? 1.0;
+      final bWeight = weightings['${b['word']} (${b['attributes']['partOfSpeech']})']?['weight'] ?? 1.0;
       return bWeight.compareTo(aWeight);
     });
     return data;
   }
 
-  Map generateWeightings(List<Map> data) {
+  Map<String, dynamic> generateWeightings(List<Map> data) {
     double maxChecked = 0, maxRight = 0, maxPct = 0;
     Map<String, dynamic> weightings = {};
+    final now = DateTime.now();
+
+    data.sort((a, b) => DateTime.parse(a['dateAdded']).compareTo(DateTime.parse(b['dateAdded'])));
+
     for (var wordData in data) {
       final key = '${wordData['word']} (${wordData['attributes']['partOfSpeech']})';
-      int checked = wordData['attributes']['inputs']?.length ?? 0;
-      int right = wordData['attributes']['inputs']?.where((e) => e['correct'] == true).length ?? 0;
-      DateTime? lastChecked = checked != 0 ? DateTime.tryParse(wordData['attributes']['inputs']?.last['date'] ?? '') : null;
+      final inputs = wordData['attributes']['inputs'] ?? [];
+
+      int checked = inputs.length;
+      int right = inputs.where((e) => e['correct'] == true).length;
+      DateTime? lastChecked = checked > 0 ? DateTime.tryParse(inputs.last['date'] ?? '') : null;
+      bool lastWasSkip = inputs.isNotEmpty && (inputs.last['skip'] == true);
       double pct = checked > 0 ? (right / checked) : 0.0;
+
       if (checked > maxChecked) maxChecked = checked.toDouble();
       if (right > maxRight) maxRight = right.toDouble();
       if (pct > maxPct) maxPct = pct;
+
       weightings[key] = {
         'timesChecked': checked,
         'timesRight': right,
         'lastChecked': lastChecked,
         'percentage': pct,
+        'lastWasSkip': lastWasSkip,
       };
     }
-    // ADD skipping counts & ability to spread to 
-    for (var word in weightings.entries) {
-      final key = word.key;
-      var w = weightings[key];
-      double value = w['timesChecked'] == 0
-          ? 1.1
-          : (((1/w['timesChecked']) / (maxChecked == 0 ? 1 : maxChecked) / 4)
-            + ((1/w['percentage']) / (maxPct == 0 ? 1 : maxPct) / 4)
-            + ((w['lastChecked'] != null) ? (w['lastChecked'] as DateTime).difference(DateTime.now()).inDays / 60 : 0)).clamp(0, 1);
-      weightings[key]['weight'] = value;
+
+    for (var entry in weightings.entries) {
+      final w = entry.value;
+      int checked = w['timesChecked'];
+      double pct = w['percentage'];
+      DateTime? lastChecked = w['lastChecked'];
+      bool lastWasSkip = w['lastWasSkip'];
+
+      double weight;
+
+      // Most important: new words
+      if (checked == 0) {
+        weight = 1.0;
+      } 
+      // Treat skipped words as newly added if last skip was ≥ 12 hours ago
+      else if (lastWasSkip && lastChecked != null && now.difference(lastChecked).inHours >= 12) {
+        weight = 1.0;
+      } 
+      else {
+        // Scaled inverses for fewer checks and lower accuracy
+        double invCheck = 1 - (checked / (maxChecked == 0 ? 1 : maxChecked));
+        double invPct = 1 - (pct / (maxPct == 0 ? 1 : maxPct));
+
+        // Recency factor (0.0–0.3 range): more recent → lower weight
+        double timeDecay = lastChecked != null ? 
+            (now.difference(lastChecked).inDays.clamp(0, 30) / 30) * 0.3 : 
+            0.3;
+
+        weight = (invCheck * 0.4) + (invPct * 0.3) + timeDecay;
+        weight = weight.clamp(0.0, 1.0);
+      }
+
+      w['weight'] = weight;
     }
+
     return weightings;
   }
 }
