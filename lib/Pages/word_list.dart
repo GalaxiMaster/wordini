@@ -491,7 +491,7 @@ class WordListState extends State<WordList> {
       children: [
         Center(
           child: Text(
-            'Filtering',
+            heading,
             style: TextStyle(
               fontWeight: FontWeight.bold,
               letterSpacing: 2,
