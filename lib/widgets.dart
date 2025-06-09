@@ -424,3 +424,79 @@ class _AnimatedToggleSwitchState extends State<AnimatedToggleSwitch>
     );
   }
 }
+
+class AnimatedTick extends StatefulWidget {
+  final Duration duration;
+  final double size;
+
+  const AnimatedTick({
+    Key? key,
+    this.duration = const Duration(milliseconds: 750),
+    this.size = 64,
+  }) : super(key: key);
+
+  @override
+  State<AnimatedTick> createState() => AnimatedTickState();
+}
+
+class AnimatedTickState extends State<AnimatedTick> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scale;
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: widget.duration,
+      vsync: this,
+    );
+
+    _scale = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
+  }
+
+  /// Call this method to show the animated tick
+  void showTick() {
+    setState(() {
+      _visible = true;
+    });
+    _controller.forward(from: 0);
+    Future.delayed(widget.duration, () {
+      if (mounted) {
+        setState(() {
+          _visible = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        AnimatedOpacity(
+          opacity: _visible ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          child: ScaleTransition(
+            scale: _scale,
+            child: Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: widget.size,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

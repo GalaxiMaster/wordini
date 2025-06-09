@@ -21,6 +21,8 @@ class QuizzesState extends State<Quizzes> {
 
   final TextEditingController entryController = TextEditingController();
   final FocusNode _entryFocusNode = FocusNode();
+    final GlobalKey<AnimatedTickState> tickKey = GlobalKey<AnimatedTickState>();
+
   @override
   void initState() {
     super.initState();
@@ -107,8 +109,7 @@ class QuizzesState extends State<Quizzes> {
                                   }
                                 }
                               });
-                              message = examples[0];
-                              // message = currentWord['attributes']['details'].first['definitions'].first.first['example'].first;
+                              message = examples[0]; // ADD index's later
                             } on RangeError {
                               message = 'No example available';
                             }
@@ -148,6 +149,10 @@ class QuizzesState extends State<Quizzes> {
                       ],
                     ),
                   ),
+                ),
+                Center(
+                  heightFactor: .4,
+                  child: Center(child: AnimatedTick(key: tickKey)),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -190,6 +195,7 @@ class QuizzesState extends State<Quizzes> {
                             if (correct == null) return;
 
                             if (correct) {
+                              tickKey.currentState?.showTick();
                               if (_currentIndex < words.length - 1) {
                                 setState(() {
                                   _currentIndex++;
