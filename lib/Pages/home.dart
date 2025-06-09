@@ -247,7 +247,7 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -305,14 +305,6 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Track your progress',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blue.shade100,
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -327,7 +319,6 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
               tabs: [
                 Tab(text: 'Overview'),
                 Tab(text: 'Charts'),
-                Tab(text: 'Words'),
               ],
               labelColor: Colors.blue.shade600,
               unselectedLabelColor: Colors.grey.shade600,
@@ -343,7 +334,6 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
               children: [
                 _buildOverviewTab(),
                 _buildChartsTab(),
-                _buildWordsTab(),
               ],
             ),
           ),
@@ -378,56 +368,56 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
           SizedBox(height: 16),
           
           // Most Challenging Word Card
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.orange.shade400, Colors.red.shade500],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            padding: EdgeInsets.all(24),
-            child: Column(
-              children: [
-                Text(
-                  'Most Challenging Word',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.9),
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  stats.mostGuessedWord.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Guessed ${stats.mostGuessedCount} times',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  '${wordCategories[stats.mostGuessedWord]?.type} • ${wordCategories[stats.mostGuessedWord]?.length} letters',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Container(
+          //   width: double.infinity,
+          //   decoration: BoxDecoration(
+          //     gradient: LinearGradient(
+          //       colors: [Colors.orange.shade400, Colors.red.shade500],
+          //       begin: Alignment.centerLeft,
+          //       end: Alignment.centerRight,
+          //     ),
+          //     borderRadius: BorderRadius.circular(16),
+          //   ),
+          //   padding: EdgeInsets.all(24),
+          //   child: Column(
+          //     children: [
+          //       Text(
+          //         'Most Challenging Word',
+          //         style: TextStyle(
+          //           fontSize: 14,
+          //           color: Colors.white.withOpacity(0.9),
+          //         ),
+          //       ),
+          //       SizedBox(height: 8),
+          //       Text(
+          //         stats.mostGuessedWord.toUpperCase(),
+          //         style: TextStyle(
+          //           fontSize: 28,
+          //           fontWeight: FontWeight.bold,
+          //           color: Colors.white,
+          //         ),
+          //       ),
+          //       SizedBox(height: 8),
+          //       Text(
+          //         'Guessed ${stats.mostGuessedCount} times',
+          //         style: TextStyle(
+          //           fontSize: 16,
+          //           color: Colors.white,
+          //         ),
+          //       ),
+          //       SizedBox(height: 4),
+          //       Text(
+          //         '${wordCategories[stats.mostGuessedWord]?.type} • ${wordCategories[stats.mostGuessedWord]?.length} letters',
+          //         style: TextStyle(
+          //           fontSize: 12,
+          //           color: Colors.white.withOpacity(0.8),
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
           
-          SizedBox(height: 16),
+          // SizedBox(height: 16),
           
           // Progress Bars
           _buildProgressCard(stats),
@@ -456,21 +446,10 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
       padding: EdgeInsets.all(16),
       child: Column(
         children: [
-          // Bar Chart
-          _buildChartCard(
-            'Most Guessed Words',
-            Container(
-              height: 250,
-              child: _buildBarChart(),
-            ),
-          ),
-          
-          SizedBox(height: 16),
-          
           // Pie Chart
           _buildChartCard(
             'Word Types',
-            Container(
+            SizedBox(
               height: 200,
               child: _buildPieChart(),
             ),
@@ -487,7 +466,7 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
                   child: Container(
                     padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: Colors.blue.shade100,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -516,7 +495,7 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
                   child: Container(
                     padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.red.shade50,
+                      color: Colors.red.shade100,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -548,87 +527,6 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
     );
   }
 
-  Widget _buildWordsTab() {
-    final sortedWords = gameStats.wordGuesses.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.all(16),
-          child: Text(
-            'All Words (${gameStats.wordGuesses.length})',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            itemCount: sortedWords.length,
-            itemBuilder: (context, index) {
-              final entry = sortedWords[index];
-              final wordInfo = wordCategories[entry.key];
-              
-              return Container(
-                margin: EdgeInsets.only(bottom: 8),
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 30, 30, 30),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            entry.key,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            '${wordInfo?.type ?? 'unknown'} • ${wordInfo?.length ?? entry.key.length} letters',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade100.withAlpha(240),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${entry.value}×',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade800,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildStatCard(String value, String label, Color color, String emoji) {
     return Container(
       padding: EdgeInsets.all(16),
@@ -637,7 +535,7 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: const Color.fromARGB(255, 66, 66, 66).withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 4,
             offset: Offset(0, 2),
@@ -687,7 +585,7 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: const Color.fromARGB(255, 66, 66, 66).withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 4,
             offset: Offset(0, 2),
@@ -737,7 +635,8 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
         SizedBox(height: 8),
         LinearProgressIndicator(
           value: percentage / 100,
-          backgroundColor: Colors.grey.shade200,
+          backgroundColor: Colors.grey.shade800,
+          borderRadius: BorderRadius.circular(10),
           valueColor: AlwaysStoppedAnimation<Color>(color),
           minHeight: 8,
         ),
@@ -753,7 +652,7 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: const Color.fromARGB(255, 66, 66, 66).withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 4,
             offset: Offset(0, 2),
@@ -792,7 +691,7 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: const Color.fromARGB(255, 66, 66, 66).withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 4,
             offset: Offset(0, 2),
@@ -813,64 +712,6 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
           SizedBox(height: 16),
           chart,
         ],
-      ),
-    );
-  }
-
-  Widget _buildBarChart() {
-    final topWords = gameStats.wordGuesses.entries
-        .toList()
-        ..sort((a, b) => b.value.compareTo(a.value));
-    final chartData = topWords.take(8).toList();
-
-    return BarChart(
-      BarChartData(
-        alignment: BarChartAlignment.spaceAround,
-        maxY: chartData.first.value.toDouble() + 1,
-        barTouchData: BarTouchData(enabled: false),
-        titlesData: FlTitlesData(
-          show: true,
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (double value, TitleMeta meta) {
-                if (value.toInt() < chartData.length) {
-                  return Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: Text(
-                      chartData[value.toInt()].key,
-                      style: TextStyle(fontSize: 10),
-                    ),
-                  );
-                }
-                return Text('');
-              },
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          topTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-        ),
-        borderData: FlBorderData(show: false),
-        barGroups: chartData.asMap().entries.map((entry) {
-          return BarChartGroupData(
-            x: entry.key,
-            barRods: [
-              BarChartRodData(
-                toY: entry.value.value.toDouble(),
-                color: Colors.blue.shade600,
-                width: 20,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ],
-          );
-        }).toList(),
       ),
     );
   }
