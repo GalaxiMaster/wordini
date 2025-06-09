@@ -91,48 +91,59 @@ class HomePageState extends State<HomePage> {
 class HomePageContent extends StatefulWidget {
   const HomePageContent({super.key});
   @override
-  // ignore: library_private_types_in_public_api
-  _HomePageContentState createState() => _HomePageContentState();
+  HomePageContentState createState() => HomePageContentState();
 }
 
-class _HomePageContentState extends State<HomePageContent> {
+class HomePageContentState extends State<HomePageContent> {
   @override
   void initState() {
     super.initState();
-    fetchInputData();
   }
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        WordGameStatsScreen(),
-        Positioned(
-          right: 10,
-          bottom: 10,
-          child: FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddWord(),
-                  )
-              );
-            },
-            backgroundColor: Colors.blue,
-            child: Text(
-              "+",
-              style: TextStyle(
-                fontSize: 30,
-                color: Colors.white,
-              ),
-            ),
-          )
-        )
-      ],
+    return FutureBuilder(
+      future:  fetchInputData(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return const Center(child: Text('Error loading data'));
+        } else if (snapshot.hasData) {
+          return Stack(
+            children: [
+              WordGameStatsScreen(gameData: snapshot.data!),
+              Positioned(
+                right: 10,
+                bottom: 10,
+                child: FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddWord(),
+                        )
+                    );
+                  },
+                  backgroundColor: Colors.blue,
+                  child: Text(
+                    "+",
+                    style: TextStyle(
+                      fontSize: 30,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              )
+            ],
+          );
+        } else {
+          return const Center(child: Text('No data available'));
+        }
+      },
     );
   }
   
-  void fetchInputData() async {
+  Future<GameStats> fetchInputData() async {
     final Map<String, dynamic> data = await readData(path: 'inputs');
 
     int wordsGuessed = 0;
@@ -167,65 +178,30 @@ class _HomePageContentState extends State<HomePageContent> {
     int averageTimesGuessed = wordsGuessed > 0
         ? wordGuesses.values.reduce((a, b) => a + b) ~/ wordsGuessed
         : 0;
-
-    debugPrint('Words guessed: $wordsGuessed');
-    debugPrint('Speech types guessed: $speechTypesGuessed');
-    debugPrint('Total guesses: $totalGuesses');
-    debugPrint('Average times guessed: $averageTimesGuessed');
-    debugPrint('Word guesses: $wordGuesses');
-  }
-
-}
-
-class WordGameStatsApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Word Game Stats',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
-      home: WordGameStatsScreen(),
+    final GameStats gameStats = GameStats(
+      wordsGuessed: wordsGuessed,
+      speechTypesGuessed: speechTypesGuessed,
+      totalGuesses: totalGuesses,
+      totalSkips: totalSkips,
+      correctGuesses: correctGuesses,
+      wordGuesses: wordGuesses
     );
+    return gameStats;
   }
 }
 
 class WordGameStatsScreen extends StatefulWidget {
+  final GameStats gameData;
+  const WordGameStatsScreen({required this.gameData, super.key});
+
   @override
-  _WordGameStatsScreenState createState() => _WordGameStatsScreenState();
+  WordGameStatsScreenState createState() => WordGameStatsScreenState();
 }
 
-class _WordGameStatsScreenState extends State<WordGameStatsScreen>
-    with SingleTickerProviderStateMixin {
+class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late GameStats gameStats;
   
-  // Sample data - replace with your actual data
-  final GameStats gameStats = GameStats(
-    wordsGuessed: 45,
-    speechTypesGuessed: 8,
-    totalGuesses: 180,
-    totalSkips: 12,
-    correctGuesses: 45,
-    wordGuesses: {
-      "apple": 4,
-      "beautiful": 7,
-      "quickly": 3,
-      "house": 2,
-      "running": 5,
-      "elephant": 8,
-      "mysterious": 9,
-      "jump": 1,
-      "incredible": 6,
-      "computer": 3,
-      "happiness": 4,
-      "whisper": 2,
-      "adventure": 5,
-      "brilliant": 7,
-      "ocean": 2,
-    },
-  );
-
   final Map<String, WordInfo> wordCategories = {
     "apple": WordInfo(type: "noun", length: 5),
     "beautiful": WordInfo(type: "adjective", length: 9),
@@ -248,6 +224,7 @@ class _WordGameStatsScreenState extends State<WordGameStatsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    gameStats = widget.gameData;
   }
 
   @override
