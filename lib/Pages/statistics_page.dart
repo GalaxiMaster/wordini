@@ -79,40 +79,11 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
     return Scaffold(
       body: Column(
         children: [
-          // Header
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Color.fromARGB(255, 30, 30, 30)
-              // gradient: LinearGradient(
-              //   colors: [Colors.blue.shade600, Colors.purple.shade600],
-              //   begin: Alignment.centerLeft,
-              //   end: Alignment.centerRight,
-              // ),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(24.0),
-                child: Column(
-                  children: [
-                    Text(
-                      'The Vocab Lab',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          
           // Tab Bar
           Container(
             color: Color.fromARGB(255, 30, 30, 30),
             child: TabBar(
+              padding: EdgeInsets.only(top: 20),
               controller: _tabController,
               tabs: [
                 Tab(text: 'Overview'),

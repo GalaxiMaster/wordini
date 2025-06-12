@@ -125,14 +125,19 @@ class HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.all(25),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.green
+                        borderRadius: BorderRadius.circular(15),
+                        color: Color.fromARGB(255, 30, 30, 30)
                       ),
                       width: double.infinity,
-                      height: 100,
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(''),
+                      height: 125,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Text(
+                          'Words Added this week',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold
+                          ),
                         ),
                       )
                     ),
