@@ -138,20 +138,6 @@ class HomePageContentState extends State<HomePageContent> {
                     ),
                   ),
                   Positioned(
-                    right: 15,
-                    top: 15,
-                    child: IconButton(
-                      padding: EdgeInsets.all(25),
-                      onPressed: (){
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SettingsPage())
-                        );
-                      }, 
-                      icon: Icon(Icons.settings)
-                    )
-                  ),
-                  Positioned(
                     right: 10,
                     bottom: 10,
                     child: FloatingActionButton(
