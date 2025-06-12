@@ -235,19 +235,29 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
 
   DerivedStats get derivedStats {
     final totalWordGuesses = gameStats.wordGuesses.values.fold(0, (sum, count) => sum + count);
-    final averageGuesses = totalWordGuesses / gameStats.wordGuesses.length;
-    
-    final mostGuessedEntry = gameStats.wordGuesses.entries
-        .reduce((a, b) => a.value > b.value ? a : b);
-    
-    final successRate = (gameStats.correctGuesses / gameStats.totalGuesses) * 100;
-    final skipRate = (gameStats.totalSkips / (gameStats.totalGuesses + gameStats.totalSkips)) * 100;
+    final averageGuesses = gameStats.wordGuesses.isNotEmpty
+        ? totalWordGuesses / gameStats.wordGuesses.length
+        : 0.0;
+    final MapEntry? mostGuessedEntry;
+    if (gameStats.wordGuesses.isNotEmpty){
+      mostGuessedEntry = gameStats.wordGuesses.entries
+          .reduce((a, b) => a.value > b.value ? a : b);
+    } else{
+      mostGuessedEntry = null;
+    }
 
+    final successRate = gameStats.totalGuesses > 0
+      ? (gameStats.correctGuesses / gameStats.totalGuesses) * 100
+      : 0.0;
+
+    final skipRate = (gameStats.totalGuesses + gameStats.totalSkips) > 0
+      ? (gameStats.totalSkips / (gameStats.totalGuesses + gameStats.totalSkips)) * 100
+      : 0.0;
     return DerivedStats(
       totalWordGuesses: totalWordGuesses,
       averageGuesses: averageGuesses,
-      mostGuessedWord: mostGuessedEntry.key,
-      mostGuessedCount: mostGuessedEntry.value,
+      mostGuessedWord: mostGuessedEntry?.key,
+      mostGuessedCount: mostGuessedEntry?.value,
       successRate: successRate,
       skipRate: skipRate,
     );
@@ -323,7 +333,7 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
     final stats = derivedStats;
     
     return SingleChildScrollView(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
           // Key Stats Grid
@@ -337,7 +347,7 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
             children: [
               _buildStatCard('${gameStats.wordsGuessed}', 'Words Guessed', Colors.blue, '📝'),
               _buildStatCard('${gameStats.correctGuesses}', 'Correct', Colors.green, '✅'),
-              _buildStatCard('${stats.successRate.toStringAsFixed(1)}%', 'Success Rate', Colors.purple, '🎯'),
+              _buildStatCard('16', 'Words Added', Colors.purple, '+'),
               _buildStatCard(stats.averageGuesses.toStringAsFixed(1), 'Avg. Guesses', Colors.orange, '📊'),
             ],
           ),
@@ -758,8 +768,8 @@ class WordInfo {
 class DerivedStats {
   final int totalWordGuesses;
   final double averageGuesses;
-  final String mostGuessedWord;
-  final int mostGuessedCount;
+  final String? mostGuessedWord;
+  final int? mostGuessedCount;
   final double successRate;
   final double skipRate;
 
