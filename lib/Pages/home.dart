@@ -1,4 +1,5 @@
 // import 'dart:convert';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:vocab_app/Pages/add_word.dart';
 import 'package:vocab_app/Pages/quizzes.dart';
@@ -110,7 +111,7 @@ class HomePageContentState extends State<HomePageContent> {
                   onPressed: (){
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => WordGameStatsScreen(gameData: snapshot.data!,))
+                      MaterialPageRoute(builder: (context) => WordGameStatsScreen(gameData: snapshot.data!['inputData'],))
                     );
                   }, 
                   icon: Icon(Icons.bar_chart)
@@ -129,15 +130,61 @@ class HomePageContentState extends State<HomePageContent> {
                         color: Color.fromARGB(255, 30, 30, 30)
                       ),
                       width: double.infinity,
-                      height: 125,
+                      height: 200,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Text(
-                          'Words Added this week',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Words Added this week',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ), 
+                            LinearProgressIndicator(
+                              value: 50 / 100,
+                              backgroundColor: Colors.grey.shade800,
+                              borderRadius: BorderRadius.circular(10),
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                              minHeight: 12,
+                            ),
+                            SizedBox(
+                              height: 150,
+                              child: PieChart(
+                                PieChartData(
+                                  sections: [
+                                    PieChartSectionData(
+                                      color: Colors.green,
+                                      value: 80,
+                                      title: 'title',
+                                      radius: 100,
+                                      titleStyle: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    PieChartSectionData(
+                                      color: Colors.grey,
+                                      value: 20,
+                                      title: 'title',
+                                      radius: 100,
+                                      titleStyle: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  ]
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       )
                     ),
@@ -175,8 +222,10 @@ class HomePageContentState extends State<HomePageContent> {
     );
   }
   
-  Future<GameStats> fetchInputData() async {
-    final Map<String, dynamic> data = await readData(path: 'inputs');
+  Future<Map> fetchInputData() async {
+    final Map<String, dynamic> inputData = await readData(path: 'inputs');
+    final Map<String, dynamic> wordData = await readData();
+
 
     int wordsGuessed = 0;
     int speechTypesGuessed = 0;
@@ -185,7 +234,7 @@ class HomePageContentState extends State<HomePageContent> {
     int correctGuesses = 0;
     final Map<String, int> wordGuesses = {};
 
-    for (final MapEntry<String, dynamic> word in data.entries) {
+    for (final MapEntry<String, dynamic> word in inputData.entries) {
       wordsGuessed++;
       wordGuesses[word.key] = (wordGuesses[word.key] ?? 0) + 1;
 
@@ -210,15 +259,20 @@ class HomePageContentState extends State<HomePageContent> {
     int averageTimesGuessed = wordsGuessed > 0
         ? wordGuesses.values.reduce((a, b) => a + b) ~/ wordsGuessed
         : 0;
-    final GameStats gameStats = GameStats(
-      wordsGuessed: wordsGuessed,
-      speechTypesGuessed: speechTypesGuessed,
-      totalGuesses: totalGuesses,
-      totalSkips: totalSkips,
-      correctGuesses: correctGuesses,
-      wordGuesses: wordGuesses
-    );
-    return gameStats;
+    Map output = {
+      'wordData': {
+
+      },
+      'inputData': GameStats(
+        wordsGuessed: wordsGuessed,
+        speechTypesGuessed: speechTypesGuessed,
+        totalGuesses: totalGuesses,
+        totalSkips: totalSkips,
+        correctGuesses: correctGuesses,
+        wordGuesses: wordGuesses
+      ),
+    };
+    return output;
   }
 }
 
