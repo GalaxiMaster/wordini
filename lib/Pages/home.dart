@@ -1,6 +1,5 @@
 // import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' as test;
 import 'package:vocab_app/Pages/add_word.dart';
 import 'package:vocab_app/Pages/quizzes.dart';
 import 'package:vocab_app/Pages/settings.dart';
@@ -125,72 +124,139 @@ class HomePageContentState extends State<HomePageContent> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(25),
-                    child: Column(
-                      // crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            color: Color.fromARGB(255, 30, 30, 30)
-                          ),
-                          width: double.infinity,
-                          height: 100,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Words Added this week',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 6,
-                                ),
-                                Text(
-                                  '${snapshot.data!['homePage']['wordsThisWeek']} / 20',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.5
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 6.5,
-                                ),
-                                LinearProgressIndicator(
-                                  value: snapshot.data!['homePage']['wordsThisWeek'] / 20,
-                                  backgroundColor: Colors.grey.shade800,
-                                  borderRadius: BorderRadius.circular(10),
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-                                  minHeight: 12,
-                                ),
-                              ],
+                    child: SingleChildScrollView(
+                      child: Column(
+                        // crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Statistics',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold
+                              ),
                             ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              color: Color.fromARGB(255, 30, 30, 30)
+                            ),
+                            width: double.infinity,
+                            height: 100,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Words Added this week',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 6,
+                                  ),
+                                  Text(
+                                    '${snapshot.data!['homePage']['wordsThisWeek']} / 20',
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.5
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 6.5,
+                                  ),
+                                  LinearProgressIndicator(
+                                    value: snapshot.data!['homePage']['wordsThisWeek'] / 20,
+                                    backgroundColor: Colors.grey.shade800,
+                                    borderRadius: BorderRadius.circular(10),
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                                    minHeight: 12,
+                                  ),
+                                ],
+                              ),
+                            )
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              'Definition Checking',
+                              style: TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              dataPieChart('Today', snapshot.data!['homePage']['guessesToday'], 4, context),
+                              dataPieChart('This week', snapshot.data!['homePage']['guessesThisWeek'], 20, context),
+                            ],
+                          ),
+                          Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Text(
+                              'Quizzes',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              double totalSpacing = 12 * 4; // 4 gaps between 4 chips
+                              double chipWidth = (constraints.maxWidth - totalSpacing) / 4;
+                              
+                              return Align(
+                                alignment: Alignment.centerLeft,
+                                child: Wrap(
+                                  runSpacing: 5,
+                                  children: List.generate(8, (index) {
+                                    int value = 5 * (index + 1);
+                                    return Container(
+                                      width: chipWidth,
+                                      margin: EdgeInsets.only(
+                                        right: (index + 1) % 4 == 0 ? 0 : 12, // allow perfect margining for 4 chips per row
+                                      ),
+                                      child: RawChip(
+                                        label: SizedBox(
+                                          width: double.infinity,
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 5),
+                                            child: Text(
+                                              value.toString(),
+                                              style: TextStyle(fontSize: 16),
+                                              overflow: TextOverflow.ellipsis,
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        ),
+                                        backgroundColor: Color.fromARGB(255, 30, 30, 30),
+                                        elevation: 0,
+                                        shadowColor: Colors.transparent,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(16.5),
+                                          side: BorderSide(color: Colors.transparent, width: 0.1),
+                                        ),
+                                        visualDensity: VisualDensity.compact,
+                                        pressElevation: 0,
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              );
+                            },
                           )
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text(
-                            'Definition Checking',
-                            style: TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1
-                            ),
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            dataPieChart('Today', snapshot.data!['homePage']['guessesToday'], 4, context),
-                            dataPieChart('This week', snapshot.data!['homePage']['guessesThisWeek'], 20, context),
-                          ],
-                        )
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   Positioned(
