@@ -150,7 +150,7 @@ class HomePageContentState extends State<HomePageContent> {
                                   height: 6,
                                 ),
                                 Text(
-                                  '17/20',
+                                  '${snapshot.data!['homePage']['wordsThisWeek']} / 20',
                                   style: TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.bold,
@@ -161,7 +161,7 @@ class HomePageContentState extends State<HomePageContent> {
                                   height: 6.5,
                                 ),
                                 LinearProgressIndicator(
-                                  value: 17 / 20,
+                                  value: snapshot.data!['homePage']['wordsThisWeek'] / 20,
                                   backgroundColor: Colors.grey.shade800,
                                   borderRadius: BorderRadius.circular(10),
                                   valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
@@ -174,8 +174,8 @@ class HomePageContentState extends State<HomePageContent> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            dataPieChart('Today', context),
-                            dataPieChart('This week', context),
+                            dataPieChart('Today', snapshot.data!['homePage']['guessesToday'], 4, context),
+                            dataPieChart('This week', snapshot.data!['homePage']['guessesThisWeek'], 20, context),
                           ],
                         )
                       ],
@@ -214,7 +214,7 @@ class HomePageContentState extends State<HomePageContent> {
     );
   }
 
-  Padding dataPieChart(title, BuildContext context) {
+  Padding dataPieChart(String title, int value, int goal, BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16),
       child: Container(
@@ -242,11 +242,11 @@ class HomePageContentState extends State<HomePageContent> {
               child: CircularPercentIndicator(
                 radius: 70,
                 lineWidth: 12,
-                percent: 0.5, // 50/100
+                percent: value/goal, // 50/100
                 startAngle: 180,
                 center: RichText(
                   text: TextSpan(
-                    text: '50',
+                    text: value.toString(),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -254,7 +254,7 @@ class HomePageContentState extends State<HomePageContent> {
                     ),
                     children: [
                       TextSpan(
-                        text: ' / 100',
+                        text: ' / $goal',
                         style: TextStyle(
                           fontWeight: FontWeight.normal,
                           color: Colors.white,
