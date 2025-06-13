@@ -224,7 +224,17 @@ class HomePageContentState extends State<HomePageContent> {
         ),
         child: Column(
           children: [
-            Text(title),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: .5
+                ),
+              ),
+            ),
             SizedBox(
               width: (MediaQuery.of(context).size.width-32-25-70)/2,
               height: (MediaQuery.of(context).size.width-32-25-70)/2,
@@ -252,10 +262,10 @@ class HomePageContentState extends State<HomePageContent> {
                     ],
                   ),
                 ),
-                backgroundColor: Colors.grey.shade600,
+                backgroundColor: Colors.grey.shade800,
                 progressColor: Colors.green,
                 circularStrokeCap: CircularStrokeCap.round,
-              )
+              ),
             ),
           ],
         ),
