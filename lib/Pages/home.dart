@@ -1,5 +1,4 @@
 // import 'dart:convert';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:vocab_app/Pages/add_word.dart';
 import 'package:vocab_app/Pages/quizzes.dart';
@@ -7,6 +6,7 @@ import 'package:vocab_app/Pages/settings.dart';
 import 'package:vocab_app/Pages/statistics_page.dart';
 import 'package:vocab_app/Pages/word_list.dart';
 import 'package:vocab_app/file_handling.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -124,69 +124,60 @@ class HomePageContentState extends State<HomePageContent> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(25),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: Color.fromARGB(255, 30, 30, 30)
-                      ),
-                      width: double.infinity,
-                      height: 200,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Words Added this week',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ), 
-                            LinearProgressIndicator(
-                              value: 50 / 100,
-                              backgroundColor: Colors.grey.shade800,
-                              borderRadius: BorderRadius.circular(10),
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-                              minHeight: 12,
-                            ),
-                            SizedBox(
-                              height: 150,
-                              child: PieChart(
-                                PieChartData(
-                                  sections: [
-                                    PieChartSectionData(
-                                      color: Colors.green,
-                                      value: 80,
-                                      title: 'title',
-                                      radius: 100,
-                                      titleStyle: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    PieChartSectionData(
-                                      color: Colors.grey,
-                                      value: 20,
-                                      title: 'title',
-                                      radius: 100,
-                                      titleStyle: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  ]
+                    child: Column(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15),
+                            color: Color.fromARGB(255, 30, 30, 30)
+                          ),
+                          width: double.infinity,
+                          height: 100,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Words Added this week',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold
+                                  ),
                                 ),
-                              ),
+                                SizedBox(
+                                  height: 6,
+                                ),
+                                Text(
+                                  '17/20',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.5
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 6.5,
+                                ),
+                                LinearProgressIndicator(
+                                  value: 17 / 20,
+                                  backgroundColor: Colors.grey.shade800,
+                                  borderRadius: BorderRadius.circular(10),
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                                  minHeight: 12,
+                                ),
+                              ],
                             ),
-                          ],
+                          )
                         ),
-                      )
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            dataPieChart('Today', context),
+                            dataPieChart('This week', context),
+                          ],
+                        )
+                      ],
                     ),
                   ),
                   Positioned(
@@ -219,6 +210,56 @@ class HomePageContentState extends State<HomePageContent> {
           return const Center(child: Text('No data available'));
         }
       },
+    );
+  }
+
+  Padding dataPieChart(title, BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 16),
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          color: Color.fromARGB(255, 30, 30, 30)
+        ),
+        child: Column(
+          children: [
+            Text(title),
+            SizedBox(
+              width: (MediaQuery.of(context).size.width-32-25-70)/2,
+              height: (MediaQuery.of(context).size.width-32-25-70)/2,
+              child: CircularPercentIndicator(
+                radius: 70,
+                lineWidth: 12,
+                percent: 0.5, // 50/100
+                startAngle: 180,
+                center: RichText(
+                  text: TextSpan(
+                    text: '50',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: ' / 100',
+                        style: TextStyle(
+                          fontWeight: FontWeight.normal,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                backgroundColor: Colors.grey.shade600,
+                progressColor: Colors.green,
+                circularStrokeCap: CircularStrokeCap.round,
+              )
+            ),
+          ],
+        ),
+      ),
     );
   }
   
