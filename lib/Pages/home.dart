@@ -1,5 +1,6 @@
 // import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' as test;
 import 'package:vocab_app/Pages/add_word.dart';
 import 'package:vocab_app/Pages/quizzes.dart';
 import 'package:vocab_app/Pages/settings.dart';
@@ -91,7 +92,7 @@ class HomePageContentState extends State<HomePageContent> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          return const Center(child: Text('Error loading data'));
+          return Center(child: Text('Error loading data ${snapshot.error}'));
         } else if (snapshot.hasData) {
           return Scaffold(
             appBar: AppBar(
@@ -111,7 +112,7 @@ class HomePageContentState extends State<HomePageContent> {
                   onPressed: (){
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => WordGameStatsScreen(gameData: snapshot.data!['inputData'],))
+                      MaterialPageRoute(builder: (context) => WordGameStatsScreen(gameData: snapshot.data!['statistics'],))
                     );
                   }, 
                   icon: Icon(Icons.bar_chart)
@@ -275,8 +276,7 @@ class HomePageContentState extends State<HomePageContent> {
   
   Future<Map> fetchInputData() async {
     final Map<String, dynamic> inputData = await readData(path: 'inputs');
-    final Map<String, dynamic> wordData = await readData();
-
+    final int week = getWeekNumber(DateTime.now());
 
     int wordsGuessed = 0;
     int speechTypesGuessed = 0;
@@ -284,6 +284,8 @@ class HomePageContentState extends State<HomePageContent> {
     int totalSkips = 0;
     int correctGuesses = 0;
     final Map<String, int> wordGuesses = {};
+    int guessesThisWeek = 0;
+    int guessesToday = 0;
 
     for (final MapEntry<String, dynamic> word in inputData.entries) {
       wordsGuessed++;
@@ -294,6 +296,15 @@ class HomePageContentState extends State<HomePageContent> {
         for (final MapEntry speechType in speechTypes.entries) {
           speechTypesGuessed++;
           for (Map guess in speechType.value){
+            final int guessWeek = getWeekNumber(DateTime.parse(guess['date']));
+
+            if (guessWeek == week){
+              guessesThisWeek += 1;
+            }
+            if (isSameDay(DateTime.parse(guess['date']), DateTime.now())){
+              guessesToday += 1;
+            }
+
             if (guess['correct'] ?? false){
               correctGuesses++;
             }
@@ -306,15 +317,27 @@ class HomePageContentState extends State<HomePageContent> {
         }
       }
     }
+    final Map<String, dynamic> wordData = await readData();
 
-    int averageTimesGuessed = wordsGuessed > 0
-        ? wordGuesses.values.reduce((a, b) => a + b) ~/ wordsGuessed
-        : 0;
+    int wordsThisWeek = 0;
+    
+    for (MapEntry word in wordData.entries){
+      final int wordWeek = getWeekNumber(DateTime.parse(word.value['dateAdded']));
+      if (wordWeek == week){
+        wordsThisWeek += 1;
+      }
+    }
+
+    // int averageTimesGuessed = wordsGuessed > 0
+    //     ? wordGuesses.values.reduce((a, b) => a + b) ~/ wordsGuessed
+    //     : 0;
     Map output = {
-      'wordData': {
-
+      'homePage': {
+        'guessesThisWeek': guessesThisWeek,
+        'guessesToday': guessesToday,
+        'wordsThisWeek': wordsThisWeek
       },
-      'inputData': GameStats(
+      'statistics': GameStats(
         wordsGuessed: wordsGuessed,
         speechTypesGuessed: speechTypesGuessed,
         totalGuesses: totalGuesses,
@@ -324,6 +347,28 @@ class HomePageContentState extends State<HomePageContent> {
       ),
     };
     return output;
+  }
+  bool isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+  int getWeekNumber(DateTime date) {
+    // Find the first day of the year
+    DateTime firstDayOfYear = DateTime(date.year, 1, 1);
+    
+    // Find the first Monday of the year (ISO week standard)
+    DateTime firstMonday = firstDayOfYear;
+    while (firstMonday.weekday != DateTime.monday) {
+      firstMonday = firstMonday.add(Duration(days: 1));
+    }
+    
+    // If the date is before the first Monday, it belongs to the previous year's last week
+    if (date.isBefore(firstMonday)) {
+      return getWeekNumber(DateTime(date.year - 1, 12, 31));
+    }
+    
+    // Calculate the week number
+    int daysDifference = date.difference(firstMonday).inDays;
+    return (daysDifference / 7).floor() + 1;
   }
 }
 
