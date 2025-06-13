@@ -296,16 +296,14 @@ class HomePageContentState extends State<HomePageContent> {
         for (final MapEntry speechType in speechTypes.entries) {
           speechTypesGuessed++;
           for (Map guess in speechType.value){
-            final int guessWeek = getWeekNumber(DateTime.parse(guess['date']));
-
-            if (guessWeek == week){
-              guessesThisWeek += 1;
-            }
-            if (isSameDay(DateTime.parse(guess['date']), DateTime.now())){
-              guessesToday += 1;
-            }
-
             if (guess['correct'] ?? false){
+              final int guessWeek = getWeekNumber(DateTime.parse(guess['date']));
+              if (guessWeek == week){
+                guessesThisWeek += 1;
+              }
+              if (isSameDay(DateTime.parse(guess['date']), DateTime.now())){
+                guessesToday += 1;
+              }
               correctGuesses++;
             }
             if (guess['skipped'] ?? false){
