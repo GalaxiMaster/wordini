@@ -126,6 +126,7 @@ class HomePageContentState extends State<HomePageContent> {
                   Padding(
                     padding: const EdgeInsets.all(25),
                     child: Column(
+                      // crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
                           decoration: BoxDecoration(
@@ -170,6 +171,17 @@ class HomePageContentState extends State<HomePageContent> {
                               ],
                             ),
                           )
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text(
+                            'Definition Checking',
+                            style: TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1
+                            ),
+                          ),
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -216,7 +228,7 @@ class HomePageContentState extends State<HomePageContent> {
 
   Padding dataPieChart(String title, int value, int goal, BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 16),
+      padding: EdgeInsets.only(bottom: 16),
       child: Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
