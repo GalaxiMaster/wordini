@@ -122,9 +122,9 @@ class HomePageContentState extends State<HomePageContent> {
               height: double.infinity,
               child: Stack(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(25),
-                    child: SingleChildScrollView(
+                  SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(25),
                       child: Column(
                         // crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
