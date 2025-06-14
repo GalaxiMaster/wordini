@@ -6,7 +6,7 @@ import 'package:vocab_app/Pages/settings.dart';
 import 'package:vocab_app/Pages/statistics_page.dart';
 import 'package:vocab_app/Pages/word_list.dart';
 import 'package:vocab_app/file_handling.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:syncfusion_flutter_gauges/gauges.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -196,8 +196,8 @@ class HomePageContentState extends State<HomePageContent> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              dataPieChart('Today', snapshot.data!['homePage']['guessesToday'], 4, context),
-                              dataPieChart('This week', snapshot.data!['homePage']['guessesThisWeek'], 20, context),
+                              dataGaugeChart('Today', snapshot.data!['homePage']['guessesToday'], 4, context),
+                              dataGaugeChart('This week', snapshot.data!['homePage']['guessesThisWeek'], 20, context),
                             ],
                           ),
                           Align(
@@ -298,14 +298,14 @@ class HomePageContentState extends State<HomePageContent> {
     );
   }
 
-  Padding dataPieChart(String title, int value, int goal, BuildContext context) {
+  Padding dataGaugeChart(String title, int value, int goal, BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(bottom: 16),
       child: Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
-          color: Color.fromARGB(255, 30, 30, 30)
+          color: Color.fromARGB(255, 30, 30, 30),
         ),
         child: Column(
           children: [
@@ -316,40 +316,63 @@ class HomePageContentState extends State<HomePageContent> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: .5
+                  letterSpacing: .5,
                 ),
               ),
             ),
             SizedBox(
-              width: (MediaQuery.of(context).size.width-32-25-70)/2,
-              height: (MediaQuery.of(context).size.width-32-25-70)/2,
-              child: CircularPercentIndicator(
-                radius: 70,
-                lineWidth: 12,
-                percent: value/goal, // 50/100
-                startAngle: 180,
-                center: RichText(
-                  text: TextSpan(
-                    text: value.toString(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 16,
+              width: (MediaQuery.of(context).size.width - 32 - 25 - 70) / 2,
+              height: (MediaQuery.of(context).size.width - 32 - 25 - 70) / 2,
+              child: SfRadialGauge(
+                axes: <RadialAxis>[
+                  RadialAxis(
+                    minimum: 0,
+                    maximum: goal.toDouble(),
+                    showLabels: false,
+                    showTicks: false,
+                    startAngle: 135,
+                    endAngle: 45,
+                    axisLineStyle: AxisLineStyle(
+                      thickness: 0.15,
+                      thicknessUnit: GaugeSizeUnit.factor,
+                      cornerStyle: CornerStyle.bothCurve,
+                      color: Colors.grey.shade800,
                     ),
-                    children: [
-                      TextSpan(
-                        text: ' / $goal',
-                        style: TextStyle(
-                          fontWeight: FontWeight.normal,
-                          color: Colors.white,
-                        ),
-                      ),
+                    pointers: <GaugePointer>[
+                      RangePointer(
+                        value: value.toDouble(),
+                        width: 0.15,
+                        sizeUnit: GaugeSizeUnit.factor,
+                        color: Colors.green,
+                        cornerStyle: CornerStyle.bothCurve,
+                      )
                     ],
-                  ),
-                ),
-                backgroundColor: Colors.grey.shade800,
-                progressColor: Colors.green,
-                circularStrokeCap: CircularStrokeCap.round,
+                    annotations: <GaugeAnnotation>[
+                      GaugeAnnotation(
+                        angle: 90,
+                        widget: RichText(
+                          text: TextSpan(
+                            text: '$value',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: ' / $goal',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    ],
+                  )
+                ],
               ),
             ),
           ],
