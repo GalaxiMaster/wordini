@@ -161,6 +161,6 @@ void addWordToList(String word, context) {
     }
     Navigator.pop(context);
 
-    writeWord(word, wordDetails);
+    writeKey(word, wordDetails);
   });
 }

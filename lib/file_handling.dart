@@ -29,20 +29,20 @@ Future<void> writeData(
   debugPrint('Data written to Hive box: $path');
 }
 
-Future<void> deleteWord(String word, {String path = 'words'}) async {
+Future<void> deleteKey(String word, {String path = 'words'}) async {
   final box = await Hive.openBox('words');
   await box.delete(word);
   debugPrint('Deleted word "$word" from box "$path"');
 }
 
-Future<void> writeWord(String key, Map data, {String path = 'words',}) async {
+Future<void> writeKey(String key, dynamic data, {String path = 'words',}) async {
   final box = await Hive.openBox(path);
   box.put(key, data);
 }
 
-Future<dynamic> readKey(String key, {String path = 'words'}) async {
+Future<dynamic> readKey(String key, {String path = 'words', dynamic defaultValue}) async {
   final box = await Hive.openBox(path);
-  return box.get(key);
+  return box.get(key, defaultValue: defaultValue);
 }
 
 Future<void> resetData(context, {String? path}) async {

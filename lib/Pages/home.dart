@@ -7,6 +7,7 @@ import 'package:vocab_app/Pages/statistics_page.dart';
 import 'package:vocab_app/Pages/word_list.dart';
 import 'package:vocab_app/file_handling.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
+import 'package:vocab_app/widgets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -138,49 +139,60 @@ class HomePageContentState extends State<HomePageContent> {
                               ),
                             ),
                           ),
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Color.fromARGB(255, 30, 30, 30)
-                            ),
-                            width: double.infinity,
-                            height: 100,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Words Added this week',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 6,
-                                  ),
-                                  Text(
-                                    '${snapshot.data!['homePage']['wordsThisWeek']} / 20',
-                                    style: TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.5
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 6.5,
-                                  ),
-                                  LinearProgressIndicator(
-                                    value: snapshot.data!['homePage']['wordsThisWeek'] / 20,
-                                    backgroundColor: Colors.grey.shade800,
-                                    borderRadius: BorderRadius.circular(10),
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-                                    minHeight: 12,
-                                  ),
-                                ],
+                          GestureDetector(
+                            onTap: () async {
+                              await showModalBottomSheet(
+                                context: context,
+                                builder: (context) {
+                                  return const GoalOptions(goal: 'wordsThisWeek');
+                                },
+                              );
+                              setState(() {});
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                color: Color.fromARGB(255, 30, 30, 30)
                               ),
-                            )
+                              width: double.infinity,
+                              height: 100,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Words Added this week',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 6,
+                                    ),
+                                    Text(
+                                      '${snapshot.data!['homePage']['wordsThisWeek']} / ${int.parse(snapshot.data!['settings']['wordsThisWeek'] ?? '20')}',
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1.5
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 6.5,
+                                    ),
+                                    LinearProgressIndicator(
+                                      value: snapshot.data!['homePage']['wordsThisWeek'] / 20,
+                                      backgroundColor: Colors.grey.shade800,
+                                      borderRadius: BorderRadius.circular(10),
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                                      minHeight: 12,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            ),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -196,8 +208,30 @@ class HomePageContentState extends State<HomePageContent> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              dataGaugeChart('Today', snapshot.data!['homePage']['guessesToday'], 4, context),
-                              dataGaugeChart('This week', snapshot.data!['homePage']['guessesThisWeek'], 20, context),
+                              GestureDetector(
+                                onLongPress: () async {
+                                  await showModalBottomSheet(
+                                    context: context,
+                                    builder: (context) {
+                                      return const GoalOptions(goal: 'WT-today');
+                                    },
+                                  );
+                                  setState(() {});
+                                },
+                                child: dataGaugeChart('Today', snapshot.data!['homePage']['guessesToday'], int.parse(snapshot.data!['settings']['WT-today'] ?? '4'), context)
+                              ),
+                              GestureDetector(
+                                onLongPress: () async{
+                                  await showModalBottomSheet(
+                                    context: context,
+                                    builder: (context) {
+                                      return const GoalOptions(goal: 'WT-thisWeek');
+                                    },
+                                  );
+                                  setState(() {});
+                                },
+                                child: dataGaugeChart('This week', snapshot.data!['homePage']['guessesThisWeek'], int.parse(snapshot.data!['settings']['WT-thisWeek'] ?? '20'), context)
+                              ),
                             ],
                           ),
                           Align(
@@ -436,6 +470,7 @@ class HomePageContentState extends State<HomePageContent> {
     // int averageTimesGuessed = wordsGuessed > 0
     //     ? wordGuesses.values.reduce((a, b) => a + b) ~/ wordsGuessed
     //     : 0;
+    Map settings = await readData(path: 'settings');
     Map output = {
       'homePage': {
         'guessesThisWeek': guessesThisWeek,
@@ -451,6 +486,7 @@ class HomePageContentState extends State<HomePageContent> {
         wordGuesses: wordGuesses,
         wordsAdded: wordData.length,
       ),
+      'settings': settings,
     };
     return output;
   }

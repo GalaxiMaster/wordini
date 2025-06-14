@@ -481,7 +481,7 @@ class WordDetailsState extends State<WordDetails> {
   
   void saveWord(){
     if (!widget.addWordMode && word['word'] != null){
-      writeWord(word['word'], word);
+      writeKey(word['word'], word);
     }
   }
   
@@ -1130,7 +1130,7 @@ class WordDetailsState extends State<WordDetails> {
                     ),
                   ),
                   onPressed: () {
-                    writeWord(word['word'], word);
+                    writeKey(word['word'], word);
                     Navigator.pushNamed(context, '/home');
                   },
                   child: const Padding(

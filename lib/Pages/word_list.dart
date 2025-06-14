@@ -430,7 +430,7 @@ class WordListState extends State<WordList> {
                     final Map firstWordDetails = words[word]['entries']?.entries?.first?.value['details']?.first;
                     return InkWell(
                       onLongPress: () async {
-                        deleteWord(word);
+                        deleteKey(word);
                         setState(() {
                           words.remove(word); 
                         });

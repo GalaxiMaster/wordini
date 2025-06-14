@@ -549,3 +549,109 @@ void showCustomOverlay(String word, BuildContext context) async{
     );
   }
 }
+class GoalOptions extends StatefulWidget {
+  final String goal;
+  const GoalOptions({super.key, required this.goal});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _GoalOptionsState createState() => _GoalOptionsState();
+}
+
+class _GoalOptionsState extends State<GoalOptions> {
+  int _selectedIndex = 1; // Default selection
+  final List<String> _options = List.generate(7, (index) => '${index + 1}');
+  late FixedExtentScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = FixedExtentScrollController(initialItem: _selectedIndex);
+    _loadStartingPoint();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // Load the starting point asynchronously
+  Future<void> _loadStartingPoint() async {
+    String startingPoint = await getStartingPoint();
+    setState(() {
+      _selectedIndex = _options.contains(startingPoint) ? _options.indexOf(startingPoint) : _selectedIndex;
+    });
+    _scrollController.jumpToItem(_selectedIndex); // Move to the starting point
+  }
+
+  Future<String> getStartingPoint() async {
+    String value = (await readKey(widget.goal, path: 'settings', defaultValue: 20)).toString();
+    return value;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 250,
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          const Text(
+            'Day Goal',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const Text('Amount of times per week you want to go'),
+          const SizedBox(height: 20),
+          Expanded(
+            child: Center(
+              child: ListWheelScrollView.useDelegate(
+                controller: _scrollController,
+                itemExtent: 40,
+                onSelectedItemChanged: (index) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
+                physics: const FixedExtentScrollPhysics(),
+                perspective: 0.005,
+                diameterRatio: 1.5,
+                childDelegate: ListWheelChildBuilderDelegate(
+                  builder: (context, index) {
+                    if (index < 0 || index >= _options.length) return null;
+
+                    final double opacity = 1.0 - (index - _selectedIndex).abs() * 0.1;
+                    final adjustedOpacity = opacity.clamp(0.3, 1.0);
+
+                    return Opacity(
+                      opacity: adjustedOpacity,
+                      child: Center(
+                        child: Text(
+                          _options[index],
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: _selectedIndex == index ? Colors.blue : const Color.fromARGB(96, 255, 255, 255),
+                            fontWeight: _selectedIndex == index ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  childCount: _options.length,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              writeKey(widget.goal, path: 'settings', _options[_selectedIndex]);
+            },
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
+  }
+}
