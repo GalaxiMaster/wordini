@@ -129,7 +129,7 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
             children: [
               _buildStatCard('${gameStats.wordsGuessed}', 'Words Guessed', Colors.blue, '📝'),
               _buildStatCard('${gameStats.correctGuesses}', 'Correct', Colors.green, '✅'),
-              _buildStatCard('16', 'Words Added', Colors.purple, '+'),
+              _buildStatCard('${gameStats.wordsAdded}', 'Words Added', Colors.purple, '+'),
               _buildStatCard(stats.averageGuesses.toStringAsFixed(1), 'Avg. Guesses', Colors.orange, '📊'),
             ],
           ),
@@ -529,6 +529,7 @@ class GameStats {
   final int totalSkips;
   final int correctGuesses;
   final Map<String, int> wordGuesses;
+  final int wordsAdded;
 
   GameStats({
     required this.wordsGuessed,
@@ -537,6 +538,7 @@ class GameStats {
     required this.totalSkips,
     required this.correctGuesses,
     required this.wordGuesses,
+    required this.wordsAdded, 
   });
 }
 

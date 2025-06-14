@@ -448,7 +448,8 @@ class HomePageContentState extends State<HomePageContent> {
         totalGuesses: totalGuesses,
         totalSkips: totalSkips,
         correctGuesses: correctGuesses,
-        wordGuesses: wordGuesses
+        wordGuesses: wordGuesses,
+        wordsAdded: wordData.length,
       ),
     };
     return output;
