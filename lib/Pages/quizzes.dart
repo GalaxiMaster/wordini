@@ -19,7 +19,7 @@ class QuizzesState extends State<Quizzes> {
   int questionsDone = 0;
   int questionsRight = 0;
   Map<String, dynamic> rawWords = {};
-
+  late int? maxQuestions;
   final TextEditingController entryController = TextEditingController();
   final FocusNode _entryFocusNode = FocusNode();
     final GlobalKey<AnimatedTickState> tickKey = GlobalKey<AnimatedTickState>();
@@ -31,7 +31,12 @@ class QuizzesState extends State<Quizzes> {
       rawWords = data; // store the raw data for later use
       _gatherSelectedDefinitions(data).then((selectedDefs) {
         setState(() {
-          if (widget.questions == null){
+          if (widget.questions != null ){
+            maxQuestions = widget.questions!.clamp(0, selectedDefs.length);
+          } else{
+            maxQuestions = null;
+          }
+          if (maxQuestions == null){
             words = Future.value(randomise(selectedDefs));
           } else{
             selectedDefs.shuffle();
@@ -128,20 +133,38 @@ class QuizzesState extends State<Quizzes> {
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
-                            '$questionsRight / ${widget.questions ?? questionsDone}',
+                            '${maxQuestions == null ? questionsRight : _currentIndex} / ${maxQuestions ?? questionsDone}',
                             style: const TextStyle(
                               fontSize: 20,
                               color: Colors.white,
                             ),
                           ),
                         ),
-                        if (_currentIndex < words.length - 1)
+                        if (_currentIndex < words.length - 1 || maxQuestions != null)
                           IconButton(
                             icon: const Icon(Icons.arrow_forward),
                             onPressed: () {
                               setState(() {
                                 _currentIndex++;
                               });
+                              if (_currentIndex >= words.length - 1) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => QuizCompletionPage(
+                                      score: questionsRight,
+                                      totalQuestions: maxQuestions!,
+                                      onRetry: (context) {
+                                        Navigator.pushReplacementNamed(context, '/testing');
+                                      },
+                                      onHome: (context) {
+                                        Navigator.pop(context);
+                                      },
+                                    ),
+                                  ),
+                                );
+                              }
+ 
                               entryController.clear();
                               questionsDone++; // up counter in the top right
                               addInputEntry(
@@ -209,6 +232,24 @@ class QuizzesState extends State<Quizzes> {
                                   _currentIndex++;
                                 });
                                 entryController.clear();
+                              }else{
+                                if (context.mounted){
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => QuizCompletionPage(
+                                        score: questionsRight,
+                                        totalQuestions: maxQuestions ?? questionsDone,
+                                        onRetry: (context) {
+                                          Navigator.pushReplacementNamed(context, '/testing');
+                                        },
+                                        onHome: (context) {
+                                          Navigator.popUntil(context, (route) => route.isFirst);
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                }
                               }
                               removeNotif(currentWord['word']);
                               questionsRight++;
@@ -317,5 +358,89 @@ class QuizzesState extends State<Quizzes> {
     }
 
     return weightings;
+  }
+}
+
+class QuizCompletionPage extends StatelessWidget {
+  final int score;
+  final int totalQuestions;
+  final Function(BuildContext) onRetry;
+  final Function(BuildContext) onHome;
+
+  const QuizCompletionPage({
+    super.key,
+    required this.score,
+    required this.totalQuestions,
+    required this.onRetry,
+    required this.onHome,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    double percentage = (score / totalQuestions) * 100;
+
+    return Scaffold(
+      backgroundColor: Color.fromARGB(255, 30, 30, 30),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.check_circle, size: 80, color: Colors.greenAccent),
+              SizedBox(height: 20),
+              Text(
+                'Quiz Completed!',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Score: $score / $totalQuestions',
+                style: TextStyle(
+                  fontSize: 22,
+                  color: Colors.white70,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '${percentage.toStringAsFixed(1)}%',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: percentage >= 70 ? Colors.green : Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: () => onRetry(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  'Try Again',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              SizedBox(height: 12),
+              TextButton(
+                onPressed: () => onHome(context),
+                child: Text(
+                  'Back to Home',
+                  style: TextStyle(color: Colors.white60),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
