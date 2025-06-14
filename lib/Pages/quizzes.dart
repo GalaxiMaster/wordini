@@ -133,7 +133,7 @@ class QuizzesState extends State<Quizzes> {
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
-                            '${maxQuestions == null ? questionsRight : _currentIndex} / ${maxQuestions ?? questionsDone}',
+                            '${maxQuestions == null ? questionsRight : _currentIndex+1} / ${maxQuestions ?? questionsDone}',
                             style: const TextStyle(
                               fontSize: 20,
                               color: Colors.white,
@@ -144,37 +144,40 @@ class QuizzesState extends State<Quizzes> {
                           IconButton(
                             icon: const Icon(Icons.arrow_forward),
                             onPressed: () {
-                              setState(() {
-                                _currentIndex++;
-                              });
-                              if (_currentIndex >= words.length - 1) {
+                              if (_currentIndex == words.length-1) {
                                 Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => QuizCompletionPage(
-                                      score: questionsRight,
-                                      totalQuestions: maxQuestions!,
-                                      onRetry: (context) {
-                                        Navigator.pushReplacementNamed(context, '/testing');
-                                      },
-                                      onHome: (context) {
-                                        Navigator.pop(context);
-                                      },
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => QuizCompletionPage(
+                                        score: questionsRight,
+                                        totalQuestions: maxQuestions ?? questionsDone,
+                                        onRetry: (context) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(builder: (context) => Quizzes(questions: maxQuestions,))
+                                          );
+                                        },
+                                        onHome: (context) {
+                                          Navigator.popUntil(context, (route) => route.isFirst);
+                                        },
+                                      ),
                                     ),
-                                  ),
+                                  );
+                              } else{
+                                setState(() {
+                                  _currentIndex++;
+                                });
+                                entryController.clear();
+                                questionsDone++; // up counter in the top right
+                                addInputEntry(
+                                  currentWord['word'], 
+                                  currentWord['attributes']['partOfSpeech'], 
+                                  {
+                                    'skipped': true,
+                                    'date': DateTime.now().toString(),
+                                  }
                                 );
                               }
- 
-                              entryController.clear();
-                              questionsDone++; // up counter in the top right
-                              addInputEntry(
-                                currentWord['word'], 
-                                currentWord['attributes']['partOfSpeech'], 
-                                {
-                                  'skipped': true,
-                                  'date': DateTime.now().toString(),
-                                }
-                              );
                             },
                           ),
                       ],
@@ -241,7 +244,10 @@ class QuizzesState extends State<Quizzes> {
                                         score: questionsRight,
                                         totalQuestions: maxQuestions ?? questionsDone,
                                         onRetry: (context) {
-                                          Navigator.pushReplacementNamed(context, '/testing');
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(builder: (context) => Quizzes(questions: maxQuestions,))
+                                          );
                                         },
                                         onHome: (context) {
                                           Navigator.popUntil(context, (route) => route.isFirst);
