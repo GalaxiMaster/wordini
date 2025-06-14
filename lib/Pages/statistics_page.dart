@@ -1,4 +1,4 @@
-import 'package:fl_chart/fl_chart.dart';
+// import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class WordGameStatsScreen extends StatefulWidget {
@@ -12,24 +12,6 @@ class WordGameStatsScreen extends StatefulWidget {
 class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late GameStats gameStats;
-  
-  final Map<String, WordInfo> wordCategories = {
-    "apple": WordInfo(type: "noun", length: 5),
-    "beautiful": WordInfo(type: "adjective", length: 9),
-    "quickly": WordInfo(type: "adverb", length: 7),
-    "house": WordInfo(type: "noun", length: 5),
-    "running": WordInfo(type: "verb", length: 7),
-    "elephant": WordInfo(type: "noun", length: 8),
-    "mysterious": WordInfo(type: "adjective", length: 10),
-    "jump": WordInfo(type: "verb", length: 4),
-    "incredible": WordInfo(type: "adjective", length: 10),
-    "computer": WordInfo(type: "noun", length: 8),
-    "happiness": WordInfo(type: "noun", length: 9),
-    "whisper": WordInfo(type: "verb", length: 7),
-    "adventure": WordInfo(type: "noun", length: 9),
-    "brilliant": WordInfo(type: "adjective", length: 9),
-    "ocean": WordInfo(type: "noun", length: 5),
-  };
 
   @override
   void initState() {
@@ -216,13 +198,13 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
       child: Column(
         children: [
           // Pie Chart
-          _buildChartCard(
-            'Word Types',
-            SizedBox(
-              height: 200,
-              child: _buildPieChart(),
-            ),
-          ),
+          // _buildChartCard(
+          //   'Word Types',
+          //   SizedBox(
+          //     height: 200,
+          //     child: _buildPieChart(),
+          //   ),
+          // ),
           
           SizedBox(height: 16),
           
@@ -485,40 +467,40 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
     );
   }
 
-  Widget _buildPieChart() {
-    final speechTypes = <String, int>{};
-    gameStats.wordGuesses.forEach((word, count) {
-      final type = wordCategories[word]?.type ?? 'unknown';
-      speechTypes[type] = (speechTypes[type] ?? 0) + count;
-    });
+  // Widget _buildPieChart() {
+  //   final speechTypes = <String, int>{};
+  //   gameStats.wordGuesses.forEach((word, count) {
+  //     final type = wordCategories[word]?.type ?? 'unknown';
+  //     speechTypes[type] = (speechTypes[type] ?? 0) + count;
+  //   });
 
-    final colors = [
-      Colors.blue.shade600,
-      Colors.green.shade600,
-      Colors.orange.shade600,
-      Colors.red.shade600,
-      Colors.purple.shade600,
-    ];
+  //   final colors = [
+  //     Colors.blue.shade600,
+  //     Colors.green.shade600,
+  //     Colors.orange.shade600,
+  //     Colors.red.shade600,
+  //     Colors.purple.shade600,
+  //   ];
 
-    return PieChart(
-      PieChartData(
-        sections: speechTypes.entries.map((entry) {
-          final index = speechTypes.keys.toList().indexOf(entry.key);
-          return PieChartSectionData(
-            color: colors[index % colors.length],
-            value: entry.value.toDouble(),
-            title: '${entry.key}\n${entry.value}',
-            radius: 80,
-            titleStyle: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
+  //   return PieChart(
+  //     PieChartData(
+  //       sections: speechTypes.entries.map((entry) {
+  //         final index = speechTypes.keys.toList().indexOf(entry.key);
+  //         return PieChartSectionData(
+  //           color: colors[index % colors.length],
+  //           value: entry.value.toDouble(),
+  //           title: '${entry.key}\n${entry.value}',
+  //           radius: 80,
+  //           titleStyle: TextStyle(
+  //             fontSize: 12,
+  //             fontWeight: FontWeight.bold,
+  //             color: Colors.white,
+  //           ),
+  //         );
+  //       }).toList(),
+  //     ),
+  //   );
+  // }
 }
 
 // Data Models

@@ -185,7 +185,7 @@ class HomePageContentState extends State<HomePageContent> {
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Text(
-                              'Definition Checking',
+                              'Word Testing',
                               style: TextStyle(
                                 fontSize: 19,
                                 fontWeight: FontWeight.bold,
