@@ -229,7 +229,7 @@ class QuizzesState extends State<Quizzes> {
                             value = value.trim();
                             if (value.toLowerCase() == currentWord['word'].toLowerCase()) return; // ADD error message for this
 
-                            bool? correct = await checkDefinition(currentWord['word'], value, currentWord['attributes']['partOfSpeech'], context);
+                            bool? correct = false; // await checkDefinition(currentWord['word'], value, currentWord['attributes']['partOfSpeech'], context)
 
                             if (correct == null) return;
 
@@ -240,6 +240,7 @@ class QuizzesState extends State<Quizzes> {
                               // TODO some sort of correct answer animation
                             } else {
                               crossKey.currentState?.showTick();
+                              if (context.mounted) showCustomOverlay(currentWord['word'], context);
                               // errorOverlay(context, 'Wrong answer');
                             }
                             questionsDone++;

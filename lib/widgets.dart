@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:vocab_app/Pages/word_details.dart';
+import 'package:vocab_app/file_handling.dart';
 
 class LoadingOverlay {
   final OverlayEntry _overlayEntry = OverlayEntry(
@@ -500,6 +502,50 @@ class AnimatedTickState extends State<AnimatedTick> with SingleTickerProviderSta
           ),
         ),
       ],
+    );
+  }
+}
+
+void showCustomOverlay(String word, BuildContext context) async{
+  Map data = await readKey(word);
+  Set allTags = await gatherTags();
+  if (context.mounted){
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Stack(
+            children: [
+              // Container(
+              //   decoration: BoxDecoration(
+              //     color: Colors.grey.withOpacity(0.8)
+              //   ),
+              //   width: MediaQuery.of(context).size.width,
+              //   height: MediaQuery.of(context).size.width,
+              // ),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                height: MediaQuery.of(context).size.height * 0.8,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  // border: Border.all(Color),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade700,
+                      blurRadius: 6.5,
+                      offset: Offset(0, 0),
+                    ),
+                  ],
+                ),
+                child: WordDetails(word: data, allTags: allTags), // Your custom widget here
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
