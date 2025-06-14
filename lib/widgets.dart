@@ -554,103 +554,248 @@ class GoalOptions extends StatefulWidget {
   const GoalOptions({super.key, required this.goal});
 
   @override
-  // ignore: library_private_types_in_public_api
   _GoalOptionsState createState() => _GoalOptionsState();
 }
 
 class _GoalOptionsState extends State<GoalOptions> {
-  int _selectedIndex = 1; // Default selection
-  final List<String> _options = List.generate(7, (index) => '${index + 1}');
-  late FixedExtentScrollController _scrollController;
+  int _selectedIndex1 = 0; // First digit (tens)
+  int _selectedIndex2 = 0; // Second digit (ones)
+  final List<String> _options = List.generate(10, (index) => '$index'); // 0-9
+  late FixedExtentScrollController _scrollController1;
+  late FixedExtentScrollController _scrollController2;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = FixedExtentScrollController(initialItem: _selectedIndex);
+    _scrollController1 = FixedExtentScrollController(initialItem: 0);
+    _scrollController2 = FixedExtentScrollController(initialItem: 0);
     _loadStartingPoint();
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _scrollController1.dispose();
+    _scrollController2.dispose();
     super.dispose();
   }
 
   // Load the starting point asynchronously
   Future<void> _loadStartingPoint() async {
-    String startingPoint = await getStartingPoint();
-    setState(() {
-      _selectedIndex = _options.contains(startingPoint) ? _options.indexOf(startingPoint) : _selectedIndex;
-    });
-    _scrollController.jumpToItem(_selectedIndex); // Move to the starting point
+    try {
+      String startingPoint = await getStartingPoint();
+      int value = int.tryParse(startingPoint) ?? 20;
+      
+      // Split the number into digits
+      int tensDigit = (value ~/ 10) % 10; // Get tens digit (0-9)
+      int onesDigit = value % 10; // Get ones digit (0-9)
+      
+      // Ensure indices are within bounds
+      tensDigit = tensDigit.clamp(0, 9);
+      onesDigit = onesDigit.clamp(0, 9);
+      
+      if (mounted) {
+        setState(() {
+          _selectedIndex1 = tensDigit;
+          _selectedIndex2 = onesDigit;
+          _isLoading = false;
+        });
+        
+        // Jump to the correct positions after the widget is built
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController1.hasClients) {
+            _scrollController1.jumpToItem(_selectedIndex1);
+          }
+          if (_scrollController2.hasClients) {
+            _scrollController2.jumpToItem(_selectedIndex2);
+          }
+        });
+      }
+    } catch (e) {
+      // Handle any errors during loading
+      print('Error loading starting point: $e');
+      if (mounted) {
+        setState(() {
+          _selectedIndex1 = 2; // Default to 20
+          _selectedIndex2 = 0;
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<String> getStartingPoint() async {
-    String value = (await readKey(widget.goal, path: 'settings', defaultValue: 20)).toString();
-    return value;
+    try {
+      String value = (await readKey(widget.goal, path: 'settings', defaultValue: 20)).toString();
+      return value;
+    } catch (e) {
+      print('Error reading key: $e');
+      return '20'; // Return default value on error
+    }
   }
+
+  int get _combinedValue => (_selectedIndex1 * 10) + _selectedIndex2;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 250,
+      height: 300,
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
           const Text(
-            'Day Goal',
+            'Goal Value',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const Text('Amount of times per week you want to go'),
+          // const Text('Goal'),
+          const SizedBox(height: 10),
+          
+          // // Display current value
+          // Container(
+          //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          //   decoration: BoxDecoration(
+          //     color: Colors.blue.withOpacity(0.1),
+          //     borderRadius: BorderRadius.circular(8),
+          //   ),
+          //   child: Text(
+          //     'Current Goal: $_combinedValue',
+          //     style: const TextStyle(
+          //       fontSize: 16,
+          //       fontWeight: FontWeight.bold,
+          //       color: Colors.blue,
+          //     ),
+          //   ),
+          // ),
+          
           const SizedBox(height: 20),
-          Expanded(
-            child: Center(
-              child: ListWheelScrollView.useDelegate(
-                controller: _scrollController,
-                itemExtent: 40,
-                onSelectedItemChanged: (index) {
-                  setState(() {
-                    _selectedIndex = index;
-                  });
-                },
-                physics: const FixedExtentScrollPhysics(),
-                perspective: 0.005,
-                diameterRatio: 1.5,
-                childDelegate: ListWheelChildBuilderDelegate(
-                  builder: (context, index) {
-                    if (index < 0 || index >= _options.length) return null;
-
-                    final double opacity = 1.0 - (index - _selectedIndex).abs() * 0.1;
-                    final adjustedOpacity = opacity.clamp(0.3, 1.0);
-
-                    return Opacity(
-                      opacity: adjustedOpacity,
-                      child: Center(
-                        child: Text(
-                          _options[index],
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: _selectedIndex == index ? Colors.blue : const Color.fromARGB(96, 255, 255, 255),
-                            fontWeight: _selectedIndex == index ? FontWeight.bold : FontWeight.normal,
-                          ),
+          
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else
+            Expanded(
+              child: Center(
+                child: SizedBox(
+                  height: 160,
+                  width: double.infinity,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 30,
+                        child: buildWheel(
+                          _scrollController1,
+                          (index) {
+                            if (mounted) {
+                              setState(() {
+                                _selectedIndex1 = index;
+                              });
+                            }
+                          },
+                          _selectedIndex1,
                         ),
                       ),
-                    );
-                  },
-                  childCount: _options.length,
+                      
+                      // Ones digit wheel - right next to tens wheel
+                      SizedBox(
+                        width: 30,
+                        child: buildWheel(
+                          _scrollController2,
+                          (index) {
+                            if (mounted) {
+                              setState(() {
+                                _selectedIndex2 = index;
+                              });
+                            }
+                          },
+                          _selectedIndex2,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              writeKey(widget.goal, path: 'settings', _options[_selectedIndex]);
-            },
-            child: const Text('Done'),
+          
+          const SizedBox(height: 20),
+          
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey,
+                ),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: _isLoading ? null : () async {
+                  if (_combinedValue > 0){
+                    try {
+                      await writeKey(widget.goal, path: 'settings', _combinedValue.toString());
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+                    } catch (e) {
+                      debugPrint('Error saving goal: $e');
+                      // Optionally show a snackbar or dialog with error message
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error saving goal: $e')),
+                        );
+                      }
+                    }
+                  }
+                },
+                child: const Text('Done'),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget buildWheel(
+    FixedExtentScrollController controller,
+    Function(int) onSelectedItemChanged,
+    int selectedIndex,
+  ) {
+    return ListWheelScrollView.useDelegate(
+      controller: controller,
+      itemExtent: 40,
+      onSelectedItemChanged: onSelectedItemChanged,
+      physics: const FixedExtentScrollPhysics(),
+      perspective: 0.005,
+      diameterRatio: 1.5,
+      childDelegate: ListWheelChildBuilderDelegate(
+        builder: (context, index) {
+          if (index < 0 || index >= _options.length) return null;
+
+          final double opacity = 1.0 - (index - selectedIndex).abs() * 0.1;
+          final adjustedOpacity = opacity.clamp(0.3, 1.0);
+
+          return Opacity(
+            opacity: adjustedOpacity,
+            child: Center(
+              child: Text(
+                _options[index],
+                style: TextStyle(
+                  fontSize: 24,
+                  color: selectedIndex == index 
+                      ? Colors.blue 
+                      : Colors.grey,
+                  fontWeight: selectedIndex == index 
+                      ? FontWeight.bold 
+                      : FontWeight.normal,
+                ),
+              ),
+            ),
+          );
+        },
+        childCount: _options.length,
       ),
     );
   }
