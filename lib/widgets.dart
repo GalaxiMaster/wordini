@@ -430,10 +430,10 @@ class AnimatedTick extends StatefulWidget {
   final double size;
 
   const AnimatedTick({
-    Key? key,
+    super.key,
     this.duration = const Duration(milliseconds: 750),
     this.size = 64,
-  }) : super(key: key);
+  });
 
   @override
   State<AnimatedTick> createState() => AnimatedTickState();

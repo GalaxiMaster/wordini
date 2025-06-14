@@ -227,6 +227,12 @@ class HomePageContentState extends State<HomePageContent> {
                                         right: (index + 1) % 4 == 0 ? 0 : 12, // allow perfect margining for 4 chips per row
                                       ),
                                       child: RawChip(
+                                        onPressed: (){
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(builder: (context) => Quizzes(questions: value))
+                                          );
+                                        },
                                         label: SizedBox(
                                           width: double.infinity,
                                           child: Padding(

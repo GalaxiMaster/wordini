@@ -5,7 +5,8 @@ import 'package:vocab_app/widgets.dart';
 import 'package:vocab_app/word_functions.dart';
 
 class Quizzes extends StatefulWidget {
-  const Quizzes({super.key});
+  final int? questions;
+  const Quizzes({super.key, this.questions});
   @override
   QuizzesState createState() => QuizzesState();
 }
@@ -30,9 +31,16 @@ class QuizzesState extends State<Quizzes> {
       rawWords = data; // store the raw data for later use
       _gatherSelectedDefinitions(data).then((selectedDefs) {
         setState(() {
-          words = Future.value(randomise(selectedDefs));
+          if (widget.questions == null){
+            words = Future.value(randomise(selectedDefs));
+          } else{
+            selectedDefs.shuffle();
+            words = Future.value(selectedDefs);
+          }
         });
       });
+
+
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _entryFocusNode.requestFocus();
@@ -120,7 +128,7 @@ class QuizzesState extends State<Quizzes> {
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
-                            '$questionsRight / $questionsDone',
+                            '$questionsRight / ${widget.questions ?? questionsDone}',
                             style: const TextStyle(
                               fontSize: 20,
                               color: Colors.white,
