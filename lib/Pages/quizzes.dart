@@ -22,7 +22,8 @@ class QuizzesState extends State<Quizzes> {
   late int? maxQuestions;
   final TextEditingController entryController = TextEditingController();
   final FocusNode _entryFocusNode = FocusNode();
-    final GlobalKey<AnimatedTickState> tickKey = GlobalKey<AnimatedTickState>();
+  final GlobalKey<AnimatedTickState> tickKey = GlobalKey<AnimatedTickState>();
+  final GlobalKey<AnimatedTickState> crossKey = GlobalKey<AnimatedTickState>();
 
   @override
   void initState() {
@@ -46,9 +47,6 @@ class QuizzesState extends State<Quizzes> {
       });
 
 
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _entryFocusNode.requestFocus();
     });
   }
     @override
@@ -98,6 +96,9 @@ class QuizzesState extends State<Quizzes> {
             }
             currentWord = words.elementAt(_currentIndex);
             String partOfSpeech = currentWord['attributes']['partOfSpeech'] ?? 'unknown';
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _entryFocusNode.requestFocus();
+            });
             return Stack(
               children: [
                 Positioned(
@@ -188,6 +189,10 @@ class QuizzesState extends State<Quizzes> {
                   heightFactor: .4,
                   child: Center(child: AnimatedTick(key: tickKey)),
                 ),
+                Center(
+                  heightFactor: .4,
+                  child: Center(child: AnimatedTick(key: crossKey, color: Colors.red, icon: Icons.close,)),
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25),
                   child: Center(
@@ -230,38 +235,12 @@ class QuizzesState extends State<Quizzes> {
 
                             if (correct) {
                               tickKey.currentState?.showTick();
-                              if (_currentIndex < words.length - 1) {
-                                setState(() {
-                                  _currentIndex++;
-                                });
-                                entryController.clear();
-                              }else{
-                                if (context.mounted){
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => QuizCompletionPage(
-                                        score: questionsRight,
-                                        totalQuestions: maxQuestions ?? questionsDone,
-                                        onRetry: (context) {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(builder: (context) => Quizzes(questions: maxQuestions,))
-                                          );
-                                        },
-                                        onHome: (context) {
-                                          Navigator.popUntil(context, (route) => route.isFirst);
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                }
-                              }
                               removeNotif(currentWord['word']);
                               questionsRight++;
                               // TODO some sort of correct answer animation
                             } else {
-                              errorOverlay(context, 'Wrong answer');
+                              crossKey.currentState?.showTick();
+                              // errorOverlay(context, 'Wrong answer');
                             }
                             questionsDone++;
                             addInputEntry(
@@ -273,6 +252,33 @@ class QuizzesState extends State<Quizzes> {
                                 'date': DateTime.now().toString(),
                               }
                             );
+                            if (_currentIndex < words.length - 1) {
+                              setState(() {
+                                _currentIndex++;
+                              });
+                              entryController.clear();
+                            }else{
+                              if (context.mounted){
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => QuizCompletionPage(
+                                      score: questionsRight,
+                                      totalQuestions: maxQuestions ?? questionsDone,
+                                      onRetry: (context) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => Quizzes(questions: maxQuestions,))
+                                        );
+                                      },
+                                      onHome: (context) {
+                                        Navigator.popUntil(context, (route) => route.isFirst);
+                                      },
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
                           },
                         ),
                       ],

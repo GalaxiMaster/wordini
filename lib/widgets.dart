@@ -428,11 +428,14 @@ class _AnimatedToggleSwitchState extends State<AnimatedToggleSwitch>
 class AnimatedTick extends StatefulWidget {
   final Duration duration;
   final double size;
-
+  final IconData icon;
+  final Color color;
   const AnimatedTick({
     super.key,
     this.duration = const Duration(milliseconds: 750),
-    this.size = 64,
+    this.size = 64, 
+    this.icon = Icons.check_circle, 
+    this.color = Colors.green,
   });
 
   @override
@@ -490,8 +493,8 @@ class AnimatedTickState extends State<AnimatedTick> with SingleTickerProviderSta
           child: ScaleTransition(
             scale: _scale,
             child: Icon(
-              Icons.check_circle,
-              color: Colors.green,
+              widget.icon,
+              color: widget.color,
               size: widget.size,
             ),
           ),
