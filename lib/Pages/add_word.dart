@@ -128,7 +128,7 @@ void addWordToList(String word, context) {
   LoadingOverlay loadingOverlay = LoadingOverlay();
   readData().then((data) async {
     if (data.containsKey(word)) {
-      errorOverlay(context, 'Already added word');
+      messageOverlay(context, 'Already added word');
       return;
     }
     loadingOverlay.showLoadingOverlay(context);
@@ -138,16 +138,16 @@ void addWordToList(String word, context) {
       wordDetails = await getWordDetails(word);
     } on FormatException {
       loadingOverlay.removeLoadingOverlay();
-      errorOverlay(context, 'Invalid word');
+      messageOverlay(context, 'Invalid word');
       return;
     } catch (e) {
       loadingOverlay.removeLoadingOverlay();
-      errorOverlay(context, 'Error fetching word details: $e');
+      messageOverlay(context, 'Error fetching word details: $e');
       return;
     }
     if (wordDetails['entries'].isEmpty) {
       loadingOverlay.removeLoadingOverlay();
-      errorOverlay(context, 'Word not found');
+      messageOverlay(context, 'Word not found');
       return;
     }
 

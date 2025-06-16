@@ -127,7 +127,33 @@ class QuizzesState extends State<Quizzes> {
                             } on RangeError {
                               message = 'No example available';
                             }
-                            errorOverlay(context, message, duration: Duration(seconds: 5), color: Color.fromARGB(255, 30, 30, 30));
+                            messageOverlay(
+                              context, 
+                              message, 
+                              duration: Duration(seconds: 5), 
+                              color: Color.fromARGB(255, 30, 30, 30),
+                              content: Column(
+                                children: [
+                                  MWTaggedText(capitalise(message), style: TextStyle(fontWeight: FontWeight.w400, fontSize: 16),),
+                                  Wrap(
+                                    spacing: 8,
+                                    children: (currentWord['attributes']['synonyms'] ?? {}).entries
+                                      .where((synonym) => synonym.key.toLowerCase() != currentWord['word'].toLowerCase())
+                                      .map<Widget>(
+                                        (synonym) => Chip(
+                                          label: MWTaggedText(
+                                            capitalise(synonym.key),
+                                            style: const TextStyle(fontSize: 16),
+                                          ),
+                                          backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                          side: BorderSide.none,
+                                        ),
+                                      ).toList(),
+                                  ),
+                                ],
+                              )
+                            );
                           },
                         ),
                         const Spacer(),

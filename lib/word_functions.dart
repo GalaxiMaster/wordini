@@ -305,7 +305,7 @@ Future<bool?> checkDefinition(word, userDef, partOfSpeech, context) async{
     if (e is HandshakeException ||
         e is SocketException ||
         e is HttpException) {
-      errorOverlay(context, 'Failed to connect to server, please check your internet connection');
+      messageOverlay(context, 'Failed to connect to server, please check your internet connection');
     }
     debugPrint(e.toString());
     // TODO handle more error types
