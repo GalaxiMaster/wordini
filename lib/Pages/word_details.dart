@@ -1131,7 +1131,11 @@ class WordDetailsState extends State<WordDetails> {
                   ),
                   onPressed: () {
                     writeKey(word['word'], word);
-                    Navigator.pushNamed(context, '/home');
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/home',
+                      (Route<dynamic> route) => false,
+                    );
                   },
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),

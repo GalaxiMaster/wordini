@@ -24,6 +24,7 @@ class AddWordState extends State<AddWord> {
     @override
   void dispose() {
     _addWordTextBoxFN.dispose();
+    _addWordTextBoxController.dispose();
     super.dispose();
   }
   @override
@@ -125,7 +126,7 @@ class AddWordState extends State<AddWord> {
 }
 void addWordToList(String word, context) {
   LoadingOverlay loadingOverlay = LoadingOverlay();
-  readData().then((data) async{
+  readData().then((data) async {
     if (data.containsKey(word)) {
       errorOverlay(context, 'Already added word');
       return;
@@ -159,8 +160,6 @@ void addWordToList(String word, context) {
     if (!(result ?? false)) {
       return;
     }
-    Navigator.pop(context);
-
     writeKey(word, wordDetails);
   });
 }
