@@ -170,6 +170,7 @@ class QuizzesState extends State<Quizzes> {
                                 });
                                 entryController.clear();
                                 questionsDone++; // up counter in the top right
+                                if (context.mounted) showWordDetailsOverlay(currentWord['word'], context);
                                 addInputEntry(
                                   currentWord['word'], 
                                   currentWord['attributes']['partOfSpeech'], 
@@ -240,7 +241,7 @@ class QuizzesState extends State<Quizzes> {
                               // TODO some sort of correct answer animation
                             } else {
                               crossKey.currentState?.showTick();
-                              if (context.mounted) showCustomOverlay(currentWord['word'], context);
+                              if (context.mounted) showWordDetailsOverlay(currentWord['word'], context);
                               // errorOverlay(context, 'Wrong answer');
                             }
                             questionsDone++;

@@ -506,7 +506,7 @@ class AnimatedTickState extends State<AnimatedTick> with SingleTickerProviderSta
   }
 }
 
-void showCustomOverlay(String word, BuildContext context) async{
+void showWordDetailsOverlay(String word, BuildContext context) async{
   Map data = await readKey(word);
   Set allTags = await gatherTags();
   if (context.mounted){
