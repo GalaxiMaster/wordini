@@ -28,7 +28,8 @@ class LoadingOverlay {
     overlayOn = false;
   }
 }
-void errorOverlay(context, String message, {Duration duration = const Duration(seconds: 2), Color color = Colors.red}) {
+
+void messageOverlay(BuildContext context, String message, {Duration duration = const Duration(seconds: 2), Color color = Colors.red, Widget? content}) {
   var overlay = Overlay.of(context);
   late OverlayEntry overlayEntry;
   overlayEntry = OverlayEntry(
@@ -38,6 +39,7 @@ void errorOverlay(context, String message, {Duration duration = const Duration(s
         onFinish: () => overlayEntry.remove(),
         duration: duration,
         color: color,
+        content: content,
       );
     },
   );
@@ -49,13 +51,15 @@ class _AnimatedErrorOverlay extends StatefulWidget {
   final VoidCallback onFinish;
   final Duration duration;
   final Color color;
+  final Widget? content;
 
   const _AnimatedErrorOverlay({
     required this.message,
     required this.onFinish,
     required this.duration,
-    required this.color
-  });
+    required this.color,
+    this.content,
+    });
 
   @override
   State<_AnimatedErrorOverlay> createState() => _AnimatedErrorOverlayState();
@@ -101,7 +105,7 @@ class _AnimatedErrorOverlayState extends State<_AnimatedErrorOverlay>
               color: widget.color,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(widget.message),
+            child: widget.content ?? Text(widget.message),
           ),
         ),
       ),
