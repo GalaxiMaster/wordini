@@ -427,7 +427,7 @@ class WordListState extends State<WordList> {
                   itemCount: filteredWords.length,
                   itemBuilder: (context, index) {
                     final String word = filteredWords[index].value['word'];
-                    final Map firstWordDetails = words[word]['entries']?.entries?.first?.value['details']?.first;
+                    final Map firstWordDetails = getFirstData(words, word);
                     return InkWell(
                       onLongPress: () async {
                         deleteKey(word);
@@ -522,5 +522,15 @@ class WordListState extends State<WordList> {
         ),
       ],
     );
+  }
+  
+  Map getFirstData(Map words, String word) {
+    Map entries = words[word]['entries']; // ?.first?.value['details']?.first
+    for (MapEntry entry in entries.entries){
+      for (Map detailEntry in entry.value['details']){
+        return detailEntry;
+      }
+    }
+    return {};
   }
 }
