@@ -63,18 +63,41 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
         children: [
           // Tab Bar
           Container(
+            width: double.infinity,
             color: Color.fromARGB(255, 30, 30, 30),
-            child: TabBar(
-              padding: EdgeInsets.only(top: 20),
-              controller: _tabController,
-              tabs: [
-                Tab(text: 'Overview'),
-                Tab(text: 'Charts'),
-              ],
-              labelColor: Colors.blue.shade600,
-              unselectedLabelColor: Colors.grey.shade600,
-              indicatorColor: Colors.blue.shade600,
-              dividerColor: Colors.grey.shade600,
+            height: 82.5, // Set an explicit height
+            child: Padding(
+              padding: const EdgeInsets.only(top: 30),
+              child: Stack(
+                children: [      // Full-width TabBar
+                  Positioned.fill(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: TabBar(
+                        controller: _tabController,
+                        tabs: const [
+                          Tab(text: 'Overview'),
+                          Tab(text: 'Charts'),
+                        ],
+                        labelColor: Colors.blue,
+                        unselectedLabelColor: Colors.grey,
+                        indicatorColor: Colors.blue,
+                        dividerColor: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  // IconButton overlay
+                  Positioned(
+                    left: 5,
+                    top: 0,
+                    bottom: 0,
+                    child: IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(Icons.arrow_back, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           
