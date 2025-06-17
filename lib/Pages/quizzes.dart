@@ -96,9 +96,6 @@ class QuizzesState extends State<Quizzes> {
             }
             currentWord = words.elementAt(_currentIndex);
             String partOfSpeech = currentWord['attributes']['partOfSpeech'] ?? 'unknown';
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _entryFocusNode.requestFocus();
-            });
             return Stack(
               children: [
                 Positioned(
@@ -196,7 +193,13 @@ class QuizzesState extends State<Quizzes> {
                                 });
                                 entryController.clear();
                                 questionsDone++; // up counter in the top right
-                                if (context.mounted) showWordDetailsOverlay(currentWord['word'], context);
+                                if (context.mounted) {
+                                  showWordDetailsOverlay(currentWord['word'], context).then((_){
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      _entryFocusNode.requestFocus();
+                                    });
+                                  });
+                                }
                                 addInputEntry(
                                   currentWord['word'], 
                                   currentWord['attributes']['partOfSpeech'], 
@@ -267,7 +270,13 @@ class QuizzesState extends State<Quizzes> {
                               // TODO some sort of correct answer animation
                             } else {
                               crossKey.currentState?.showTick();
-                              if (context.mounted) showWordDetailsOverlay(currentWord['word'], context);
+                              if (context.mounted) {
+                                showWordDetailsOverlay(currentWord['word'], context).then((_){
+                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    _entryFocusNode.requestFocus();
+                                  });
+                                });
+                              }
                               // errorOverlay(context, 'Wrong answer');
                             }
                             questionsDone++;

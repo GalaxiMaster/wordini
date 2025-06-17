@@ -510,11 +510,12 @@ class AnimatedTickState extends State<AnimatedTick> with SingleTickerProviderSta
   }
 }
 
-void showWordDetailsOverlay(String word, BuildContext context) async{
+dynamic showWordDetailsOverlay(String word, BuildContext context) async{
   Map data = await readKey(word);
   Set allTags = await gatherTags();
+  final bool? output;
   if (context.mounted){
-    await showDialog(
+    output = await showDialog(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
@@ -551,7 +552,10 @@ void showWordDetailsOverlay(String word, BuildContext context) async{
         );
       },
     );
+  }else {
+    return false;
   }
+  return output;
 }
 class GoalOptions extends StatefulWidget {
   final String goal;
