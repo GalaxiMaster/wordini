@@ -10,12 +10,14 @@ class WordDetails extends StatefulWidget {
   final Set allTags;
   final bool editModeState;
   final List activatedElements;
+  final String? initialIndex;
   const WordDetails({
     super.key, 
     required this.word, 
     required this.allTags, 
     this.addWordMode = false, 
     this.editModeState = false, 
+    this.initialIndex,
     this.activatedElements = const ['synonyms', 'etymology', 'quotes', 'quizHistory']
   });
   
@@ -24,8 +26,8 @@ class WordDetails extends StatefulWidget {
 }
 
 class WordDetailsState extends State<WordDetails> {
-  final PageController _controller = PageController(initialPage: 0);
-  double currentPage = 0;
+  late final PageController _controller;
+  late double currentPage;
   bool editMode = false;
   late Map word;
   final LayerLink _layerLink = LayerLink();
@@ -40,6 +42,8 @@ class WordDetailsState extends State<WordDetails> {
     super.initState();
     word = widget.word;
     allTags = widget.allTags;
+    _controller = PageController(initialPage: widget.initialIndex != null ? getIndexOfSpeechPart(word, widget.initialIndex!) : 0);
+    currentPage = _controller.initialPage.toDouble();
     _controller.addListener(() {
       setState(() {
         currentPage = _controller.page ?? 0;
@@ -55,6 +59,15 @@ class WordDetailsState extends State<WordDetails> {
         }
       });
     }
+  }
+  int getIndexOfSpeechPart(Map word, String partOfSpeech) {
+    int index = 0;
+    for (var entry in word['entries'].keys.toList().asMap().entries){
+      if (entry.value == partOfSpeech){
+        index = entry.key;
+      }
+    }
+    return index;
   }
 
   void _addSpeechPart() {

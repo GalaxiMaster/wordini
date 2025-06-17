@@ -510,7 +510,7 @@ class AnimatedTickState extends State<AnimatedTick> with SingleTickerProviderSta
   }
 }
 
-dynamic showWordDetailsOverlay(String word, BuildContext context) async{
+dynamic showWordDetailsOverlay(String word, String partOfSpeech, BuildContext context) async{
   Map data = await readKey(word);
   Set allTags = await gatherTags();
   final bool? output;
@@ -549,6 +549,7 @@ dynamic showWordDetailsOverlay(String word, BuildContext context) async{
                   word: data, 
                   allTags: allTags,
                   activatedElements: ['synonyms'],
+                  initialIndex: partOfSpeech,
                 ), // Your custom widget here
               ),
             ],

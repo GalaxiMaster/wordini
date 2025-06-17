@@ -194,7 +194,7 @@ class QuizzesState extends State<Quizzes> {
                                 entryController.clear();
                                 questionsDone++; // up counter in the top right
                                 if (context.mounted) {
-                                  showWordDetailsOverlay(currentWord['word'], context).then((_){
+                                  showWordDetailsOverlay(currentWord['word'], currentWord['attributes']['partOfSpeech'], context).then((_){
                                     WidgetsBinding.instance.addPostFrameCallback((_) {
                                       _entryFocusNode.requestFocus();
                                     });
@@ -271,7 +271,7 @@ class QuizzesState extends State<Quizzes> {
                             } else {
                               crossKey.currentState?.showTick();
                               if (context.mounted) {
-                                showWordDetailsOverlay(currentWord['word'], context).then((_){
+                                showWordDetailsOverlay(currentWord['word'],  currentWord['attributes']['partOfSpeech'], context).then((_){
                                   WidgetsBinding.instance.addPostFrameCallback((_) {
                                     _entryFocusNode.requestFocus();
                                   });
