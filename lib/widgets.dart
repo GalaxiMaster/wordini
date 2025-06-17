@@ -532,7 +532,7 @@ dynamic showWordDetailsOverlay(String word, BuildContext context) async{
               // ),
               Container(
                 width: MediaQuery.of(context).size.width * 0.8,
-                height: MediaQuery.of(context).size.height * 0.8,
+                height: MediaQuery.of(context).size.height * 0.6,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   // border: Border.all(Color),
@@ -545,7 +545,11 @@ dynamic showWordDetailsOverlay(String word, BuildContext context) async{
                     ),
                   ],
                 ),
-                child: WordDetails(word: data, allTags: allTags), // Your custom widget here
+                child: WordDetails(
+                  word: data, 
+                  allTags: allTags,
+                  activatedElements: ['synonyms'],
+                ), // Your custom widget here
               ),
             ],
           ),

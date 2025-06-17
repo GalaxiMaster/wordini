@@ -9,7 +9,15 @@ class WordDetails extends StatefulWidget {
   final Map word;
   final Set allTags;
   final bool editModeState;
-  const WordDetails({super.key, required this.word, required this.allTags, this.addWordMode = false, this.editModeState = false});
+  final List activatedElements;
+  const WordDetails({
+    super.key, 
+    required this.word, 
+    required this.allTags, 
+    this.addWordMode = false, 
+    this.editModeState = false, 
+    this.activatedElements = const ['synonyms', 'etymology', 'quotes', 'quizHistory']
+  });
   
   @override
   WordDetailsState createState() => WordDetailsState();
@@ -884,7 +892,11 @@ class WordDetailsState extends State<WordDetails> {
                               ),
                               const SizedBox(height: 18),
                               
-                              if ((speechType.value['synonyms'] != null && speechType.value['synonyms'].isNotEmpty) || editMode) ...[
+                              if (
+                                ((speechType.value['synonyms']?.isNotEmpty ?? false) 
+                                  || editMode
+                                ) && widget.activatedElements.contains('synonyms')
+                                ) ...[
                                 Divider(),
                                 Row(
                                   children: [
@@ -935,7 +947,7 @@ class WordDetailsState extends State<WordDetails> {
                                 ),
                               ],
                               
-                              if ((speechType.value['etymology'] != null && speechType.value['etymology'].isNotEmpty) || editMode) ...[
+                              if (((speechType.value['etymology']?.isNotEmpty ?? false) || editMode) && widget.activatedElements.contains('etymology')) ...[
                                 Divider(),
                                 Row(
                                   children: [
@@ -966,7 +978,7 @@ class WordDetailsState extends State<WordDetails> {
                                 const SizedBox(height: 10),
                               ],
                               
-                              if ((speechType.value['quotes'] != null && speechType.value['quotes'].isNotEmpty) || editMode) ...[
+                              if (((speechType.value['quotes']?.isNotEmpty ?? false) || editMode) && widget.activatedElements.contains('quotes')) ...[
                                 Divider(),
                                 Row(
                                   children: [
@@ -1021,7 +1033,7 @@ class WordDetailsState extends State<WordDetails> {
                                 ],
                               ],
                               
-                              if ((inputs[speechType.value['partOfSpeech']] != null && inputs[speechType.value['partOfSpeech']].isNotEmpty) || editMode) ...[
+                              if (((inputs[speechType.value['partOfSpeech']]?.isNotEmpty ?? false) || editMode) && widget.activatedElements.contains('quizHistory')) ...[
                                 Divider(),
                                 Row(
                                   children: const [
