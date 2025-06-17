@@ -74,7 +74,8 @@ Future<Map> getWordDetails(String word) async {
             }
             wordDetails['entries'][partOfSpeech]['details'].add(wordDeets);
           } catch (e) {
-            throw FormatException('Error parsing word details: $e');
+            continue;
+            // throw FormatException('Error parsing word details: $e');
           }
         }
         // gather all stems and intersect them and then choose the smallest one
