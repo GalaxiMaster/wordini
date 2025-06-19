@@ -1087,6 +1087,18 @@ class WordDetailsState extends State<WordDetails> {
                                                   ' — ${DateFormat('d MMM yyyy, h:mm a').format(DateTime.parse(entry['date']))}',
                                                   style: const TextStyle(fontSize: 13, color: Colors.white70),
                                                 ),
+                                                if (editMode)
+                                                IconButton(
+                                                  onPressed: (){
+                                                    setState(() {
+                                                      inputs[speechType.value['partOfSpeech']].removeAt(index);
+                                                    });
+                                                  },
+                                                  icon: Icon(
+                                                    Icons.close,
+                                                    size: 20,
+                                                  ),
+                                                )
                                               ],
                                             ),
                                           )
@@ -1119,6 +1131,18 @@ class WordDetailsState extends State<WordDetails> {
                                                     style: const TextStyle(fontSize: 16, color: Colors.white),
                                                   ),
                                                 ),
+                                                if (editMode)
+                                                IconButton(
+                                                  onPressed: (){
+                                                    setState(() {
+                                                      inputs[speechType.value['partOfSpeech']].removeAt(index);
+                                                    });
+                                                  },
+                                                  icon: Icon(
+                                                    Icons.close,
+                                                    size: 20,
+                                                  ),
+                                                )
                                               ],
                                             ),
                                             const SizedBox(height: 4),
