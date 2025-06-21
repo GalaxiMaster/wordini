@@ -39,7 +39,11 @@ class WordListState extends State<WordList> {
     'selectedTags': <String>{},
     'selectedTagsMode': 'any',
     'sortBy': 'Alphabetical',
-    'sortOrder':'Ascending',
+    'sortOrder': 'Ascending'
+  };
+  final Map sortOrderOptions = {
+    'Alphabetical': ['Ascending', 'Descending'],
+    'Date Added': ['Newest', 'Oldest'],
   };
   bool _showBar = false;
 
@@ -110,17 +114,18 @@ class WordListState extends State<WordList> {
                       selected: filters['sortBy'],
                       onSelected: (value) {
                         filters['sortBy'] = value;
-                        setPopupState(() {});
+                        filters['sortOrder'] = sortOrderOptions[value]?.first ?? 'Ascending';
+                        _hideTagPopup();
                       },
                     )
                   ],
                   TagPopupType.sortOrder => [
                     _buildTwoOptionSelector(
-                      options: const ['Ascending', 'Descending'],
+                      options: sortOrderOptions[filters['sortBy']] ?? ['Ascending', 'Descending'],
                       selected: filters['sortOrder'],
                       onSelected: (value) {
                         filters['sortOrder'] = value;
-                        setPopupState(() {});
+                        _hideTagPopup();
                       },
                     )
                   ],
@@ -304,11 +309,14 @@ class WordListState extends State<WordList> {
         switch (filters['sortBy']){
           case 'Alphabetical':
             filteredWords.sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
+            if (filters['sortOrder'] == 'Descending'){
+              filteredWords = filteredWords.reversed.toList();
+            }
           case 'Date Added':
             filteredWords.sort((a, b) => DateTime.parse(a.value['dateAdded']).compareTo(DateTime.parse(b.value['dateAdded'])));
-        }
-        if (filters['sortOrder'] == 'Descending'){
-          filteredWords = filteredWords.reversed.toList();
+            if (filters['sortOrder'] == 'Newest'){
+              filteredWords = filteredWords.reversed.toList();
+            }
         }
 
         allTags = words.values
