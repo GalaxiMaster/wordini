@@ -182,7 +182,11 @@ class QuizzesState extends State<Quizzes> {
                                           );
                                         },
                                         onHome: (context) {
-                                          Navigator.popUntil(context, (route) => route.isFirst);
+                                          Navigator.pushNamedAndRemoveUntil(
+                                            context,
+                                            '/home',
+                                            (Route<dynamic> route) => false,
+                                          );
                                         },
                                       ),
                                     ),
@@ -309,7 +313,11 @@ class QuizzesState extends State<Quizzes> {
                                         );
                                       },
                                       onHome: (context) {
-                                        Navigator.popUntil(context, (route) => route.isFirst);
+                                        Navigator.pushNamedAndRemoveUntil(
+                                          context,
+                                          '/home',
+                                          (Route<dynamic> route) => false,
+                                        );
                                       },
                                     ),
                                   ),
