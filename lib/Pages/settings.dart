@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:vocab_app/Pages/word_details.dart';
 import 'package:vocab_app/file_handling.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
+import 'package:vocab_app/word_functions.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -57,7 +59,7 @@ class SettingsPageState extends State<SettingsPage> {
                   icon: Icons.download_rounded,
                   label: 'Import CSV',
                   function: () async {
-                    await processCsvRows();
+                    await processCsvRows(context);
                   },
                 ),
               ],
@@ -107,17 +109,40 @@ class SettingsPageState extends State<SettingsPage> {
   }
 }
 
-Future<void> processCsvRows() async {
+Future<void> processCsvRows(context) async {
   final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
 
   if (result != null) {
     final file = File(result.files.single.path!);
     final content = await file.readAsString();
     final rows = const CsvToListConverter().convert(content);
-
+    
+    final allTags = await gatherTags();
     for (var row in rows) {
-      // Do something with each row
-      debugPrint(row.toString()); // Replace with your logic
+      String word = row[0].toString();
+      // final String definition = row[1].toString();
+      final Map wordDetails = await getWordDetails(word.toLowerCase());
+      word = wordDetails['word'];
+      if (wordDetails.isNotEmpty) {
+        debugPrint('Word exists: $word');
+        writeKey(word, wordDetails);
+      } else {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => WordDetails(
+            word: {
+              "word": word,
+              "dateAdded": DateTime.now().toString(),
+              "entries": {
+            
+              }
+            }, 
+            editModeState: true,
+            allTags: allTags,
+            addWordMode: true,
+          ))
+        );
+      }
     }
   } else {
     debugPrint('No file selected.');

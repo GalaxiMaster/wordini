@@ -43,6 +43,7 @@ Future<Map> getWordDetails(String word) async {
         for (Map mainData in data) {
           // var dataWordId = mainData['meta']['id'].split(':')[0].replaceAll(RegExp(r'[\s-]+'), '').toLowerCase();
           final bool inStems = mainData['meta']['stems'].contains(word);
+          debugPrint(inStems.toString());
           if (!inStems) continue;
           Map wordDeets = {};
           try {
