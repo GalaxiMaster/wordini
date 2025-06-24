@@ -50,6 +50,21 @@ Future<void> initializeNotifications() async {
   );
 }
 
+void scheduleQuizNotification() async{
+  final currentNotifs = await Hive.openBox<int>('active-notifications');
+  if (currentNotifs.containsKey('wordReminder')) {
+    debugPrint('Notification already scheduled for word reminder.');
+    return; // Exit if notification is already scheduled
+  }
+  scheduleNotification(
+    title: 'DO YOUR QUIZ', 
+    description: 'Your words are waiting for you.', 
+    duration: Duration(days: 1), 
+    androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
+    payload: 'wordReminder',
+  );
+}
+
 Future<void> showInstantNotification({
   required String title,
   required String description,
@@ -78,6 +93,7 @@ Future<void> scheduleNotification(
     required Duration duration, 
     required AndroidNotificationDetails androidPlatformChannelSpecifics,
     required String payload,
+    bool exact = false,
   }
   ) async {
   await requestNotificationPermission();
@@ -93,7 +109,7 @@ Future<void> scheduleNotification(
   NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
 
   int id = await NotificationIdManager.getNextId();
-
+  AndroidScheduleMode scheduleMode = exact ? AndroidScheduleMode.exact : AndroidScheduleMode.inexactAllowWhileIdle;
   // Schedule notification 20 minutes from now
   await flutterLocalNotificationsPlugin.zonedSchedule(
     id, // Notification ID (different from instant notification)
@@ -101,7 +117,7 @@ Future<void> scheduleNotification(
     description,
     tz.TZDateTime.now(tz.local).add(duration),
     platformChannelSpecifics,
-    androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // TODO probably dont need exact
+    androidScheduleMode: scheduleMode,
     payload: payload,
   );
   noteNotification(id, payload);
@@ -115,18 +131,18 @@ Future<void> noteNotification(int id, String payload) async {
   await box.put(payload, id);
 }
 
-void removeNotif(String word) async {
+void removeNotif(String key) async {
   // Ensure the box is open before accessing it
   if (!Hive.isBoxOpen('active-notifications')) {
     await Hive.openBox<int>('active-notifications');
   }
   var box = Hive.box<int>('active-notifications');
-  int? id = box.get(word);
+  int? id = box.get(key);
   if (id != null) {
     flutterLocalNotificationsPlugin.cancel(id);
-    box.delete(word);
+    box.delete(key);
   }
-  debugPrint('Notification with ID: $id removed for word: $word');
+  debugPrint('Notification with ID: $id removed for word: $key');
 }
 
 Future<void> requestNotificationPermission() async {

@@ -269,7 +269,6 @@ class QuizzesState extends State<Quizzes> {
 
                             if (correct) {
                               tickKey.currentState?.showTick();
-                              removeNotif(currentWord['word']);
                               questionsRight++;
                               // TODO some sort of correct answer animation
                             } else {
@@ -283,6 +282,8 @@ class QuizzesState extends State<Quizzes> {
                               }
                               // errorOverlay(context, 'Wrong answer');
                             }
+                            removeNotif('wordReminder');
+                            scheduleQuizNotification();
                             questionsDone++;
                             addInputEntry(
                               currentWord['word'],
