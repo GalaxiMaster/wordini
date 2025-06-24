@@ -25,6 +25,7 @@ dependencies:
   fl_chart: ^0.71.0
   percent_indicator: ^4.2.5
   syncfusion_flutter_gauges: ^29.1.38
+  csv: ^6.0.0
 
 dev_dependencies:
   flutter_test:

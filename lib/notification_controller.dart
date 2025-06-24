@@ -57,7 +57,7 @@ void scheduleQuizNotification() async{
     return; // Exit if notification is already scheduled
   }
   scheduleNotification(
-    title: 'DO YOUR QUIZ', 
+    title: 'DO YOUR QUIZZES', 
     description: 'Your words are waiting for you.', 
     duration: Duration(days: 1), 
     androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 

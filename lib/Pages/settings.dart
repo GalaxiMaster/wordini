@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:vocab_app/file_handling.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:csv/csv.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -50,6 +53,13 @@ class SettingsPageState extends State<SettingsPage> {
                     await resetData(context);
                   },
                 ),
+                _buildSettingsTile(
+                  icon: Icons.download_rounded,
+                  label: 'Import CSV',
+                  function: () async {
+                    await processCsvRows();
+                  },
+                ),
               ],
             );
           } else {
@@ -94,5 +104,22 @@ class SettingsPageState extends State<SettingsPage> {
         trailing: rightside ?? const Icon(Icons.arrow_forward_ios_rounded, size: 16),
       ),
     );
+  }
+}
+
+Future<void> processCsvRows() async {
+  final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
+
+  if (result != null) {
+    final file = File(result.files.single.path!);
+    final content = await file.readAsString();
+    final rows = const CsvToListConverter().convert(content);
+
+    for (var row in rows) {
+      // Do something with each row
+      debugPrint(row.toString()); // Replace with your logic
+    }
+  } else {
+    debugPrint('No file selected.');
   }
 }
