@@ -1,13 +1,13 @@
 // import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:vocab_app/Pages/add_word.dart';
-import 'package:vocab_app/Pages/quizzes.dart';
-import 'package:vocab_app/Pages/settings.dart';
-import 'package:vocab_app/Pages/statistics_page.dart';
-import 'package:vocab_app/Pages/word_list.dart';
-import 'package:vocab_app/file_handling.dart';
+import 'package:wordini/Pages/add_word.dart';
+import 'package:wordini/Pages/quizzes.dart';
+import 'package:wordini/Pages/settings.dart';
+import 'package:wordini/Pages/statistics_page.dart';
+import 'package:wordini/Pages/word_list.dart';
+import 'package:wordini/file_handling.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
-import 'package:vocab_app/widgets.dart';
+import 'package:wordini/widgets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

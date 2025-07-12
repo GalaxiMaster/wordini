@@ -1,11 +1,11 @@
 import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:vocab_app/Pages/home.dart';
+import 'package:wordini/Pages/home.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:vocab_app/Pages/quizzes.dart';
-import 'package:vocab_app/notification_controller.dart';
+import 'package:wordini/Pages/quizzes.dart';
+import 'package:wordini/notification_controller.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:vocab_app/file_handling.dart';
-import 'package:vocab_app/widgets.dart';
-import 'package:vocab_app/word_functions.dart';
+import 'package:wordini/file_handling.dart';
+import 'package:wordini/widgets.dart';
+import 'package:wordini/word_functions.dart';
 
 class WordDetails extends StatefulWidget {
   final bool addWordMode;

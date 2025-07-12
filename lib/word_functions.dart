@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
-import 'package:vocab_app/widgets.dart';
+import 'package:wordini/widgets.dart';
 import 'dart:convert';
 
 Set getWordType(Map word) {

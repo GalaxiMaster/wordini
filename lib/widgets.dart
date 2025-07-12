@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:vocab_app/Pages/word_details.dart';
-import 'package:vocab_app/file_handling.dart';
+import 'package:wordini/Pages/word_details.dart';
+import 'package:wordini/file_handling.dart';
 
 class LoadingOverlay {
   final OverlayEntry _overlayEntry = OverlayEntry(

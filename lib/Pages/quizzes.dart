@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:vocab_app/file_handling.dart';
-import 'package:vocab_app/notification_controller.dart';
-import 'package:vocab_app/widgets.dart';
-import 'package:vocab_app/word_functions.dart';
+import 'package:wordini/file_handling.dart';
+import 'package:wordini/notification_controller.dart';
+import 'package:wordini/widgets.dart';
+import 'package:wordini/word_functions.dart';
 
 class Quizzes extends StatefulWidget {
   final int? questions;

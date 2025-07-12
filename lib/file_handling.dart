@@ -5,9 +5,9 @@ import 'dart:io';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:vocab_app/widgets.dart';
+import 'package:wordini/widgets.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:vocab_app/word_functions.dart';
+import 'package:wordini/word_functions.dart';
 
 Future<Map<String, dynamic>> readData({String path = 'words'}) async {
   final box = await Hive.openBox(path);
