@@ -1,3 +1,3 @@
-# vocab_app
+# Wordini
 
 A new Flutter project.

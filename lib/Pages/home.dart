@@ -96,7 +96,7 @@ class HomePageContentState extends State<HomePageContent> {
         } else if (snapshot.hasData) {
           return Scaffold(
             appBar: AppBar(
-              title: Center(child: Text('The Vocab Lab')),
+              title: Center(child: Text('Wordini')),
               automaticallyImplyLeading: false,
               leading: IconButton(
                 onPressed: (){

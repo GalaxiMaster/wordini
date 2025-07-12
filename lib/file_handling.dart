@@ -106,7 +106,7 @@ Future<void> exportJson(BuildContext context) async {
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(path)],
-          text: 'Exported data from vocab app',
+          text: 'Exported data from Wordini',
         ),
       );
 
