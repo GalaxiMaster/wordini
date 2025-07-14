@@ -38,32 +38,40 @@ class _SignUpPageState extends State<SignUpPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: Colors.white38,
-                      width: 2,
+              AutofillGroup(
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _emailController,
+                      autofillHints: const [AutofillHints.email],
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Colors.white38,
+                            width: 2,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: Colors.white38,
-                      width: 2,
+                    TextField(
+                      controller: _passwordController,
+                      autofillHints: const [AutofillHints.password],
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Colors.white38,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      obscureText: true,
                     ),
-                  ),
+                  ]
                 ),
-                obscureText: true,
               ),
               Column(
                 children: [

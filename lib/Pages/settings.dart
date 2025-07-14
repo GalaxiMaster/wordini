@@ -7,6 +7,7 @@ import 'package:wordini/file_handling.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
+import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -40,11 +41,14 @@ class SettingsPageState extends State<SettingsPage> {
                 _buildSettingsTile(
                   icon: Icons.person,
                   label: 'Account',
-                  function: () async{ // When clicked, toggle a button somewhere that makes sure you can't click it twice, either by just having a backend variable or a loading widget on screen while its
+                  function: () async{
+                    final LoadingOverlay loadingOverlay = LoadingOverlay();
+                    loadingOverlay.showLoadingOverlay(context);
                     User? user = FirebaseAuth.instance.currentUser;
                     if (user != null){
                       await reAuthUser(user, context);
                       user = FirebaseAuth.instance.currentUser;
+                      loadingOverlay.removeLoadingOverlay();
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -52,6 +56,7 @@ class SettingsPageState extends State<SettingsPage> {
                         ),
                       );  
                     }else{
+                      loadingOverlay.removeLoadingOverlay();
                       Navigator.push(
                         context,
                         MaterialPageRoute(
