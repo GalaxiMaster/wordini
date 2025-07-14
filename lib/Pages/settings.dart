@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:wordini/Pages/Account/account.dart';
+import 'package:wordini/Pages/Account/sign_in.dart';
 import 'package:wordini/Pages/word_details.dart';
 import 'package:wordini/file_handling.dart';
 import 'dart:io';
@@ -32,6 +35,32 @@ class SettingsPageState extends State<SettingsPage> {
             return ListView(
               padding: const EdgeInsets.all(16.0),
               children: [
+                settingsHeader('Account'),
+                const SizedBox(height: 8),
+                _buildSettingsTile(
+                  icon: Icons.person,
+                  label: 'Account',
+                  function: () async{ // When clicked, toggle a button somewhere that makes sure you can't click it twice, either by just having a backend variable or a loading widget on screen while its
+                    User? user = FirebaseAuth.instance.currentUser;
+                    if (user != null){
+                      await reAuthUser(user, context);
+                      user = FirebaseAuth.instance.currentUser;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AccountPage(accountDetails: user!),
+                        ),
+                      );  
+                    }else{
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SignInPage(),
+                        ),
+                      );  
+                    }
+                  },
+                ),
                 settingsHeader('Functions'),
                 const SizedBox(height: 8),
                 _buildSettingsTile(

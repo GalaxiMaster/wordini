@@ -481,7 +481,7 @@ class WordListState extends State<WordList> {
                         ),
                         subtitle: Text(
                           (firstWordDetails['shortDefs']?.isNotEmpty ? firstWordDetails['shortDefs']?.first : firstWordDetails['definitions']?.first?.first['definition']) ?? '',
-                        ),
+                        ), 
                       ),
                     );
                   },
