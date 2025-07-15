@@ -31,8 +31,8 @@ class QuizzesState extends State<Quizzes> {
   void initState() {
     super.initState();
     Box permissionsBox = Hive.box('permissions');
-    permissionsBox.get('canQuiz', defaultValue: false);
-    if (permissionsBox.get('canQuiz') == false) {
+    canQuiz = permissionsBox.get('canQuiz', defaultValue: false);
+    if (!canQuiz) {
       return;
     }
     readData().then((data) {

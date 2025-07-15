@@ -267,7 +267,7 @@ Future<void> getUserPermissions() async {
 
     if (user != null) {
       final doc = await FirebaseFirestore.instance
-          .collection('User Permissions')
+          .collection('User-Permissions')
           .doc(user.uid)
           .get();
       
@@ -283,4 +283,22 @@ Future<void> getUserPermissions() async {
   final permissionsBox = Hive.box('permissions');
 
   permissionsBox.put('canQuiz', permissions['canQuiz'] ?? false);
+}
+
+Future<void> createDefaultPermissions(UserCredential userCredential) async {
+  final user = userCredential.user;
+  if (user == null) return;
+
+  final defaultPermissions = {
+    'canQuiz': false,
+  };
+
+  try {
+    await FirebaseFirestore.instance
+        .collection('User-Permissions')
+        .doc(user.uid)
+        .set(defaultPermissions);
+  } catch (e) {
+    debugPrint("Error creating permissions document: $e");
+  }
 }

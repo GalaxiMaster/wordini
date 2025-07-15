@@ -94,10 +94,14 @@ class SignUpPageState extends State<SignUpPage> {
                         return;
                       }
                       try {
-                        await _auth.createUserWithEmailAndPassword(
-                          email: _emailController.text.trim(),
-                          password: _passwordController.text,
-                        );
+                        await _auth
+                        .createUserWithEmailAndPassword(
+                          email: _emailController.text.trim(), 
+                          password: _passwordController.text
+                        ).then((userCredential) {
+                          debugPrint('User created: ${userCredential.user?.email}');
+                          createDefaultPermissions(userCredential);
+                        });
                         // createUserPermissions(_auth.currentUser!);
                         if (!context.mounted) return;
                         Navigator.pushReplacement(
