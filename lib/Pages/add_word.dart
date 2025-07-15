@@ -30,6 +30,11 @@ class AddWordState extends State<AddWord> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Add Word'),
+        centerTitle: true,
+        backgroundColor: Colors.black,
+      ),
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
         child: Center(

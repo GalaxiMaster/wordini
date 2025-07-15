@@ -528,6 +528,13 @@ class WordDetailsState extends State<WordDetails> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      GestureDetector(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: const Icon(Icons.arrow_back, color: Colors.white, size: 25),
+                        ),
+                        onTap: () => Navigator.of(context).pop(),
+                      ),
                       Text(
                         capitalise(word['word']),
                         style: const TextStyle(
@@ -1166,6 +1173,7 @@ class WordDetailsState extends State<WordDetails> {
                 ],
               ),
             ),
+            // Add this Positioned widget for the back button
             if (widget.addWordMode)
               Positioned(
                 left: 50,
