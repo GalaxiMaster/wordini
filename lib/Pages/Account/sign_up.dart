@@ -3,15 +3,16 @@ import 'package:wordini/Pages/Account/sign_in.dart';
 import 'package:wordini/encryption_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:wordini/file_handling.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
   @override
-  _SignUpPageState createState() => _SignUpPageState();
+  SignUpPageState createState() => SignUpPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class SignUpPageState extends State<SignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -55,6 +56,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                       ),
                     ),
+                    SizedBox(height: 25),
                     TextField(
                       controller: _passwordController,
                       autofillHints: const [AutofillHints.password],
@@ -96,7 +98,8 @@ class _SignUpPageState extends State<SignUpPage> {
                           email: _emailController.text.trim(),
                           password: _passwordController.text,
                         );
-                        if (!mounted) return;
+                        // createUserPermissions(_auth.currentUser!);
+                        if (!context.mounted) return;
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (context) => const HomePage()),
@@ -120,12 +123,12 @@ class _SignUpPageState extends State<SignUpPage> {
                           default:
                             message = 'An error occurred: ${e.message}';
                         }
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           errorSnackBar(message),
                         );
                       } catch (e) {
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           errorSnackBar('An unexpected error occurred: $e'),
                         );

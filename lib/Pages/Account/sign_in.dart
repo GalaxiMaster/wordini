@@ -3,6 +3,7 @@ import 'package:wordini/Pages/Account/sign_up.dart';
 import 'package:wordini/encryption_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:wordini/file_handling.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -55,6 +56,7 @@ class _SignInPageState extends State<SignInPage> {
                         ),
                       ),
                     ),
+                    SizedBox(height: 25),
                     TextField(
                       controller: _passwordController,
                       autofillHints: const [AutofillHints.password],
@@ -95,7 +97,8 @@ class _SignInPageState extends State<SignInPage> {
                         await _auth.signInWithEmailAndPassword(
                           email: _emailController.text.trim(),
                           password: _passwordController.text,
-                        );
+                        );                        
+                        getUserPermissions();
                         if (!context.mounted) return;
                         Navigator.pushReplacement(
                           context,
@@ -120,12 +123,12 @@ class _SignInPageState extends State<SignInPage> {
                           default:
                             message = 'An error occurred: ${e.message}';
                         }
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           errorSnackBar(message),
                         );
                       } catch (e) {
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           errorSnackBar('An unexpected error occurred: $e'),
                         );

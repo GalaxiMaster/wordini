@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:wordini/file_handling.dart';
 import 'package:wordini/notification_controller.dart';
 import 'package:wordini/widgets.dart';
@@ -12,6 +13,7 @@ class Quizzes extends StatefulWidget {
 }
 
 class QuizzesState extends State<Quizzes> {
+  bool canQuiz = false;
   Future<List>? words; // Make nullable to avoid LateInitializationError
   int _currentIndex = 0;
   Map currentWord = {};
@@ -28,6 +30,11 @@ class QuizzesState extends State<Quizzes> {
   @override
   void initState() {
     super.initState();
+    Box permissionsBox = Hive.box('permissions');
+    permissionsBox.get('canQuiz', defaultValue: false);
+    if (permissionsBox.get('canQuiz') == false) {
+      return;
+    }
     readData().then((data) {
       rawWords = data; // store the raw data for later use
       _gatherSelectedDefinitions(data).then((selectedDefs) {
@@ -77,99 +84,234 @@ class QuizzesState extends State<Quizzes> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder<List>(
-        future: words,
-        builder: (context, snapshot) {
-          if (words == null) {
-            // words is not initialized yet
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error loading data ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            List words = snapshot.data!;
-            if (words.isEmpty) {
-              return const Center(child: Text('No words added'));
+    if (!canQuiz) {
+      return const Scaffold(body: Center(child: Text('User doesn\'t have permission to quiz')));
+    } else{
+      return Scaffold(
+        body: FutureBuilder<List>(
+          future: words,
+          builder: (context, snapshot) {
+            if (words == null) {
+              // words is not initialized yet
+              return const Center(child: CircularProgressIndicator());
             }
-            currentWord = words.elementAt(_currentIndex);
-            String partOfSpeech = currentWord['attributes']['partOfSpeech'] ?? 'unknown';
-            return Stack(
-              children: [
-                Positioned(
-                  top: 25,
-                  child: SizedBox(
-                    height: 50,
-                    width: MediaQuery.of(context).size.width,
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.lightbulb),
-                          onPressed: () {
-                            String message;
-                            try {
-                              List examples = [];
-                              final details = currentWord['attributes']['details'] ?? {};
-                              details.forEach((value) {
-                                final definitions = value['definitions'] ?? [];
-                                for (var defGroup in definitions) {
-                                  for (var subGroup in defGroup) {
-                                    examples += subGroup['example'];
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error loading data ${snapshot.error}'));
+            } else if (snapshot.hasData) {
+              List words = snapshot.data!;
+              if (words.isEmpty) {
+                return const Center(child: Text('No words added'));
+              }
+              currentWord = words.elementAt(_currentIndex);
+              String partOfSpeech = currentWord['attributes']['partOfSpeech'] ?? 'unknown';
+              return Stack(
+                children: [
+                  Positioned(
+                    top: 25,
+                    child: SizedBox(
+                      height: 50,
+                      width: MediaQuery.of(context).size.width,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.lightbulb),
+                            onPressed: () {
+                              String message;
+                              try {
+                                List examples = [];
+                                final details = currentWord['attributes']['details'] ?? {};
+                                details.forEach((value) {
+                                  final definitions = value['definitions'] ?? [];
+                                  for (var defGroup in definitions) {
+                                    for (var subGroup in defGroup) {
+                                      examples += subGroup['example'];
+                                    }
                                   }
-                                }
-                              });
-                              message = examples[0]; // ADD index's later
-                            } on RangeError {
-                              message = 'No example available';
-                            }
-                            messageOverlay(
-                              context, 
-                              message, 
-                              duration: Duration(seconds: 5), 
-                              color: Color.fromARGB(255, 30, 30, 30),
-                              content: Column(
-                                children: [
-                                  MWTaggedText(capitalise(message), style: TextStyle(fontWeight: FontWeight.w400, fontSize: 16),),
-                                  Wrap(
-                                    spacing: 8,
-                                    children: (currentWord['attributes']['synonyms'] ?? {}).entries
-                                      .where((synonym) => synonym.key.toLowerCase() != currentWord['word'].toLowerCase())
-                                      .map<Widget>(
-                                        (synonym) => Chip(
-                                          label: MWTaggedText(
-                                            capitalise(synonym.key),
-                                            style: const TextStyle(fontSize: 16),
+                                });
+                                message = examples[0]; // ADD index's later
+                              } on RangeError {
+                                message = 'No example available';
+                              }
+                              messageOverlay(
+                                context, 
+                                message, 
+                                duration: Duration(seconds: 5), 
+                                color: Color.fromARGB(255, 30, 30, 30),
+                                content: Column(
+                                  children: [
+                                    MWTaggedText(capitalise(message), style: TextStyle(fontWeight: FontWeight.w400, fontSize: 16),),
+                                    Wrap(
+                                      spacing: 8,
+                                      children: (currentWord['attributes']['synonyms'] ?? {}).entries
+                                        .where((synonym) => synonym.key.toLowerCase() != currentWord['word'].toLowerCase())
+                                        .map<Widget>(
+                                          (synonym) => Chip(
+                                            label: MWTaggedText(
+                                              capitalise(synonym.key),
+                                              style: const TextStyle(fontSize: 16),
+                                            ),
+                                            backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            side: BorderSide.none,
                                           ),
-                                          backgroundColor: const Color.fromARGB(255, 19, 54, 79),
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                          side: BorderSide.none,
-                                        ),
-                                      ).toList(),
-                                  ),
-                                ],
-                              )
-                            );
-                          },
-                        ),
-                        const Spacer(),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            '${maxQuestions == null ? questionsRight : _currentIndex+1} / ${maxQuestions ?? questionsDone}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
+                                        ).toList(),
+                                    ),
+                                  ],
+                                )
+                              );
+                            },
+                          ),
+                          const Spacer(),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              '${maxQuestions == null ? questionsRight : _currentIndex+1} / ${maxQuestions ?? questionsDone}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                        ),
-                        if (_currentIndex < words.length - 1 || maxQuestions != null)
-                          IconButton(
-                            icon: const Icon(Icons.arrow_forward),
-                            onPressed: () {
-                              if (_currentIndex == words.length-1) {
-                                Navigator.pushReplacement(
+                          if (_currentIndex < words.length - 1 || maxQuestions != null)
+                            IconButton(
+                              icon: const Icon(Icons.arrow_forward),
+                              onPressed: () {
+                                if (_currentIndex == words.length-1) {
+                                  Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => QuizCompletionPage(
+                                          score: questionsRight,
+                                          totalQuestions: maxQuestions ?? questionsDone,
+                                          onRetry: (context) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(builder: (context) => Quizzes(questions: maxQuestions,))
+                                            );
+                                          },
+                                          onHome: (context) {
+                                            Navigator.pushNamedAndRemoveUntil(
+                                              context,
+                                              '/home',
+                                              (Route<dynamic> route) => false,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                } else{
+                                  setState(() {
+                                    _currentIndex++;
+                                  });
+                                  entryController.clear();
+                                  questionsDone++; // up counter in the top right
+                                  if (context.mounted) {
+                                    showWordDetailsOverlay(currentWord['word'], currentWord['attributes']['partOfSpeech'], context).then((_){
+                                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                                        _entryFocusNode.requestFocus();
+                                      });
+                                    });
+                                  }
+                                  addInputEntry(
+                                    currentWord['word'], 
+                                    currentWord['attributes']['partOfSpeech'], 
+                                    {
+                                      'skipped': true,
+                                      'date': DateTime.now().toString(),
+                                    }
+                                  );
+                                }
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Center(
+                    heightFactor: .4,
+                    child: Center(child: AnimatedTick(key: tickKey)),
+                  ),
+                  Center(
+                    heightFactor: .4,
+                    child: Center(child: AnimatedTick(key: crossKey, color: Colors.red, icon: Icons.close,)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Column(
+                            children: [
+                              Text(
+                                capitalise(currentWord['word']),
+                                style: const TextStyle(fontSize: 26),
+                              ),
+                              Text(
+                                capitalise(partOfSpeech),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          TextField(
+                            focusNode: _entryFocusNode,
+                            controller: entryController,
+                            decoration: InputDecoration(
+                              labelStyle: TextStyle(
+                                color: Colors.grey[400],
+                              ),
+                              labelText: 'Enter definition',
+                            ),
+                            onSubmitted: (value) async {
+                              value = value.trim();
+                              if (value.toLowerCase() == currentWord['word'].toLowerCase()) return; // ADD error message for this
+
+                              bool? correct = await checkDefinition(currentWord['word'], value, currentWord['attributes']['partOfSpeech'], context);
+
+                              if (correct == null) return;
+
+                              if (correct) {
+                                tickKey.currentState?.showTick();
+                                questionsRight++;
+                                // TODO some sort of correct answer animation
+                              } else {
+                                crossKey.currentState?.showTick();
+                                if (context.mounted) {
+                                  showWordDetailsOverlay(currentWord['word'],  currentWord['attributes']['partOfSpeech'], context).then((_){
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      _entryFocusNode.requestFocus();
+                                    });
+                                  });
+                                }
+                                // errorOverlay(context, 'Wrong answer');
+                              }
+                              removeNotif('wordReminder');
+                              scheduleQuizNotification();
+                              questionsDone++;
+                              addInputEntry(
+                                currentWord['word'],
+                                currentWord['attributes']['partOfSpeech'], 
+                                {
+                                  'guess': value,
+                                  'correct': correct,
+                                  'date': DateTime.now().toString(),
+                                }
+                              );
+                              if (_currentIndex < words.length - 1) {
+                                setState(() {
+                                  _currentIndex++;
+                                });
+                                entryController.clear();
+                              }else{
+                                if (context.mounted){
+                                  Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) => QuizCompletionPage(
@@ -191,154 +333,23 @@ class QuizzesState extends State<Quizzes> {
                                       ),
                                     ),
                                   );
-                              } else{
-                                setState(() {
-                                  _currentIndex++;
-                                });
-                                entryController.clear();
-                                questionsDone++; // up counter in the top right
-                                if (context.mounted) {
-                                  showWordDetailsOverlay(currentWord['word'], currentWord['attributes']['partOfSpeech'], context).then((_){
-                                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                                      _entryFocusNode.requestFocus();
-                                    });
-                                  });
                                 }
-                                addInputEntry(
-                                  currentWord['word'], 
-                                  currentWord['attributes']['partOfSpeech'], 
-                                  {
-                                    'skipped': true,
-                                    'date': DateTime.now().toString(),
-                                  }
-                                );
                               }
                             },
                           ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                Center(
-                  heightFactor: .4,
-                  child: Center(child: AnimatedTick(key: tickKey)),
-                ),
-                Center(
-                  heightFactor: .4,
-                  child: Center(child: AnimatedTick(key: crossKey, color: Colors.red, icon: Icons.close,)),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Column(
-                          children: [
-                            Text(
-                              capitalise(currentWord['word']),
-                              style: const TextStyle(fontSize: 26),
-                            ),
-                            Text(
-                              capitalise(partOfSpeech),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        TextField(
-                          focusNode: _entryFocusNode,
-                          controller: entryController,
-                          decoration: InputDecoration(
-                            labelStyle: TextStyle(
-                              color: Colors.grey[400],
-                            ),
-                            labelText: 'Enter definition',
-                          ),
-                          onSubmitted: (value) async {
-                            value = value.trim();
-                            if (value.toLowerCase() == currentWord['word'].toLowerCase()) return; // ADD error message for this
-
-                            bool? correct = await checkDefinition(currentWord['word'], value, currentWord['attributes']['partOfSpeech'], context);
-
-                            if (correct == null) return;
-
-                            if (correct) {
-                              tickKey.currentState?.showTick();
-                              questionsRight++;
-                              // TODO some sort of correct answer animation
-                            } else {
-                              crossKey.currentState?.showTick();
-                              if (context.mounted) {
-                                showWordDetailsOverlay(currentWord['word'],  currentWord['attributes']['partOfSpeech'], context).then((_){
-                                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                                    _entryFocusNode.requestFocus();
-                                  });
-                                });
-                              }
-                              // errorOverlay(context, 'Wrong answer');
-                            }
-                            removeNotif('wordReminder');
-                            scheduleQuizNotification();
-                            questionsDone++;
-                            addInputEntry(
-                              currentWord['word'],
-                              currentWord['attributes']['partOfSpeech'], 
-                              {
-                                'guess': value,
-                                'correct': correct,
-                                'date': DateTime.now().toString(),
-                              }
-                            );
-                            if (_currentIndex < words.length - 1) {
-                              setState(() {
-                                _currentIndex++;
-                              });
-                              entryController.clear();
-                            }else{
-                              if (context.mounted){
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => QuizCompletionPage(
-                                      score: questionsRight,
-                                      totalQuestions: maxQuestions ?? questionsDone,
-                                      onRetry: (context) {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(builder: (context) => Quizzes(questions: maxQuestions,))
-                                        );
-                                      },
-                                      onHome: (context) {
-                                        Navigator.pushNamedAndRemoveUntil(
-                                          context,
-                                          '/home',
-                                          (Route<dynamic> route) => false,
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          } else {
-            return const Center(child: Text('No data available'));
-          }
-        },
-      ),
-    );
+                ],
+              );
+            } else {
+              return const Center(child: Text('No data available'));
+            }
+          },
+        ),
+      );
+    }
   }
 
   List randomise(List<Map> data) {

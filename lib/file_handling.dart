@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'dart:convert';
@@ -254,4 +256,31 @@ void _showErrorDialog(BuildContext context, String message) {
       ],
     ),
   );
+}
+
+Future<void> getUserPermissions() async {
+  Map<String, dynamic> permissions;
+  const defaultPermissions = {'canQuiz': false};
+
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance
+          .collection('User Permissions')
+          .doc(user.uid)
+          .get();
+      
+      permissions = doc.exists ? doc.data() as Map<String, dynamic> : defaultPermissions;
+    } else {
+      permissions = defaultPermissions;
+    }
+  } catch (e) {
+    debugPrint('Error fetching permissions: $e');
+    permissions = defaultPermissions;
+  }
+
+  final permissionsBox = Hive.box('permissions');
+
+  permissionsBox.put('canQuiz', permissions['canQuiz'] ?? false);
 }
