@@ -332,7 +332,7 @@ class WordListState extends State<WordList> {
               decoration: BoxDecoration(
                 color: Color.fromARGB(255, 18, 18, 18),
               ),
-              padding: const EdgeInsets.fromLTRB(16, 35, 16, 5),
+              padding: const EdgeInsets.fromLTRB(16, 50, 16, 5),
               child: Stack(
                 children: [
                   TextField(
