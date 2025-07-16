@@ -48,6 +48,11 @@ Future<Map> getWordDetails(String word) async {
           Map wordDeets = {};
           try {
             String partOfSpeech = mainData['fl'] ?? '';
+            int i = 2;
+            while (wordDetails['entries'].containsKey(partOfSpeech)){
+              partOfSpeech = '$partOfSpeech:$i';
+              i++;
+            }
             if (partOfSpeech.isEmpty) partOfSpeech = 'unknown';
             if (wordDetails['entries'][partOfSpeech] == null) {
               wordDetails['entries'][partOfSpeech] = {
@@ -177,17 +182,14 @@ Map<String, Map<String, dynamic>> parseSynonyms(Map entry) {
   return result;
 }
 
-List parseDefinitions(Map data){
+// Improved parseDefinitions to preserve sn and flatten for easier rendering
+List<Map<String, dynamic>> parseDefinitions(Map data) {
   final List<List<dynamic>> sseq = List.from(data['sseq']);
 
-  final definitions = <List<Map<String, dynamic>>>[];
+  List<Map<String, dynamic>> extractSenses(List group) {
+    final List<Map<String, dynamic>> senses = [];
 
-  for (var i = 0; i < sseq.length; i++) {
-    final group = sseq[i];
-    final groupList = <Map<String, dynamic>>[];
-
-    for (var j = 0; j < group.length; j++) {
-      final item = group[j];
+    for (var item in group) {
       if (item[0] == 'sense') {
         final sense = item[1];
         final dt = List.from(sense['dt']);
@@ -203,29 +205,26 @@ List parseDefinitions(Map data){
             }
           }
         }
-        if (cleanText(defText).isEmpty) {
-          debugPrint('Empty definition found in group $i, item $j | $defText');
-          continue; // Skip empty definitions
-        }
-        groupList.add({
+
+        if (cleanText(defText).isEmpty) continue;
+
+        senses.add({
           'definition': capitalise(defText.trim()),
           'example': examples,
         });
+      } else if (item[0] == 'pseq') {
+        senses.addAll(extractSenses(item[1]));
       }
     }
-    if (groupList.isEmpty) {
-      debugPrint('Empty group found at index $i');
-      continue; // Skip empty groups
-    }
-    definitions.add(groupList);
+    return senses;
   }
-  // for (var i = 0; i < definitions.length; i++) {
-  //   for (var j = 0; j < definitions[i].length; j++) {
-  //     debugPrint('definition[$i][$j]["definition"] = ${definitions[i][j]["definition"]}');
-  //     debugPrint('definition[$i][$j]["example"] = ${definitions[i][j]["example"]}\n');
-  //   }
-  // }
-  return definitions;
+
+  // Flattened list of all senses with their sn
+  List<Map<String, dynamic>> allSenses = [];
+  for (var group in sseq) {
+    allSenses.addAll(extractSenses(group));
+  }
+  return allSenses;
 }
 
 String cleanText(String input) {

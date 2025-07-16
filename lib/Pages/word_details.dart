@@ -878,11 +878,11 @@ class WordDetailsState extends State<WordDetails> {
                                                     Padding(
                                                       padding: const EdgeInsets.symmetric(vertical: 4),
                                                       child: MWTaggedText(
-                                                        "{b}${indexToLetter(definition.key)}){/b} ${definition.value[0]['definition']}", // Currently set to only show the first wording of it
+                                                        "{b}${indexToLetter(definition.key)}){/b} ${definition.value['definition']}", // Currently set to only show the first wording of it
                                                         style: const TextStyle(fontSize: 16),
                                                       ),
                                                     ),
-                                                    for (String example in definition.value[0]['example'])
+                                                    for (String example in definition.value['example'])
                                                   Padding(
                                                     padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
                                                     child: Container(
