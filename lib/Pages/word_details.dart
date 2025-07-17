@@ -118,12 +118,10 @@ class WordDetailsState extends State<WordDetails> {
   
   void _addDefinition(speechPart) {
     setState((){
-      word['entries'][speechPart]['details'].add({
-        'definitions': [],
-        'shortDefs': [],
-        'firstUsed': "",
-        'stems': [],
-        'homograph': 1
+      word['entries'][speechPart]['definitions'].add({
+        'sn': '',
+        'definition': '',
+        'example': [],
       });
     });
   }
@@ -175,7 +173,7 @@ class WordDetailsState extends State<WordDetails> {
                           ? [] 
                           : [exampleController.text.trim()],
                     }];
-                    speechTypeValue['details'][index]['definitions'].add(newDefinition);
+                    speechTypeValue[index]['definitions'].add(newDefinition);
                     // saveWord();
                   });
                 }
@@ -685,13 +683,13 @@ class WordDetailsState extends State<WordDetails> {
                                 onReorder: (oldIndex, newIndex) {
                                   setState(() {
                                     if (newIndex > oldIndex) newIndex -= 1;
-                                    final item = speechType.value['details'].removeAt(oldIndex);
-                                    speechType.value['details'].insert(newIndex, item);
+                                    final item = speechType.value.removeAt(oldIndex);
+                                    speechType.value.insert(newIndex, item);
                                   });
                                 },
-                                itemCount: speechType.value['details'].length,
+                                itemCount: speechType.value['definitions'].length,
                                 itemBuilder: (context, index) {
-                                  var entry = speechType.value['details'][index];
+                                  var entry = speechType.value['definitions'][index];
                                   return Column(
                                     key: ValueKey("definition_$index"),
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -705,7 +703,7 @@ class WordDetailsState extends State<WordDetails> {
                                           ),
                                           Spacer(),
                                           IconButton(
-                                            onPressed: () => _addDefinitionEntry(speechType.value, index),
+                                            onPressed: () => _addDefinitionEntry(speechType.value['definitions'], index),
                                             icon: const Icon(Icons.add, color: Colors.white),
                                             tooltip: 'Add Definition',
                                           ),
@@ -857,7 +855,7 @@ class WordDetailsState extends State<WordDetails> {
                                   );
                                 },
                               ) else Column(
-                                children: speechType.value['details'].asMap().entries.map<Widget>((entry) {
+                                children: speechType.value['definitions'].asMap().entries.map<Widget>((entry) {
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 6),
                                     child: Row(
@@ -871,18 +869,17 @@ class WordDetailsState extends State<WordDetails> {
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              for (var definition in (entry.value['definitions'] ?? []).asMap().entries)
-                                                Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Padding(
-                                                      padding: const EdgeInsets.symmetric(vertical: 4),
-                                                      child: MWTaggedText(
-                                                        "{b}${indexToLetter(definition.key)}){/b} ${definition.value['definition']}", // Currently set to only show the first wording of it
-                                                        style: const TextStyle(fontSize: 16),
-                                                      ),
-                                                    ),
-                                                    for (String example in definition.value['example'])
+                                              // Show the definition
+                                              Padding(
+                                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                                child: MWTaggedText(
+                                                  "${entry.value['definition'] ?? ''}", //{b}${indexToLetter(entry.key)}){/b} 
+                                                  style: const TextStyle(fontSize: 16),
+                                                ),
+                                              ),
+                                              // Show examples if any
+                                              if (entry.value['example'] != null)
+                                                for (String example in List<String>.from(entry.value['example']))
                                                   Padding(
                                                     padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
                                                     child: Container(
@@ -900,8 +897,6 @@ class WordDetailsState extends State<WordDetails> {
                                                       ),
                                                     ),
                                                   ),
-                                                ],
-                                              ),
                                             ],
                                           ),
                                         ),

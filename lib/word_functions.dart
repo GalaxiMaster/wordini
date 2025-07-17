@@ -45,11 +45,10 @@ Future<Map> getWordDetails(String word) async {
           final bool inStems = mainData['meta']['stems'].contains(word);
           debugPrint(inStems.toString());
           if (!inStems) continue;
-          Map wordDeets = {};
           try {
             String partOfSpeech = mainData['fl'] ?? '';
             int i = 2;
-            while (wordDetails['entries'].containsKey(partOfSpeech)){
+            while (wordDetails['entries'].containsKey(partOfSpeech)){ // create a unique part of speech key
               partOfSpeech = '$partOfSpeech:$i';
               i++;
             }
@@ -60,26 +59,27 @@ Future<Map> getWordDetails(String word) async {
                 'etymology': '',
                 'partOfSpeech': partOfSpeech,
                 'quotes': [],
-                'details': []
+                // 'details': []
               };
             }
-            wordDeets['definitions'] = parseDefinitions(mainData['def'][0]);
-            wordDeets['shortDefs'] = mainData['shortdef'] ?? [];
-            wordDeets['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
-            wordDeets['stems'] = mainData['meta']?['stems'] ?? [];
-            wordDeets['homograph'] = mainData['hom'] ?? wordDetails['entries'][partOfSpeech]['details'].length + 1;
+            final defs = parseDefinitions(mainData['def'][0]);
+            wordDetails['entries'][partOfSpeech]['shortDefs'] = mainData['shortdef'] ?? [];
+            wordDetails['entries'][partOfSpeech]['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
+            wordDetails['entries'][partOfSpeech]['stems'] = mainData['meta']?['stems'] ?? [];
 
             wordDetails['entries'][partOfSpeech]['synonyms'].addAll(parseSynonyms(mainData));
             wordDetails['entries'][partOfSpeech]['etymology'] += mainData['et']?[0]?[1] ?? '';
             wordDetails['entries'][partOfSpeech]['partOfSpeech'] = mainData['fl'] ?? '';
             wordDetails['entries'][partOfSpeech]['quotes'].addAll(mainData['quotes'] ?? []);
             
-            if (wordDeets['definitions'].isEmpty) {
+            if (defs.isEmpty) {
               debugPrint('No definitions found for "$word" in part of speech "$partOfSpeech".');
               continue; // Skip if no definitions found
             }
-            wordDetails['entries'][partOfSpeech]['details'].add(wordDeets);
+            wordDetails['entries'][partOfSpeech]['definitions'] = defs;
+            // wordDetails['entries'][partOfSpeech]['details'].add(wordDeets);
           } catch (e) {
+            debugPrint('Error parsing word details: $e');
             continue;
             // throw FormatException('Error parsing word details: $e');
           }
@@ -88,15 +88,15 @@ Future<Map> getWordDetails(String word) async {
         Set<String>? allStems;
 
         wordDetails['entries'].forEach((key, value) {
-          value['details'].forEach((detail) {
-            var stems = Set<String>.from(detail['stems']);
+          // value['details'].forEach((detail) {
+            var stems = Set<String>.from(value['stems']);
 
             if (allStems == null) {
               allStems = stems;
             } else {
               allStems = allStems!.intersection(stems);
             }
-          });
+          // });
         });
         word = allStems!.reduce((a, b) => a.length <= b.length ? a : b); // find smallest in list
         wordDetails['word'] = word;
@@ -185,7 +185,46 @@ Map<String, Map<String, dynamic>> parseSynonyms(Map entry) {
 // Improved parseDefinitions to preserve sn and flatten for easier rendering
 List<Map<String, dynamic>> parseDefinitions(Map data) {
   final List<List<dynamic>> sseq = List.from(data['sseq']);
+  int defSNnum = -1;
+  int defSNsub = -1;
+  int defSNsub2 = -1;
 
+  String getSN(sense) {
+    String sn = sense['sn'] ?? '';
+    try{
+      if (sn.isNotEmpty) {
+        final nums = sn.split(' ');
+        if (sn.startsWith(RegExp('[0-9]'))){
+          // start afresh || new entry
+          defSNnum = int.parse(nums[0]);
+          defSNsub = -1;
+          defSNsub2 = -1;
+          if (nums.length > 1){
+            defSNsub = getAlphabetPositionSimple(nums[1]);
+            if (nums.length > 2){
+              defSNsub2 = int.tryParse(nums[2].replaceAll(RegExp(r'[^0-9]'), '')) ?? -1;
+            }
+          }
+        }
+        else if (sn.startsWith(RegExp('[a-z]'))){
+          defSNsub = getAlphabetPositionSimple(nums[0]);
+          if (nums.length > 1){
+            defSNsub2 = int.tryParse(nums[1].replaceAll(RegExp(r'[^0-9]'), '')) ?? -1;
+          }
+          // continue from previous entry but new sub
+        }
+        else if (sn.startsWith('(')){
+          // second version of the previous
+          defSNsub2 = int.tryParse(nums[0].replaceAll(RegExp(r'[^0-9]'), '')) ?? -1;
+        }
+        sn = [defSNnum, defSNsub, defSNsub2].join(' ');
+      }
+    } catch (e) {
+      debugPrint('Error parsing sense number: $e');
+    }
+    return sn;
+  }
+  
   List<Map<String, dynamic>> extractSenses(List group) {
     final List<Map<String, dynamic>> senses = [];
 
@@ -195,7 +234,6 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
         final dt = List.from(sense['dt']);
         String defText = '';
         List<String> examples = [];
-
         for (var entry in dt) {
           if (entry[0] == 'text') {
             defText += entry[1].trim() + ' ';
@@ -205,15 +243,18 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
             }
           }
         }
-
+        String sn = getSN(sense);
         if (cleanText(defText).isEmpty) continue;
 
         senses.add({
+          'sn': sn,
           'definition': capitalise(defText.trim()),
           'example': examples,
         });
       } else if (item[0] == 'pseq') {
         senses.addAll(extractSenses(item[1]));
+      } else if (item[0] == 'sen'){
+        getSN(item[1]);
       }
     }
     return senses;
@@ -225,6 +266,17 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
     allSenses.addAll(extractSenses(group));
   }
   return allSenses;
+}
+
+int getAlphabetPositionSimple(String letter) {
+  if (letter.length != 1) {
+    return 0;
+  }
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+  final index = alphabet.indexOf(letter.toLowerCase());
+
+  // indexOf returns -1 if not found, so we add 1 to get the 1-based position.
+  return index != -1 ? index + 1 : -1;
 }
 
 String cleanText(String input) {
