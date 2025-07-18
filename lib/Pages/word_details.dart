@@ -504,6 +504,26 @@ class WordDetailsState extends State<WordDetails> {
     }
   }
   
+  void updateDefinitionSequenceNumbers(List definitions) {
+    for (int i = 0; i < definitions.length; i++) {
+      // Top-level index (starts at 1)
+      int main = i + 1;
+      // Try to parse existing sn for nesting
+      String oldSn = definitions[i]['sn'] ?? '';
+      List<String> parts = oldSn.split(' ');
+      // If only top-level, set as 'main -1 -1'
+      if (parts.length < 2 || parts[1] == '-1') {
+        definitions[i]['sn'] = '$main -1 -1';
+      } else if (parts.length == 3) {
+        // If letter and/or sub-number exist, preserve them
+        definitions[i]['sn'] = '$main ${parts[1]} ${parts[2]}';
+      } else {
+        // Fallback
+        definitions[i]['sn'] = '$main -1 -1';
+      }
+    }
+  }
+  
   @override
   void dispose() {
     _controller.dispose();
@@ -635,6 +655,7 @@ class WordDetailsState extends State<WordDetails> {
                       itemCount: word['entries'].length,
                       itemBuilder: (context, index) {
                         MapEntry speechType = word['entries'].entries.toList().elementAt(index);
+                        Map organisedDefinitions = organizeDefinitions(speechType.value['definitions']);
                         // Inputs are already fetched in initState
                         return SingleChildScrollView(
                           child: Column(
@@ -677,234 +698,144 @@ class WordDetailsState extends State<WordDetails> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              if (editMode) ReorderableListView.builder(
+
+
+
+
+
+
+
+
+
+
+
+                              if (editMode) 
+                              
+                              ReorderableListView(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
                                 onReorder: (oldIndex, newIndex) {
                                   setState(() {
                                     if (newIndex > oldIndex) newIndex -= 1;
-                                    final item = speechType.value.removeAt(oldIndex);
-                                    speechType.value.insert(newIndex, item);
+                                    final item = speechType.value['definitions'].removeAt(oldIndex);
+                                    speechType.value['definitions'].insert(newIndex, item);
+                                    saveWord();
                                   });
                                 },
-                                itemCount: speechType.value['definitions'].length,
-                                itemBuilder: (context, index) {
-                                  var entry = speechType.value['definitions'][index];
-                                  return Column(
-                                    key: ValueKey("definition_$index"),
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
+                                children: [
+                                  for (final entry in organisedDefinitions.entries)
+                                    Padding(
+                                      key: ValueKey("definition_${entry.key}"),
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           const Icon(Icons.drag_handle),
                                           MWTaggedText(
-                                            "${index + 1}.",
+                                            "${entry.key}. ",
                                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                           ),
-                                          Spacer(),
-                                          IconButton(
-                                            onPressed: () => _addDefinitionEntry(speechType.value['definitions'], index),
-                                            icon: const Icon(Icons.add, color: Colors.white),
-                                            tooltip: 'Add Definition',
+                                          Expanded(
+                                            child: _buildDefinitionLayer(entry.value),
+                                          ),
+                                          // Add edit/delete buttons if needed
+                                          PopupMenuButton<String>(
+                                            icon: const Icon(Icons.more_vert, size: 18),
+                                            tooltip: "More actions",
+                                            onSelected: (value) {
+                                              if (value == 'delete') {
+                                                setState(() {
+                                                  // Remove from the original definitions list
+                                                  speechType.value['definitions'].removeWhere((def) =>
+                                                    def['sn'] != null && def['sn'].startsWith('${entry.key} ')
+                                                  );
+                                                  saveWord();
+                                                });
+                                              }
+                                              // Add edit logic if needed
+                                            },
+                                            itemBuilder: (context) => [
+                                              const PopupMenuItem(
+                                                value: 'edit',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.edit, size: 18, color: Colors.white),
+                                                    SizedBox(width: 8),
+                                                    Text('Edit'),
+                                                  ],
+                                                ),
+                                              ),
+                                              const PopupMenuItem(
+                                                value: 'delete',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.delete, size: 18, color: Colors.red),
+                                                    SizedBox(width: 8),
+                                                    Text('Delete'),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                      // ReorderableListView for definitions within this numbered definition
-                                      ReorderableListView.builder(
-                                        shrinkWrap: true,
-                                        physics: const NeverScrollableScrollPhysics(),
-                                        onReorder: (oldDefIndex, newDefIndex) {
-                                          setState(() {
-                                            if (newDefIndex > oldDefIndex) newDefIndex -= 1;
-                                            final defItem = entry['definitions'].removeAt(oldDefIndex);
-                                            entry['definitions'].insert(newDefIndex, defItem);
-                                          });
-                                        },
-                                        itemCount: entry['definitions']?.length ?? 0,
-                                        itemBuilder: (context, defIndex) {
-                                          var definition = entry['definitions'][defIndex];
-                                          return ListTile(
-                                            key: ValueKey("def_${index}_$defIndex"),
-                                            dense: true,
-                                            contentPadding: EdgeInsets.zero,
-                                            leading: const Icon(Icons.drag_indicator, size: 18),
-                                            title: Padding(
-                                              padding: EdgeInsets.zero,
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Row(
-                                                    mainAxisAlignment: MainAxisAlignment.start,
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      MWTaggedText(
-                                                        "{b}${indexToLetter(defIndex)}){/b} ",
-                                                        style: const TextStyle(fontSize: 16),
-                                                      ),
-                                                      SizedBox(width: 2,),
-                                                      Expanded(
-                                                        child: MWTaggedText(
-                                                          "${definition[0]['definition']}",
-                                                          style: const TextStyle(fontSize: 16),
-                                                        )
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  for (String example in definition[0]['example'])
-                                                  Padding(
-                                                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        border: Border(
-                                                          left: BorderSide(
-                                                            color: Colors.blue.shade300,
-                                                            width: 4,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                                                      child: MWTaggedText(
-                                                        capitalise(example),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            trailing: PopupMenuButton<String>(
-                                              icon: const Icon(Icons.more_vert, size: 18),
-                                              tooltip: "More actions",
-                                              onSelected: (value) {
-                                                if (value == 'delete') {
-                                                  setState(() {
-                                                    entry['definitions'].removeAt(defIndex);
-                                                    saveWord();
-                                                  });
-                                                }
-                                                else if (value == 'edit') {
-                                                  // Show popup to edit the definition
-                                                  showDialog(
-                                                    context: context,
-                                                    builder: (context) {
-                                                      final TextEditingController editController = TextEditingController(
-                                                        text: entry['definitions'][defIndex][0]['definition'],
-                                                      );
-                                                      return AlertDialog(
-                                                        title: const Text('Edit Definition'),
-                                                        content: SizedBox(
-                                                          width: double.infinity,
-                                                          child: TextField(
-                                                            controller: editController,
-                                                            autofocus: true,
-                                                            maxLines: null,
-                                                            decoration: const InputDecoration(
-                                                              labelText: 'Definition',
-                                                              border: OutlineInputBorder(),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        actions: [
-                                                          TextButton(
-                                                            onPressed: () => Navigator.of(context).pop(),
-                                                            child: const Text('Cancel'),
-                                                          ),
-                                                          ElevatedButton(
-                                                            onPressed: () {
-                                                              setState(() {
-                                                                entry['definitions'][defIndex][0]['definition'] = editController.text;
-                                                                saveWord(); 
-                                                              });
-                                                              Navigator.of(context).pop();
-                                                            },
-                                                            child: const Text('Save'),
-                                                          ),
-                                                        ],
-                                                      );
-                                                    },
-                                                  );
-                                                }
-                                              },
-                                              itemBuilder: (context) => [
-                                                const PopupMenuItem(
-                                                  value: 'edit',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.edit, size: 18, color: Colors.white),
-                                                      SizedBox(width: 8),
-                                                      Text('Edit'),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const PopupMenuItem(
-                                                  value: 'delete',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.delete, size: 18, color: Colors.red),
-                                                      SizedBox(width: 8),
-                                                      Text('Delete'),
-                                                    ],
-                                                  ),
-                                                ),
-                                                // Add more PopupMenuItem widgets here for more actions
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ) else Column(
-                                children: speechType.value['definitions'].asMap().entries.map<Widget>((entry) {
+                                    ),
+                                ],
+                              ) 
+                              
+                              
+                              
+                              
+                              
+                              
+                              
+                              
+                              
+                              
+                              
+                              else Column(
+                                children: organisedDefinitions.entries.map<Widget>((entry) {
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 6),
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         MWTaggedText(
-                                          "${entry.key + 1}. ",
+                                          "${entry.key}. ",
                                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                         ),
                                         Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              // Show the definition
-                                              Padding(
-                                                padding: const EdgeInsets.symmetric(vertical: 4),
-                                                child: MWTaggedText(
-                                                  "${entry.value['definition'] ?? ''}", //{b}${indexToLetter(entry.key)}){/b} 
-                                                  style: const TextStyle(fontSize: 16),
-                                                ),
-                                              ),
-                                              // Show examples if any
-                                              if (entry.value['example'] != null)
-                                                for (String example in List<String>.from(entry.value['example']))
-                                                  Padding(
-                                                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        border: Border(
-                                                          left: BorderSide(
-                                                            color: Colors.blue.shade300,
-                                                            width: 4,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                                                      child: MWTaggedText(
-                                                        capitalise(example),
-                                                      ),
-                                                    ),
-                                                  ),
-                                            ],
-                                          ),
+                                          child: _buildDefinitionLayer(entry.value),
                                         ),
                                       ],
                                     ),
                                   );
                                 }).toList(),
                               ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                               const SizedBox(height: 18),
                               
                               if (
@@ -1205,5 +1136,79 @@ class WordDetailsState extends State<WordDetails> {
         ),
       ),
     );
+  }
+
+  Widget _buildDefinitionLayer(dynamic layer, {String? letterKey}) {
+    if (layer is Map && layer.containsKey('definition')) {
+      // Case: {1: def} or {a: def}
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (letterKey != null)
+            MWTaggedText(
+              "{b}$letterKey){/b} ${layer['definition'] ?? ''}",
+              style: const TextStyle(fontSize: 16),
+            )
+          else
+            MWTaggedText(
+              "${layer['definition'] ?? ''}",
+              style: const TextStyle(fontSize: 16),
+            ),
+          if (layer['example'] != null)
+            ...List<String>.from(layer['example']).map((example) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          color: Colors.blue.shade300,
+                          width: 4,
+                        ),
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                    child: MWTaggedText(
+                      capitalise(example),
+                    ),
+                  ),
+                )),
+        ],
+      );
+    } else if (layer is Map) {
+      // Case: {a: def} or {a: {1: def}}
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: layer.entries.map<Widget>((entry) {
+          final key = entry.key;
+          final value = entry.value;
+          if (value is Map && value.keys.every((k) => k is int)) {
+            // Case: {a: {1: def, 2: def}}
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MWTaggedText(
+                  "{b}$key){/b}",
+                  style: const TextStyle(fontSize: 16),
+                ),
+                ...value.entries.map<Widget>((subEntry) {
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 16, bottom: 4),
+                    child: _buildDefinitionLayer(subEntry.value),
+                  );
+                }),
+              ],
+            );
+          } else {
+            // Case: {a: def}
+            return Padding(
+              padding: const EdgeInsets.only(left: 8, bottom: 4),
+              child: _buildDefinitionLayer(value, letterKey: key),
+            );
+          }
+        }).toList(),
+      );
+    } else {
+      return const SizedBox.shrink();
+    }
   }
 }

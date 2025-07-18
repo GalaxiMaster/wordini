@@ -44,6 +44,9 @@ Future<Map> getWordDetails(String word) async {
           // var dataWordId = mainData['meta']['id'].split(':')[0].replaceAll(RegExp(r'[\s-]+'), '').toLowerCase();
           final bool inStems = mainData['meta']['stems'].contains(word);
           debugPrint(inStems.toString());
+          if (mainData['meta']['id'].split(':')[0].toLowerCase() != word.toLowerCase()) {
+            continue; 
+          }
           if (!inStems) continue;
           try {
             String partOfSpeech = mainData['fl'] ?? '';
@@ -52,7 +55,7 @@ Future<Map> getWordDetails(String word) async {
               partOfSpeech = '$partOfSpeech:$i';
               i++;
             }
-            if (partOfSpeech.isEmpty) partOfSpeech = 'unknown';
+            if (partOfSpeech.isEmpty) continue;
             if (wordDetails['entries'][partOfSpeech] == null) {
               wordDetails['entries'][partOfSpeech] = {
                 'synonyms': {},
@@ -62,7 +65,7 @@ Future<Map> getWordDetails(String word) async {
                 // 'details': []
               };
             }
-            final defs = parseDefinitions(mainData['def'][0]);
+             
             wordDetails['entries'][partOfSpeech]['shortDefs'] = mainData['shortdef'] ?? [];
             wordDetails['entries'][partOfSpeech]['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
             wordDetails['entries'][partOfSpeech]['stems'] = mainData['meta']?['stems'] ?? [];
@@ -72,10 +75,12 @@ Future<Map> getWordDetails(String word) async {
             wordDetails['entries'][partOfSpeech]['partOfSpeech'] = mainData['fl'] ?? '';
             wordDetails['entries'][partOfSpeech]['quotes'].addAll(mainData['quotes'] ?? []);
             
-            if (defs.isEmpty) {
+            if (mainData['def'][0].isEmpty) {
               debugPrint('No definitions found for "$word" in part of speech "$partOfSpeech".');
               continue; // Skip if no definitions found
             }
+            final defs = parseDefinitions(mainData['def'][0]);
+
             wordDetails['entries'][partOfSpeech]['definitions'] = defs;
             // wordDetails['entries'][partOfSpeech]['details'].add(wordDeets);
           } catch (e) {
@@ -109,6 +114,7 @@ Future<Map> getWordDetails(String word) async {
 
     debugPrint(response.toString());
     wordDetails['entries'] = validateWordData(wordDetails['entries']);
+
     return wordDetails;
   } catch (e) {
     if (e is FormatException) rethrow;
@@ -119,6 +125,86 @@ Future<Map> getWordDetails(String word) async {
       'entries': {},
     };
   }
+}
+
+Map<int, dynamic> organizeDefinitions(List definitionsList) {
+  var organizedDefs = <int, dynamic>{};
+
+  String toLetter(int n) {
+    // 97 is the ASCII value for 'a'.
+    return String.fromCharCode(97 + n - 1);
+  }
+
+  for (var definition in definitionsList) {
+    final sn = definition['sn'];
+
+    if (sn == null || sn.isEmpty) {
+      debugPrint("Warning: Skipping definition with no 'sn': $definition");
+      continue;
+    }
+
+    try {
+      final parts = sn.split(' ').map((p) => int.parse(p)).toList();
+      if (parts.length != 3) {
+        throw FormatException("Sequence number must have three parts.");
+      }
+      final p1 = parts[0];
+      final p2 = parts[1];
+      final p3 = parts[2];
+
+      // Ensure the main key (e.g., 1, 2) exists in the map
+      organizedDefs.putIfAbsent(p1, () => <String, dynamic>{});
+      final Map mainEntry = organizedDefs[p1] as Map<String, dynamic>;
+
+      // Process the second level (the letter)
+      if (p2 != -1) {
+        final letterKey = toLetter(p2);
+
+        // Process the third level (the sub-definition number)
+        if (p3 != -1) {
+          // This is a deeply nested definition, e.g., 1 a (1).
+          var container = mainEntry[letterKey];
+
+          // Ensure we have a valid map to hold sub-definitions.
+          // If something is already here that isn't a container, it's a conflict.
+          if (container != null && container is! Map) {
+             debugPrint("Warning: Conflict at sn '$sn'. Cannot add nested definition where a simple definition already exists. Skipping.");
+             continue;
+          }
+          
+          if (container == null) {
+              container = <int, dynamic>{};
+              mainEntry[letterKey] = container;
+          }
+          
+          // Add the full definition map to the sub-definition container.
+          (container as Map)[p3] = definition;
+
+        } else {
+          // This is a definition at the letter level, e.g., 2 a
+           var existingEntry = mainEntry[letterKey];
+    
+          // Check if a container for nested definitions already exists, which is a conflict.
+          if (existingEntry != null && existingEntry is Map && existingEntry.keys.every((k) => k is int)) {
+              debugPrint("Warning: Conflict at sn '$sn'. Cannot add simple definition where a nested container already exists. Skipping.");
+              continue;
+          }
+          mainEntry[letterKey] = definition;
+        }
+      } else {
+        // This case handles a definition that only has a primary number, e.g., '1 -1 -1'
+        // Note: This would overwrite any lettered sub-definitions under the same number.
+        organizedDefs[p1] = definition; 
+        // handled differently as the others rely on it being a reference
+        debugPrint('checkmate');
+      }
+    } catch (e) {
+      debugPrint("Warning: Skipping definition with invalid 'sn' format '$sn': $e");
+      continue;
+    }
+  }
+
+  return organizedDefs;
 }
 
 Map validateWordData(Map data){
@@ -185,7 +271,7 @@ Map<String, Map<String, dynamic>> parseSynonyms(Map entry) {
 // Improved parseDefinitions to preserve sn and flatten for easier rendering
 List<Map<String, dynamic>> parseDefinitions(Map data) {
   final List<List<dynamic>> sseq = List.from(data['sseq']);
-  int defSNnum = -1;
+  int defSNnum = 1;
   int defSNsub = -1;
   int defSNsub2 = -1;
 
@@ -218,6 +304,9 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
           defSNsub2 = int.tryParse(nums[0].replaceAll(RegExp(r'[^0-9]'), '')) ?? -1;
         }
         sn = [defSNnum, defSNsub, defSNsub2].join(' ');
+      } else{
+        sn = '$defSNnum -1 -1'; // Default to current number if no sn
+        defSNnum++;
       }
     } catch (e) {
       debugPrint('Error parsing sense number: $e');
@@ -234,6 +323,7 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
         final dt = List.from(sense['dt']);
         String defText = '';
         List<String> examples = [];
+      
         for (var entry in dt) {
           if (entry[0] == 'text') {
             defText += entry[1].trim() + ' ';
@@ -243,8 +333,9 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
             }
           }
         }
+
+        if (defText.isEmpty) continue;
         String sn = getSN(sense);
-        if (cleanText(defText).isEmpty) continue;
 
         senses.add({
           'sn': sn,
@@ -253,8 +344,10 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
         });
       } else if (item[0] == 'pseq') {
         senses.addAll(extractSenses(item[1]));
-      } else if (item[0] == 'sen'){
+      } else if (item[0] == 'sen') {
         getSN(item[1]);
+      }else if (item[0] == 'bs'){
+        getSN(item[1]['sense']);
       }
     }
     return senses;

@@ -535,9 +535,7 @@ class WordListState extends State<WordList> {
   Map getFirstData(Map words, String word) {
     Map entries = words[word]['entries']; // ?.first?.value['details']?.first
     for (MapEntry entry in entries.entries){
-      for (Map detailEntry in entry.value['details']){
-        return detailEntry;
-      }
+        return entry.value;
     }
     return {};
   }
