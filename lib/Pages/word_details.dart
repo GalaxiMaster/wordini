@@ -504,24 +504,44 @@ class WordDetailsState extends State<WordDetails> {
     }
   }
   
-  void updateDefinitionSequenceNumbers(List definitions) {
-    for (int i = 0; i < definitions.length; i++) {
-      // Top-level index (starts at 1)
-      int main = i + 1;
-      // Try to parse existing sn for nesting
-      String oldSn = definitions[i]['sn'] ?? '';
-      List<String> parts = oldSn.split(' ');
-      // If only top-level, set as 'main -1 -1'
-      if (parts.length < 2 || parts[1] == '-1') {
-        definitions[i]['sn'] = '$main -1 -1';
-      } else if (parts.length == 3) {
-        // If letter and/or sub-number exist, preserve them
-        definitions[i]['sn'] = '$main ${parts[1]} ${parts[2]}';
-      } else {
-        // Fallback
-        definitions[i]['sn'] = '$main -1 -1';
+  void reorderAndRenumberDefinitions(List<Map<String, dynamic>> definitions, int oldIndex, int newIndex) {
+    // 1. Group all definitions by their main sequence number.
+    final Map<String, List<Map<String, dynamic>>> groups = {};
+    for (final def in definitions) {
+      final String mainKey = (def['sn'] as String).split(' ').first;
+      groups.putIfAbsent(mainKey, () => []).add(def);
+    }
+
+    // 2. Create an ordered list of these groups.
+    final sortedKeys = groups.keys.toList()
+      ..sort((a, b) => int.parse(a).compareTo(int.parse(b)));
+    final List<List<Map<String, dynamic>>> orderedGroups =
+        sortedKeys.map((key) => groups[key]!.cast<Map<String, dynamic>>()).toList();
+
+    // 3. Reorder the GROUPS based on the drag-and-drop action.
+    final movedGroup = orderedGroups.removeAt(oldIndex);
+    orderedGroups.insert(newIndex, movedGroup);
+
+    // 4. Flatten the list and update the main sequence number for each group.
+    final List<Map<String, dynamic>> newDefinitions = [];
+    for (int i = 0; i < orderedGroups.length; i++) {
+      final int newMainNumber = i + 1;
+      final group = orderedGroups[i];
+      for (final def in group) {
+        final List<String> parts = (def['sn'] as String).split(' ');
+        def['sn'] = [
+          '$newMainNumber',
+          if (parts.length > 1) parts[1],
+          if (parts.length > 2) parts[2]
+        ].where((e) => e.isNotEmpty).join(' ');
+        newDefinitions.add(def);
       }
     }
+
+    // 5. Replace the old definitions list with the correctly reordered one.
+    definitions
+      ..clear()
+      ..addAll(newDefinitions);
   }
   
   @override
@@ -714,14 +734,29 @@ class WordDetailsState extends State<WordDetails> {
                               ReorderableListView(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
-                                onReorder: (oldIndex, newIndex) {
-                                  setState(() {
-                                    if (newIndex > oldIndex) newIndex -= 1;
-                                    final item = speechType.value['definitions'].removeAt(oldIndex);
-                                    speechType.value['definitions'].insert(newIndex, item);
-                                    saveWord();
-                                  });
-                                },
+onReorder: (oldIndex, newIndex) {
+  setState(() {
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
+    }
+
+    // Cast the list to the correct type before passing it to the function.
+    final definitionsList = speechType.value['definitions']
+        .cast<Map<String, dynamic>>()
+        .toList();
+
+    reorderAndRenumberDefinitions(
+      definitionsList,
+      oldIndex,
+      newIndex,
+    );
+
+    // Update the original list with the reordered data
+    speechType.value['definitions'] = definitionsList;
+    
+    saveWord();
+  });
+},
                                 children: [
                                   for (final entry in organisedDefinitions.entries)
                                     Padding(
