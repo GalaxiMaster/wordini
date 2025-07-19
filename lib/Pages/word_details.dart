@@ -11,16 +11,22 @@ class WordDetails extends StatefulWidget {
   final bool editModeState;
   final List activatedElements;
   final String? initialIndex;
+
   const WordDetails({
-    super.key, 
-    required this.word, 
-    required this.allTags, 
-    this.addWordMode = false, 
-    this.editModeState = false, 
+    super.key,
+    required this.word,
+    required this.allTags,
+    this.addWordMode = false,
+    this.editModeState = false,
     this.initialIndex,
-    this.activatedElements = const ['synonyms', 'etymology', 'quotes', 'quizHistory']
+    this.activatedElements = const [
+      'synonyms',
+      'etymology',
+      'quotes',
+      'quizHistory'
+    ],
   });
-  
+
   @override
   WordDetailsState createState() => WordDetailsState();
 }
@@ -29,7 +35,7 @@ class WordDetailsState extends State<WordDetails> {
   late final PageController _controller;
   late double currentPage;
   bool editMode = false;
-  late Map word;
+  late Map wordState;
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _tagOverlayEntry;
   final TextEditingController _tagController = TextEditingController();
@@ -40,428 +46,469 @@ class WordDetailsState extends State<WordDetails> {
   @override
   void initState() {
     super.initState();
-    word = widget.word;
-    allTags = widget.allTags;
-    _controller = PageController(initialPage: widget.initialIndex != null ? getIndexOfSpeechPart(word, widget.initialIndex!) : 0);
-    currentPage = _controller.initialPage.toDouble();
-    _controller.addListener(() {
-      setState(() {
-        currentPage = _controller.page ?? 0;
-      });
-    });
-    getInputs();
-    if (widget.editModeState){
-      editMode = widget.editModeState;
-      // start by opening the new entry popup (designed for coming from manual entry)
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _addSpeechPart();
+    wordState = Map.from(
+      widget.word.map((key, value) {
+        if (value is Map) return MapEntry(key, Map.from(value));
+        if (value is List) return MapEntry(key, List.from(value));
+        return MapEntry(key, value);
+      }),
+    );
+    if (wordState.containsKey('entries')) {
+      final entries = wordState['entries'] as Map;
+      for (var speechPartKey in entries.keys) {
+        final speechPartData = entries[speechPartKey] as Map;
+        if (speechPartData.containsKey('definitions')) {
+          speechPartData['definitions'] =
+              organizeDefinitions(speechPartData['definitions']);
         }
+      }
+    }
+
+    allTags = widget.allTags;
+    _controller = PageController(
+        initialPage: widget.initialIndex != null
+            ? getIndexOfSpeechPart(wordState, widget.initialIndex!)
+            : 0);
+    currentPage = _controller.initialPage.toDouble();
+    _controller.addListener(() => setState(() => currentPage = _controller.page ?? 0));
+    getInputs();
+    if (widget.editModeState) {
+      editMode = widget.editModeState;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _addSpeechPart();
       });
     }
   }
+
   int getIndexOfSpeechPart(Map word, String partOfSpeech) {
     int index = 0;
-    for (var entry in word['entries'].keys.toList().asMap().entries){
-      if (entry.value == partOfSpeech){
-        index = entry.key;
-      }
+    for (var entry in word['entries'].keys.toList().asMap().entries) {
+      if (entry.value == partOfSpeech) index = entry.key;
     }
     return index;
   }
 
-  void _addSpeechPart() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final TextEditingController speechPartController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Add Speech Part'),
-          content: TextField(
-            controller: speechPartController,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Speech Part (e.g. noun, verb, adjective)',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final speechPart = speechPartController.text.trim().toLowerCase();
-                if (speechPart.isNotEmpty && !word['entries'].containsKey(speechPart)) {
-                  setState(() {
-                    word['entries'][speechPart] = {
-                      'partOfSpeech': speechPart,
-                      'selected': false,
-                      'details': [],
-                      'synonyms': {},
-                      'etymology': '',
-                      'quotes': [],
-                    };
-                    saveWord();
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
+  List<Map> _deconstructAndRenumber(Map organisedMap) {
+    final List<Map> flatList = [];
+    // Ensure keys are treated as integers for sorting
+    final sortedLevel1Keys = organisedMap.keys.cast<int>().toList()..sort();
+
+    for (var level1Key in sortedLevel1Keys) {
+      final node = organisedMap[level1Key];
+      if (node.containsKey('definition')) {
+        flatList.add({
+          'sn': '$level1Key -1 -1',
+          'definition': node['definition'],
+          'example': node['example'] ?? [],
+        });
+      } else {
+        _deconstructRecursive(node, level1Key.toString(), flatList);
+      }
+    }
+    return flatList;
   }
-  
-  void _addDefinition(speechPart) {
-    setState((){
-      word['entries'][speechPart]['definitions'].add({
-        'sn': '',
-        'definition': '',
-        'example': [],
-      });
+
+  void _deconstructRecursive(Map node, String level1Key, List<Map> flatList) {
+    final sortedLevel2Keys = node.keys.cast<String>().toList()..sort();
+
+    for (var level2Key in sortedLevel2Keys) {
+      final subNode = node[level2Key];
+      final level2Num =
+          (level2Key.codeUnitAt(0) - 'a'.codeUnitAt(0) + 1).toString();
+
+      if (subNode.containsKey('definition')) {
+        flatList.add({
+          'sn': '$level1Key $level2Num -1',
+          'definition': subNode['definition'],
+          'example': subNode['example'] ?? [],
+        });
+      } else {
+        // FIX: Explicitly cast keys to int before sorting to avoid TypeError.
+        final sortedLevel3Keys = subNode.keys.cast<int>().toList()..sort();
+        for (var level3Key in sortedLevel3Keys) {
+          final leafNode = subNode[level3Key];
+          if (leafNode.containsKey('definition')) {
+            flatList.add({
+              'sn': '$level1Key $level2Num $level3Key',
+              'definition': leafNode['definition'],
+              'example': leafNode['example'] ?? [],
+            });
+          }
+        }
+      }
+    }
+  }
+
+  void _reorderSubDefinitions(List<dynamic> path, int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex -= 1;
+
+      dynamic target = wordState;
+      for (final key in path) {
+        target = target[key];
+      }
+      Map reorderableMap = target as Map;
+
+      final items = reorderableMap.entries.toList()
+        ..sort((a, b) => a.key.compareTo(b.key));
+      final movedItem = items.removeAt(oldIndex);
+      items.insert(newIndex, movedItem);
+
+      if (items.isEmpty) return;
+
+      // Determine if keys are numeric (int) or alphabetic (String)
+      final bool isNumeric = items.first.key is int;
+      final newMap = <dynamic, dynamic>{};
+      for (int i = 0; i < items.length; i++) {
+        // Create new keys as int or String, not string representations of numbers
+        final dynamic newKey =
+            isNumeric ? (i + 1) : String.fromCharCode('a'.codeUnitAt(0) + i);
+        newMap[newKey] = items[i].value;
+      }
+
+      dynamic parent = wordState;
+      for (int i = 0; i < path.length - 1; i++) {
+        parent = parent[path[i]];
+      }
+      parent[path.last] = newMap;
+
+      saveWord();
     });
   }
 
-  void _addDefinitionEntry(Map speechTypeValue, index) {
+  void _addSpeechPart() {
     showDialog(
-      context: context,
-      builder: (context) {
-        final TextEditingController definitionController = TextEditingController();
-        final TextEditingController exampleController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Add Definition'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: definitionController,
-                autofocus: true,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Definition',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: exampleController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Example (optional)',
-                  border: OutlineInputBorder(),
-                ),
+        context: context,
+        builder: (context) {
+          final TextEditingController speechPartController =
+              TextEditingController();
+          return AlertDialog(
+            title: const Text('Add Speech Part'),
+            content: TextField(
+              controller: speechPartController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                  labelText: 'Speech Part (e.g. noun, verb, adjective)',
+                  border: OutlineInputBorder()),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: () {
+                  final speechPart = speechPartController.text.trim().toLowerCase();
+                  if (speechPart.isNotEmpty &&
+                      !wordState['entries'].containsKey(speechPart)) {
+                    setState(() {
+                      wordState['entries'][speechPart] = {
+                        'partOfSpeech': speechPart,
+                        'selected': false,
+                        'definitions': {},
+                        'synonyms': {},
+                        'etymology': '',
+                        'quotes': []
+                      };
+                      saveWord();
+                    });
+                  }
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Add'),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final definition = definitionController.text.trim();
-                if (definition.isNotEmpty) {
-                  setState(() {
-                    final newDefinition = [{
-                      'definition': definition,
-                      'example': exampleController.text.trim().isEmpty 
-                          ? [] 
-                          : [exampleController.text.trim()],
-                    }];
-                    speechTypeValue[index]['definitions'].add(newDefinition);
-                    // saveWord();
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
+          );
+        });
+  }
+
+  void _addDefinition(String speechPartKey) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          final TextEditingController definitionController =
+              TextEditingController();
+          final TextEditingController exampleController = TextEditingController();
+          return AlertDialog(
+            title: const Text('Add Definition'),
+            content: Column(mainAxisSize: MainAxisSize.min, children: [
+              TextField(
+                  controller: definitionController,
+                  autofocus: true,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                      labelText: 'Definition', border: OutlineInputBorder())),
+              const SizedBox(height: 16),
+              TextField(
+                  controller: exampleController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                      labelText: 'Example (optional)',
+                      border: OutlineInputBorder())),
+            ]),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: () {
+                  final definition = definitionController.text.trim();
+                  if (definition.isNotEmpty) {
+                    setState(() {
+                      final Map speechPartData = wordState['entries'][speechPartKey];
+                      final Map organisedDefinitions =
+                          speechPartData['definitions'];
+                      // Create a new key as an integer
+                      final int newKey = organisedDefinitions.length + 1;
+                      organisedDefinitions[newKey] = {
+                        'definition': definition,
+                        'example': exampleController.text.trim().isEmpty
+                            ? []
+                            : [exampleController.text.trim()]
+                      };
+                      saveWord();
+                    });
+                  }
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          );
+        });
   }
 
   void _addSynonym(Map speechTypeValue) {
     showDialog(
-      context: context,
-      builder: (context) {
-        final TextEditingController synonymController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Add Synonym'),
-          content: TextField(
-            controller: synonymController,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Synonym',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final synonym = synonymController.text.trim();
-                if (synonym.isNotEmpty) {
-                  setState(() {
-                    speechTypeValue['synonyms'] ??= {};
-                    speechTypeValue['synonyms'][synonym] = {};
-                    saveWord();
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
+        context: context,
+        builder: (context) {
+          final TextEditingController synonymController = TextEditingController();
+          return AlertDialog(
+            title: const Text('Add Synonym'),
+            content: TextField(
+                controller: synonymController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                    labelText: 'Synonym', border: OutlineInputBorder())),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: () {
+                  final synonym = synonymController.text.trim();
+                  if (synonym.isNotEmpty) {
+                    setState(() {
+                      speechTypeValue['synonyms'] ??= {};
+                      speechTypeValue['synonyms'][synonym] = {};
+                      saveWord();
+                    });
+                  }
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          );
+        });
   }
 
   void _editEtymology(Map speechTypeValue) {
     showDialog(
-      context: context,
-      builder: (context) {
-        final TextEditingController etymologyController = TextEditingController(
-          text: speechTypeValue['etymology'] ?? '',
-        );
-        return AlertDialog(
-          title: const Text('Edit Etymology'),
-          content: TextField(
-            controller: etymologyController,
-            autofocus: true,
-            maxLines: 4,
-            decoration: const InputDecoration(
-              labelText: 'Etymology',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  speechTypeValue['etymology'] = etymologyController.text.trim();
+        context: context,
+        builder: (context) {
+          final TextEditingController etymologyController =
+              TextEditingController(text: speechTypeValue['etymology'] ?? '');
+          return AlertDialog(
+            title: const Text('Edit Etymology'),
+            content: TextField(
+                controller: etymologyController,
+                autofocus: true,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                    labelText: 'Etymology', border: OutlineInputBorder())),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() =>
+                      speechTypeValue['etymology'] = etymologyController.text.trim());
                   saveWord();
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        });
   }
 
   void _addQuote(Map speechTypeValue) {
     showDialog(
-      context: context,
-      builder: (context) {
-        final TextEditingController quoteController = TextEditingController();
-        final TextEditingController authorController = TextEditingController();
-        final TextEditingController dateController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Add Quote'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+        context: context,
+        builder: (context) {
+          final TextEditingController quoteController = TextEditingController();
+          final TextEditingController authorController = TextEditingController();
+          final TextEditingController dateController = TextEditingController();
+          return AlertDialog(
+            title: const Text('Add Quote'),
+            content: Column(mainAxisSize: MainAxisSize.min, children: [
               TextField(
-                controller: quoteController,
-                autofocus: true,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Quote',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+                  controller: quoteController,
+                  autofocus: true,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                      labelText: 'Quote', border: OutlineInputBorder())),
               const SizedBox(height: 16),
               TextField(
-                controller: authorController,
-                decoration: const InputDecoration(
-                  labelText: 'Author',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+                  controller: authorController,
+                  decoration: const InputDecoration(
+                      labelText: 'Author', border: OutlineInputBorder())),
               const SizedBox(height: 16),
               TextField(
-                controller: dateController,
-                decoration: const InputDecoration(
-                  labelText: 'Date/Year',
-                  border: OutlineInputBorder(),
-                ),
+                  controller: dateController,
+                  decoration: const InputDecoration(
+                      labelText: 'Date/Year', border: OutlineInputBorder())),
+            ]),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: () {
+                  final quote = quoteController.text.trim();
+                  final author = authorController.text.trim();
+                  final date = dateController.text.trim();
+                  if (quote.isNotEmpty && author.isNotEmpty) {
+                    setState(() {
+                      speechTypeValue['quotes'] ??= [];
+                      speechTypeValue['quotes'].add({
+                        't': quote,
+                        'aq': {
+                          'auth': author,
+                          'aqdate': date.isEmpty ? 'Unknown' : date
+                        }
+                      });
+                      saveWord();
+                    });
+                  }
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Add'),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final quote = quoteController.text.trim();
-                final author = authorController.text.trim();
-                final date = dateController.text.trim();
-                
-                if (quote.isNotEmpty && author.isNotEmpty) {
-                  setState(() {
-                    speechTypeValue['quotes'] ??= [];
-                    speechTypeValue['quotes'].add({
-                      't': quote,
-                      'aq': {
-                        'auth': author,
-                        'aqdate': date.isEmpty ? 'Unknown' : date,
-                      }
-                    });
-                    saveWord();
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
+          );
+        });
   }
 
-  void _deleteSynonym(Map speechTypeValue, String synonym) {
-    setState(() {
-      speechTypeValue['synonyms']?.remove(synonym);
-      saveWord();
-    });
-  }
-
-  void _deleteQuote(Map speechTypeValue, int index) {
-    setState(() {
-      speechTypeValue['quotes']?.removeAt(index);
-      saveWord();
-    });
-  }
+  void _deleteSynonym(Map speechTypeValue, String synonym) => setState(() {
+        speechTypeValue['synonyms']?.remove(synonym);
+        saveWord();
+      });
+  void _deleteQuote(Map speechTypeValue, int index) => setState(() {
+        speechTypeValue['quotes']?.removeAt(index);
+        saveWord();
+      });
 
   void _showTagPopup(BuildContext context) {
     if (_tagOverlayEntry != null) return;
     final overlay = Overlay.of(context);
     _tagController.clear();
-
     _tagOverlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          // Dismiss when tapping outside
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () {
-                _hideTagPopup();
-              },
-              child: Container(
-                color: Colors.transparent,
-              ),
-            ),
-          ),
-          // The popup itself
-          CompositedTransformFollower(
-            link: _layerLink,
-            showWhenUnlinked: false,
-            offset: const Offset(0, 40),
-            child: StatefulBuilder(
-              builder: (context,setPopupState) {
-                return Material(
-                  elevation: 4,
-                  borderRadius: BorderRadius.circular(10),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: SizedBox(
-                      width: 220,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            height: 44,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _tagController,
-                                    focusNode: _tagFocusNode,
-                                    autofocus: true,
-                                    decoration: const InputDecoration(
-                                      hintText: "Add tag...",
-                                      border: InputBorder.none,
-                                    ),
-                                    onSubmitted: (value) {
-                                      _addTag(value);
-                                    },
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.check),
-                                  onPressed: () {
-                                    _addTag(_tagController.text);
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                          Divider(color: Colors.white,),
-                          ListView(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            children: (allTags.isEmpty
-                                ? [const ListTile(title: Text("No tags available", style: TextStyle(fontSize: 16)))]
-                                : allTags.map((tag) => ListTile(
-                                    leading: (word['tags'] ?? []).contains(tag) ? const Icon(Icons.check, size: 20) : null,
-                                    title: Text(tag, style: const TextStyle(fontSize: 16)),
-                                    onTap: () {
-                                      setState(() {
-                                        if ((word['tags'] ?? []).contains(tag)) {
-                                          _removeTag(tag);
-                                        } else {
-                                          _addTag(tag);
-                                        }
-                                      });
-                                      // _hideTagPopup();
-                                      setPopupState(() {});
-
-                                    },
-                                  )).toList()),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }
-            ),
-          ),
-        ],
-      ),
-    );
-    if (_tagOverlayEntry == null) {
-      overlay.insert(_tagOverlayEntry!);
-    }
+        builder: (context) => Stack(children: [
+              Positioned.fill(
+                  child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: _hideTagPopup,
+                      child: Container(color: Colors.transparent))),
+              CompositedTransformFollower(
+                  link: _layerLink,
+                  showWhenUnlinked: false,
+                  offset: const Offset(0, 40),
+                  child: StatefulBuilder(
+                      builder: (context, setPopupState) => Material(
+                          elevation: 4,
+                          borderRadius: BorderRadius.circular(10),
+                          child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              child: SizedBox(
+                                  width: 220,
+                                  child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        SizedBox(
+                                            height: 44,
+                                            child: Row(children: [
+                                              Expanded(
+                                                  child: TextField(
+                                                      controller: _tagController,
+                                                      focusNode: _tagFocusNode,
+                                                      autofocus: true,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                              hintText:
+                                                                  "Add tag...",
+                                                              border: InputBorder
+                                                                  .none),
+                                                      onSubmitted: _addTag)),
+                                              IconButton(
+                                                  icon: const Icon(Icons.check),
+                                                  onPressed: () => _addTag(
+                                                      _tagController.text)),
+                                            ])),
+                                        const Divider(color: Colors.white),
+                                        ListView(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8),
+                                            shrinkWrap: true,
+                                            physics:
+                                                const NeverScrollableScrollPhysics(),
+                                            children: (allTags.isEmpty
+                                                ? [
+                                                    const ListTile(
+                                                        title: Text(
+                                                            "No tags available",
+                                                            style: TextStyle(
+                                                                fontSize: 16)))
+                                                  ]
+                                                : allTags
+                                                    .map((tag) => ListTile(
+                                                          leading: (wordState[
+                                                                          'tags'] ??
+                                                                      [])
+                                                                  .contains(tag)
+                                                              ? const Icon(
+                                                                  Icons.check,
+                                                                  size: 20)
+                                                              : null,
+                                                          title: Text(tag,
+                                                              style: const TextStyle(
+                                                                  fontSize:
+                                                                      16)),
+                                                          onTap: () {
+                                                            setState(() {
+                                                              (wordState[
+                                                                              'tags'] ??
+                                                                          [])
+                                                                      .contains(
+                                                                          tag)
+                                                                  ? _removeTag(
+                                                                      tag)
+                                                                  : _addTag(
+                                                                      tag);
+                                                            });
+                                                            setPopupState(
+                                                                () {});
+                                                          },
+                                                        ))
+                                                    .toList())),
+                                      ])))))),
+            ]));
     overlay.insert(_tagOverlayEntry!);
-
-    // Focus after frame to ensure popup is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _tagFocusNode.canRequestFocus) {
-        _tagFocusNode.requestFocus();
-      }
+      if (mounted && _tagFocusNode.canRequestFocus) _tagFocusNode.requestFocus();
     });
   }
 
@@ -474,76 +521,45 @@ class WordDetailsState extends State<WordDetails> {
     if (value.trim().isEmpty) return;
     setState(() {
       allTags.add(value.trim());
-      word['tags'] ??= [];
-      if (!word['tags'].contains(value.trim())) {
-        word['tags'].add(value.trim());
+      wordState['tags'] ??= [];
+      if (!wordState['tags'].contains(value.trim())) {
+        wordState['tags'].add(value.trim());
         saveWord();
       }
     });
   }
 
-  void _removeTag(String tag) {
-    setState(() {
-      word['tags']?.remove(tag);
-      saveWord();
-    });
-  }
+  void _removeTag(String tag) => setState(() {
+        wordState['tags']?.remove(tag);
+        saveWord();
+      });
 
   void getInputs() async {
-    final data = await readKey(word['word'], path: 'inputs');
-    if (data != null) {
-      setState(() {
-        inputs = data;
-      });
-    }
+    final data = await readKey(wordState['word'], path: 'inputs');
+    if (data != null) setState(() => inputs = data);
   }
-  
-  void saveWord(){
-    if (!widget.addWordMode && word['word'] != null){
-      writeKey(word['word'], word);
-    }
-  }
-  
-  void reorderAndRenumberDefinitions(List<Map<String, dynamic>> definitions, int oldIndex, int newIndex) {
-    // 1. Group all definitions by their main sequence number.
-    final Map<String, List<Map<String, dynamic>>> groups = {};
-    for (final def in definitions) {
-      final String mainKey = (def['sn'] as String).split(' ').first;
-      groups.putIfAbsent(mainKey, () => []).add(def);
-    }
 
-    // 2. Create an ordered list of these groups.
-    final sortedKeys = groups.keys.toList()
-      ..sort((a, b) => int.parse(a).compareTo(int.parse(b)));
-    final List<List<Map<String, dynamic>>> orderedGroups =
-        sortedKeys.map((key) => groups[key]!.cast<Map<String, dynamic>>()).toList();
+  void saveWord({bool save = false}) {
+    if ((!widget.addWordMode && wordState['word'] != null) || save) {
+      final Map wordToSave = {
+        ...wordState,
+        'entries': Map.from(wordState['entries'].map((key, value) {
+          return MapEntry(key, Map.from(value));
+        })),
+      };
 
-    // 3. Reorder the GROUPS based on the drag-and-drop action.
-    final movedGroup = orderedGroups.removeAt(oldIndex);
-    orderedGroups.insert(newIndex, movedGroup);
-
-    // 4. Flatten the list and update the main sequence number for each group.
-    final List<Map<String, dynamic>> newDefinitions = [];
-    for (int i = 0; i < orderedGroups.length; i++) {
-      final int newMainNumber = i + 1;
-      final group = orderedGroups[i];
-      for (final def in group) {
-        final List<String> parts = (def['sn'] as String).split(' ');
-        def['sn'] = [
-          '$newMainNumber',
-          if (parts.length > 1) parts[1],
-          if (parts.length > 2) parts[2]
-        ].where((e) => e.isNotEmpty).join(' ');
-        newDefinitions.add(def);
+      final entries = wordToSave['entries'] as Map;
+      for (var speechPartKey in entries.keys) {
+        final speechPartData = entries[speechPartKey];
+        if (speechPartData.containsKey('definitions')) {
+          speechPartData['definitions'] =
+              _deconstructAndRenumber(speechPartData['definitions']);
+        }
       }
+      writeKey(wordState['word'], wordToSave);
     }
-
-    // 5. Replace the old definitions list with the correctly reordered one.
-    definitions
-      ..clear()
-      ..addAll(newDefinitions);
   }
-  
+
   @override
   void dispose() {
     _controller.dispose();
@@ -567,14 +583,18 @@ class WordDetailsState extends State<WordDetails> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: const Icon(Icons.arrow_back, color: Colors.white, size: 25),
-                        ),
                         onTap: () => Navigator.of(context).pop(),
+                        child: const Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 25,
+                          ),
+                        ),
                       ),
                       Text(
-                        capitalise(word['word']),
+                        capitalise(wordState['word']),
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -588,31 +608,39 @@ class WordDetailsState extends State<WordDetails> {
                             spacing: 6,
                             runSpacing: -4,
                             children: [
-                              for (var tag in word['tags'] ?? [])
+                              for (var tag in wordState['tags'] ?? [])
                                 Chip(
                                   label: MWTaggedText(
                                     tag,
                                     style: const TextStyle(fontSize: 16),
                                   ),
-                                  backgroundColor: const Color.fromARGB(255, 19, 54, 79),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  backgroundColor:
+                                      const Color.fromARGB(255, 19, 54, 79),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
                                   side: BorderSide.none,
-                                  labelPadding: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                                  labelPadding: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                    vertical: 3,
+                                  ),
                                 ),
                               if (editMode)
                                 IconButton(
                                   style: ButtonStyle(
-                                    backgroundColor: WidgetStateProperty.all<Color>(
-                                        const Color.fromARGB(255, 19, 54, 79)),
-                                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                                    backgroundColor:
+                                        WidgetStateProperty.all<Color>(
+                                      const Color.fromARGB(255, 19, 54, 79),
+                                    ),
+                                    shape: WidgetStateProperty.all<
+                                        RoundedRectangleBorder>(
                                       RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                     ),
                                   ),
-                                  onPressed: () {
-                                    _showTagPopup(context);
-                                  },
+                                  onPressed: () => _showTagPopup(context),
                                   icon: const Icon(Icons.add),
                                 ),
                             ],
@@ -626,504 +654,562 @@ class WordDetailsState extends State<WordDetails> {
                           tooltip: 'Add Speech Part',
                         ),
                       GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            editMode = !editMode;
-                          });
-                        },
+                        onTap: () => setState(() => editMode = !editMode),
                         child: Icon(
                           editMode ? Icons.edit_outlined : Icons.edit,
                           size: 30,
                         ),
-                      )
+                      ),
                     ],
                   ),
                   const SizedBox(height: 18),
                   SizedBox(
                     height: 10,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        double width = constraints.maxWidth;
-                        int totalPages = word['entries'].length;
-                        double indicatorWidth = width / (totalPages == 0 ? 1 : totalPages);
-                        return Stack(
-                          children: [
-                            Container(
-                              width: width,
-                              height: 4,
-                              color: Colors.transparent,
-                            ),
-                            AnimatedPositioned(
-                              duration: const Duration(milliseconds: 150),
-                              curve: Curves.easeOutQuint,
-                              left: indicatorWidth * currentPage,
-                              child: Container(
+                    child: LayoutBuilder(builder: (context, constraints) {
+                      double width = constraints.maxWidth;
+                      int totalPages = wordState['entries'].length;
+                      double indicatorWidth =
+                          width / (totalPages == 0 ? 1 : totalPages);
+                      return Stack(children: [
+                        Container(
+                            width: width, height: 4, color: Colors.transparent),
+                        AnimatedPositioned(
+                            duration: const Duration(milliseconds: 150),
+                            curve: Curves.easeOutQuint,
+                            left: indicatorWidth * currentPage,
+                            child: Container(
                                 width: indicatorWidth,
                                 height: 4,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
+                                color: Colors.blue)),
+                      ]);
+                    }),
                   ),
                   const SizedBox(height: 10),
                   Expanded(
                     child: PageView.builder(
                       controller: _controller,
-                      itemCount: word['entries'].length,
+                      itemCount: wordState['entries'].length,
                       itemBuilder: (context, index) {
-                        MapEntry speechType = word['entries'].entries.toList().elementAt(index);
-                        Map organisedDefinitions = organizeDefinitions(speechType.value['definitions']);
-                        // Inputs are already fetched in initState
+                        MapEntry speechType =
+                            wordState['entries'].entries.toList().elementAt(index);
+                        Map organisedDefinitions =
+                            speechType.value['definitions'];
+                        final organisedDefinitionEntries =
+                            organisedDefinitions.entries.toList();
+
                         return SingleChildScrollView(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.menu_book_rounded, color: Colors.teal, size: 24),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      capitalise(speechType.key),
-                                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  if (editMode)
-                                    IconButton(
-                                      onPressed: () => _addDefinition(speechType.key),
-                                      icon: const Icon(Icons.add, color: Colors.teal),
-                                      tooltip: 'Add Definition',
-                                    ),
-                                  if (editMode) //  && word['entries'].length > 1
-                                    AnimatedSwitcher(
-                                      duration: const Duration(milliseconds: 250),
-                                      transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+                              Row(children: [
+                                const Icon(Icons.menu_book_rounded,
+                                    color: Colors.teal, size: 24),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                    child: Text(capitalise(speechType.key),
+                                        style: const TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold))),
+                                if (editMode)
+                                  IconButton(
+                                      onPressed: () =>
+                                          _addDefinition(speechType.key),
+                                      icon: const Icon(Icons.add,
+                                          color: Colors.teal),
+                                      tooltip: 'Add Definition'),
+                                if (editMode)
+                                  AnimatedSwitcher(
+                                      duration:
+                                          const Duration(milliseconds: 250),
+                                      transitionBuilder:
+                                          (child, animation) =>
+                                              FadeTransition(
+                                                  opacity: animation,
+                                                  child: child),
                                       child: IconButton(
-                                        key: ValueKey(speechType.value['selected']),
-                                        onPressed: () {
-                                          setState(() {
-                                            speechType.value['selected'] = !speechType.value['selected'];
-                                            saveWord();
-                                          });
-                                        },
-                                        icon: Icon(
-                                          speechType.value['selected'] ? Icons.check : Icons.close,
-                                          color: speechType.value['selected'] ? Colors.green : Colors.red,
-                                        ),
-                                      ),
-                                    )
-                                ],
-                              ),
+                                          key: ValueKey(
+                                              speechType.value['selected']),
+                                          onPressed: () {
+                                            setState(() {
+                                              speechType.value['selected'] =
+                                                  !speechType
+                                                      .value['selected'];
+                                              saveWord();
+                                            });
+                                          },
+                                          icon: Icon(
+                                              speechType.value['selected']
+                                                  ? Icons.check
+                                                  : Icons.close,
+                                              color: speechType
+                                                      .value['selected']
+                                                  ? Colors.green
+                                                  : Colors.red))),
+                              ]),
                               const SizedBox(height: 8),
-
-
-
-
-
-
-
-
-
-
-
-                              if (editMode) 
-                              
-                              ReorderableListView(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-onReorder: (oldIndex, newIndex) {
-  setState(() {
-    if (newIndex > oldIndex) {
-      newIndex -= 1;
-    }
-
-    // Cast the list to the correct type before passing it to the function.
-    final definitionsList = speechType.value['definitions']
-        .cast<Map<String, dynamic>>()
-        .toList();
-
-    reorderAndRenumberDefinitions(
-      definitionsList,
-      oldIndex,
-      newIndex,
-    );
-
-    // Update the original list with the reordered data
-    speechType.value['definitions'] = definitionsList;
-    
-    saveWord();
-  });
-},
-                                children: [
-                                  for (final entry in organisedDefinitions.entries)
-                                    Padding(
-                                      key: ValueKey("definition_${entry.key}"),
-                                      padding: const EdgeInsets.only(bottom: 6),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Icon(Icons.drag_handle),
-                                          MWTaggedText(
-                                            "${entry.key}. ",
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                          ),
-                                          Expanded(
-                                            child: _buildDefinitionLayer(entry.value),
-                                          ),
-                                          // Add edit/delete buttons if needed
-                                          PopupMenuButton<String>(
-                                            icon: const Icon(Icons.more_vert, size: 18),
-                                            tooltip: "More actions",
-                                            onSelected: (value) {
-                                              if (value == 'delete') {
-                                                setState(() {
-                                                  // Remove from the original definitions list
-                                                  speechType.value['definitions'].removeWhere((def) =>
-                                                    def['sn'] != null && def['sn'].startsWith('${entry.key} ')
-                                                  );
-                                                  saveWord();
-                                                });
-                                              }
-                                              // Add edit logic if needed
-                                            },
-                                            itemBuilder: (context) => [
-                                              const PopupMenuItem(
-                                                value: 'edit',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(Icons.edit, size: 18, color: Colors.white),
-                                                    SizedBox(width: 8),
-                                                    Text('Edit'),
-                                                  ],
-                                                ),
-                                              ),
-                                              const PopupMenuItem(
-                                                value: 'delete',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(Icons.delete, size: 18, color: Colors.red),
-                                                    SizedBox(width: 8),
-                                                    Text('Delete'),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ) 
-                              
-                              
-                              
-                              
-                              
-                              
-                              
-                              
-                              
-                              
-                              
-                              else Column(
-                                children: organisedDefinitions.entries.map<Widget>((entry) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 6),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        MWTaggedText(
-                                          "${entry.key}. ",
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                        ),
-                                        Expanded(
-                                          child: _buildDefinitionLayer(entry.value),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                              const SizedBox(height: 18),
-                              
-                              if (
-                                ((speechType.value['synonyms']?.isNotEmpty ?? false) 
-                                  || editMode
-                                ) && widget.activatedElements.contains('synonyms')
-                                ) ...[
-                                Divider(),
-                                Row(
+                              if (editMode)
+                                ReorderableListView(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  buildDefaultDragHandles: false,
+                                  onReorder: (oldIndex, newIndex) {
+                                    setState(() {
+                                      if (newIndex > oldIndex) newIndex -= 1;
+                                      final items = organisedDefinitions.entries
+                                          .toList();
+                                      final movedItem = items.removeAt(oldIndex);
+                                      items.insert(newIndex, movedItem);
+                                      final Map<dynamic, dynamic>
+                                          newOrganisedMap = {};
+                                      for (int i = 0;
+                                          i < items.length;
+                                          i++) {
+                                        // Create new keys as integers
+                                        newOrganisedMap[i + 1] =
+                                            items[i].value;
+                                      }
+                                      speechType.value['definitions'] =
+                                          newOrganisedMap;
+                                      saveWord();
+                                    });
+                                  },
                                   children: [
-                                    const Icon(Icons.local_florist_rounded, color: Colors.green, size: 22),
-                                    const SizedBox(width: 8),
-                                    const Text(
-                                      "Synonyms",
-                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                    ),
-                                    if (editMode) ...[
-                                      const Spacer(),
-                                      IconButton(
-                                        onPressed: () => _addSynonym(speechType.value),
-                                        icon: const Icon(Icons.add, color: Colors.green),
-                                        tooltip: 'Add Synonym',
+                                    for (int i = 0;
+                                        i < organisedDefinitionEntries.length;
+                                        i++)
+                                      Padding(
+                                        key: ValueKey(
+                                            "definition_${organisedDefinitionEntries[i].key}"),
+                                        padding:
+                                            const EdgeInsets.only(bottom: 6),
+                                        child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              ReorderableDragStartListener(
+                                                index: i,
+                                                child: const Padding(
+                                                  padding: EdgeInsets.only(
+                                                      right: 8.0, top: 2.0),
+                                                  child: Icon(Icons.drag_handle),
+                                                ),
+                                              ),
+                                              MWTaggedText(
+                                                  "${organisedDefinitionEntries[i].key}. ",
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16)),
+                                              Expanded(
+                                                  child: _buildDefinitionLayer(
+                                                      organisedDefinitionEntries[
+                                                              i]
+                                                          .value,
+                                                      [
+                                                        'entries',
+                                                        speechType.key,
+                                                        'definitions',
+                                                        organisedDefinitionEntries[
+                                                                i]
+                                                            .key
+                                                      ],
+                                                      isEditMode: true)),
+                                              PopupMenuButton<String>(
+                                                icon: const Icon(
+                                                    Icons.more_vert,
+                                                    size: 18),
+                                                tooltip: "More actions",
+                                                onSelected: (value) {
+                                                  if (value == 'delete') {
+                                                    setState(() {
+                                                      organisedDefinitions.remove(
+                                                          organisedDefinitionEntries[
+                                                                  i]
+                                                              .key);
+                                                      final items =
+                                                          organisedDefinitions
+                                                              .values
+                                                              .toList();
+                                                      final Map<dynamic,
+                                                              dynamic>
+                                                          newOrganisedMap = {};
+                                                      for (int i = 0;
+                                                          i < items.length;
+                                                          i++) {
+                                                        newOrganisedMap[i + 1] =
+                                                            items[i];
+                                                      }
+                                                      speechType.value[
+                                                              'definitions'] =
+                                                          newOrganisedMap;
+                                                      saveWord();
+                                                    });
+                                                  }
+                                                },
+                                                itemBuilder: (context) => [
+                                                  const PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(children: [
+                                                        Icon(Icons.edit,
+                                                            size: 18,
+                                                            color:
+                                                                Colors.white),
+                                                        SizedBox(width: 8),
+                                                        Text('Edit')
+                                                      ])),
+                                                  const PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: Row(children: [
+                                                        Icon(Icons.delete,
+                                                            size: 18,
+                                                            color: Colors.red),
+                                                        SizedBox(width: 8),
+                                                        Text('Delete')
+                                                      ])),
+                                                ],
+                                              ),
+                                            ]),
                                       ),
-                                    ],
                                   ],
+                                )
+                              else
+                                Column(
+                                  children: organisedDefinitions.entries
+                                      .map<Widget>((entry) {
+                                    return Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 6),
+                                      child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            MWTaggedText("${entry.key}. ",
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16)),
+                                            Expanded(
+                                                child: _buildDefinitionLayer(
+                                                    entry.value,
+                                                    [
+                                                      'entries',
+                                                      speechType.key,
+                                                      'definitions',
+                                                      entry.key
+                                                    ],
+                                                    isEditMode: false)),
+                                          ]),
+                                    );
+                                  }).toList(),
                                 ),
+                              const SizedBox(height: 18),
+                              if (((speechType.value['synonyms']?.isNotEmpty ??
+                                      false) ||
+                                  editMode) &&
+                                  widget.activatedElements
+                                      .contains('synonyms')) ...[
+                                const Divider(),
+                                Row(children: [
+                                  const Icon(Icons.local_florist_rounded,
+                                      color: Colors.green, size: 22),
+                                  const SizedBox(width: 8),
+                                  const Text("Synonyms",
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold)),
+                                  if (editMode) ...[
+                                    const Spacer(),
+                                    IconButton(
+                                        onPressed: () =>
+                                            _addSynonym(speechType.value),
+                                        icon: const Icon(Icons.add,
+                                            color: Colors.green),
+                                        tooltip: 'Add Synonym')
+                                  ],
+                                ]),
                                 const SizedBox(height: 8),
                                 Wrap(
-                                  spacing: 8,
-                                  children: (speechType.value['synonyms'] ?? {}).entries
-                                    .where((synonym) => synonym.key.toLowerCase() != word['word'].toLowerCase())
-                                    .map<Widget>(
-                                      (synonym) => editMode
-                                        ? Chip(
-                                            label: MWTaggedText(
-                                              capitalise(synonym.key),
-                                              style: const TextStyle(fontSize: 16),
-                                            ),
-                                            backgroundColor: const Color.fromARGB(255, 19, 54, 79),
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                            side: BorderSide.none,
-                                            deleteIcon: const Icon(Icons.close, size: 18),
-                                            onDeleted: () => _deleteSynonym(speechType.value, synonym.key),
-                                          )
-                                        : Chip(
-                                            label: MWTaggedText(
-                                              capitalise(synonym.key),
-                                              style: const TextStyle(fontSize: 16),
-                                            ),
-                                            backgroundColor: const Color.fromARGB(255, 19, 54, 79),
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                            side: BorderSide.none,
-                                          ),
-                                    ).toList(),
-                                ),
+                                    spacing: 8,
+                                    children: (speechType.value['synonyms'] ??
+                                            {})
+                                        .entries
+                                        .where((synonym) =>
+                                            synonym.key.toLowerCase() !=
+                                            wordState['word'].toLowerCase())
+                                        .map<Widget>((synonym) => editMode
+                                            ? Chip(
+                                                label: MWTaggedText(
+                                                    capitalise(synonym.key),
+                                                    style: const TextStyle(
+                                                        fontSize: 16)),
+                                                backgroundColor:
+                                                    const Color.fromARGB(
+                                                        255, 19, 54, 79),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 6),
+                                                side: BorderSide.none,
+                                                deleteIcon: const Icon(
+                                                    Icons.close,
+                                                    size: 18),
+                                                onDeleted: () => _deleteSynonym(
+                                                    speechType.value,
+                                                    synonym.key))
+                                            : Chip(
+                                                label: MWTaggedText(
+                                                    capitalise(synonym.key),
+                                                    style: const TextStyle(
+                                                        fontSize: 16)),
+                                                backgroundColor:
+                                                    const Color.fromARGB(
+                                                        255, 19, 54, 79),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 6),
+                                                side: BorderSide.none))
+                                        .toList()),
                               ],
-                              
-                              if (((speechType.value['etymology']?.isNotEmpty ?? false) || editMode) && widget.activatedElements.contains('etymology')) ...[
-                                Divider(),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.biotech, color: Colors.amber, size: 22),
-                                    const SizedBox(width: 8),
-                                    const Text(
-                                      "Etymology",
-                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                    ),
-                                    if (editMode) ...[
-                                      const Spacer(),
-                                      IconButton(
-                                        onPressed: () => _editEtymology(speechType.value),
-                                        icon: const Icon(Icons.edit, color: Colors.amber),
-                                        tooltip: 'Edit Etymology',
-                                      ),
-                                    ],
+                              if (((speechType.value['etymology']?.isNotEmpty ??
+                                      false) ||
+                                  editMode) &&
+                                  widget.activatedElements
+                                      .contains('etymology')) ...[
+                                const Divider(),
+                                Row(children: [
+                                  const Icon(Icons.biotech,
+                                      color: Colors.amber, size: 22),
+                                  const SizedBox(width: 8),
+                                  const Text("Etymology",
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold)),
+                                  if (editMode) ...[
+                                    const Spacer(),
+                                    IconButton(
+                                        onPressed: () =>
+                                            _editEtymology(speechType.value),
+                                        icon: const Icon(Icons.edit,
+                                            color: Colors.amber),
+                                        tooltip: 'Edit Etymology')
                                   ],
-                                ),
-                                if (speechType.value['etymology']?.isNotEmpty == true)
+                                ]),
+                                if (speechType.value['etymology']?.isNotEmpty ==
+                                    true)
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 8),
-                                    child: MWTaggedText(
-                                      speechType.value['etymology'],
-                                      style: const TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-                                    ),
-                                  ),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 17, vertical: 8),
+                                      child: MWTaggedText(
+                                          speechType.value['etymology'],
+                                          style: const TextStyle(
+                                              fontSize: 15,
+                                              fontStyle: FontStyle.italic))),
                                 const SizedBox(height: 10),
                               ],
-                              
-                              if (((speechType.value['quotes']?.isNotEmpty ?? false) || editMode) && widget.activatedElements.contains('quotes')) ...[
-                                Divider(),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.format_quote_rounded, color: Colors.lightBlue, size: 22),
-                                    const SizedBox(width: 8),
-                                    const Text(
-                                      "Quotes",
-                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                    ),
-                                    if (editMode) ...[
-                                      const Spacer(),
-                                      IconButton(
-                                        onPressed: () => _addQuote(speechType.value),
-                                        icon: const Icon(Icons.add, color: Colors.lightBlue),
-                                        tooltip: 'Add Quote',
-                                      ),
-                                    ],
+                              if (((speechType.value['quotes']?.isNotEmpty ??
+                                      false) ||
+                                  editMode) &&
+                                  widget.activatedElements
+                                      .contains('quotes')) ...[
+                                const Divider(),
+                                Row(children: [
+                                  const Icon(Icons.format_quote_rounded,
+                                      color: Colors.lightBlue, size: 22),
+                                  const SizedBox(width: 8),
+                                  const Text("Quotes",
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold)),
+                                  if (editMode) ...[
+                                    const Spacer(),
+                                    IconButton(
+                                        onPressed: () =>
+                                            _addQuote(speechType.value),
+                                        icon: const Icon(Icons.add,
+                                            color: Colors.lightBlue),
+                                        tooltip: 'Add Quote')
                                   ],
-                                ),
+                                ]),
                                 const SizedBox(height: 8),
-                                for (int i = 0; i < (speechType.value['quotes'] ?? []).length; i++) ...[
+                                for (int i = 0;
+                                    i <
+                                        (speechType.value['quotes'] ?? [])
+                                            .length;
+                                    i++) ...[
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          left: BorderSide(
-                                            color: Colors.blue.shade300,
-                                            width: 4,
-                                          ),
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: MWTaggedText(
-                                              '"${speechType.value['quotes'][i]['t']}"\n - {it}${speechType.value['quotes'][i]['aq']['auth']} (${speechType.value['quotes'][i]['aq']['aqdate']}){/it}',
-                                            ),
-                                          ),
-                                          if (editMode)
-                                            IconButton(
-                                              onPressed: () => _deleteQuote(speechType.value, i),
-                                              icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                                              tooltip: 'Delete Quote',
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0, horizontal: 16),
+                                      child: Container(
+                                          decoration: BoxDecoration(
+                                              border: Border(
+                                                  left: BorderSide(
+                                                      color:
+                                                          Colors.blue.shade300,
+                                                      width: 4))),
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 12, horizontal: 12),
+                                          child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Expanded(
+                                                    child: MWTaggedText(
+                                                        '"${speechType.value['quotes'][i]['t']}"\n - {it}${speechType.value['quotes'][i]['aq']['auth']} (${speechType.value['quotes'][i]['aq']['aqdate']}){/it}')),
+                                                if (editMode)
+                                                  IconButton(
+                                                      onPressed: () =>
+                                                          _deleteQuote(
+                                                              speechType.value,
+                                                              i),
+                                                      icon: const Icon(
+                                                          Icons.delete,
+                                                          color: Colors.red,
+                                                          size: 18),
+                                                      tooltip: 'Delete Quote'),
+                                              ])))
                                 ],
                               ],
-                              
-                              if (((inputs[speechType.value['partOfSpeech']]?.isNotEmpty ?? false) || editMode) && widget.activatedElements.contains('quizHistory')) ...[
-                                Divider(),
-                                Row(
-                                  children: const [
-                                    Icon(Icons.history, color: Color.fromARGB(255, 7, 255, 48), size: 22),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      "Quiz History",
-                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
+                              if (((inputs[speechType.value['partOfSpeech']]
+                                          ?.isNotEmpty ??
+                                      false) ||
+                                  editMode) &&
+                                  widget.activatedElements
+                                      .contains('quizHistory')) ...[
+                                const Divider(),
+                                Row(children: const [
+                                  Icon(Icons.history,
+                                      color: Color.fromARGB(255, 7, 255, 48),
+                                      size: 22),
+                                  SizedBox(width: 8),
+                                  Text("Quiz History",
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold))
+                                ]),
                                 const SizedBox(height: 4),
                                 ListView.builder(
-                                  shrinkWrap: true,
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                  itemCount: inputs[speechType.value['partOfSpeech']]?.length ?? 0,
-                                  itemBuilder: (context, index) {
-                                    final Map entry = inputs[speechType.value['partOfSpeech']][index];
-                                    if (!entry.containsKey('guess') || entry['guess'] == null) {
+                                    shrinkWrap: true,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 8),
+                                    itemCount: inputs[speechType
+                                                .value['partOfSpeech']]
+                                            ?.length ??
+                                        0,
+                                    itemBuilder: (context, index) {
+                                      final Map entry = inputs[speechType
+                                          .value['partOfSpeech']][index];
+                                      if (!entry.containsKey('guess') ||
+                                          entry['guess'] == null) {
+                                        return Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 6),
+                                            child: Container(
+                                                decoration: BoxDecoration(
+                                                    color:
+                                                        const Color.fromARGB(
+                                                            255, 156, 2, 2),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10)),
+                                                child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceEvenly,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          const Text('SKIPPED',
+                                                              style: TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  letterSpacing:
+                                                                      2)),
+                                                          Text(
+                                                              ' — ${DateFormat('d MMM yyyy, h:mm a').format(DateTime.parse(entry['date']))}',
+                                                              style:
+                                                                  const TextStyle(
+                                                                      fontSize:
+                                                                          13,
+                                                                      color: Colors
+                                                                          .white70)),
+                                                          if (editMode)
+                                                            IconButton(
+                                                                onPressed: () =>
+                                                                    setState(() => inputs[speechType.value['partOfSpeech']]
+                                                                        .removeAt(
+                                                                            index)),
+                                                                icon:
+                                                                    const Icon(
+                                                                        Icons
+                                                                            .close,
+                                                                        size:
+                                                                            20)),
+                                                        ]))));
+                                      }
                                       return Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 6),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: const Color.fromARGB(255, 156, 2, 2),
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                              crossAxisAlignment: CrossAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  'SKIPPED', 
-                                                  style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2)
-                                                ),
-                                                Text(
-                                                  ' — ${DateFormat('d MMM yyyy, h:mm a').format(DateTime.parse(entry['date']))}',
-                                                  style: const TextStyle(fontSize: 13, color: Colors.white70),
-                                                ),
-                                                if (editMode)
-                                                IconButton(
-                                                  onPressed: (){
-                                                    setState(() {
-                                                      inputs[speechType.value['partOfSpeech']].removeAt(index);
-                                                    });
-                                                  },
-                                                  icon: Icon(
-                                                    Icons.close,
-                                                    size: 20,
-                                                  ),
-                                                )
-                                              ],
-                                            ),
-                                          )
-                                        ),
-                                      );
-                                    }
-
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 6),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: const Color.fromARGB(255, 19, 54, 79),
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Icon(
-                                                  entry['correct'] ? Icons.check_circle : Icons.cancel,
-                                                  color: entry['correct'] ? Colors.green : Colors.red,
-                                                  size: 20,
-                                                ),
-                                                const SizedBox(width: 10),
-                                                Expanded(
-                                                  child: Text(
-                                                    entry['guess'],
-                                                    style: const TextStyle(fontSize: 16, color: Colors.white),
-                                                  ),
-                                                ),
-                                                if (editMode)
-                                                IconButton(
-                                                  onPressed: (){
-                                                    setState(() {
-                                                      inputs[speechType.value['partOfSpeech']].removeAt(index);
-                                                    });
-                                                  },
-                                                  icon: Icon(
-                                                    Icons.close,
-                                                    size: 20,
-                                                  ),
-                                                )
-                                              ],
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              ' — ${DateFormat('d MMM yyyy, h:mm a').format(DateTime.parse(entry['date']))}',
-                                              style: const TextStyle(fontSize: 12, color: Colors.white70),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 6),
+                                          child: Container(
+                                              decoration: BoxDecoration(
+                                                  color: const Color.fromARGB(
+                                                      255, 19, 54, 79),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10)),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 10),
+                                              child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(children: [
+                                                      Icon(
+                                                          entry['correct']
+                                                              ? Icons
+                                                                  .check_circle
+                                                              : Icons.cancel,
+                                                          color: entry[
+                                                                  'correct']
+                                                              ? Colors.green
+                                                              : Colors.red,
+                                                          size: 20),
+                                                      const SizedBox(width: 10),
+                                                      Expanded(
+                                                          child: Text(
+                                                              entry['guess'],
+                                                              style: const TextStyle(
+                                                                  fontSize: 16,
+                                                                  color: Colors
+                                                                      .white))),
+                                                      if (editMode)
+                                                        IconButton(
+                                                            onPressed: () =>
+                                                                setState(() =>
+                                                                    inputs[speechType.value['partOfSpeech']]
+                                                                        .removeAt(
+                                                                            index)),
+                                                            icon: const Icon(
+                                                                Icons.close,
+                                                                size: 20)),
+                                                    ]),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                        ' — ${DateFormat('d MMM yyyy, h:mm a').format(DateTime.parse(entry['date']))}',
+                                                        style:
+                                                            const TextStyle(
+                                                                fontSize: 12,
+                                                                color: Colors
+                                                                    .white70)),
+                                                  ])));
+                                    }),
                               ],
                             ],
                           ),
@@ -1134,7 +1220,6 @@ onReorder: (oldIndex, newIndex) {
                 ],
               ),
             ),
-            // Add this Positioned widget for the back button
             if (widget.addWordMode)
               Positioned(
                 left: 50,
@@ -1148,7 +1233,7 @@ onReorder: (oldIndex, newIndex) {
                     ),
                   ),
                   onPressed: () {
-                    writeKey(word['word'], word);
+                    saveWord(save: true);
                     Navigator.pushNamedAndRemoveUntil(
                       context,
                       '/home',
@@ -1159,10 +1244,7 @@ onReorder: (oldIndex, newIndex) {
                     padding: EdgeInsets.symmetric(vertical: 20),
                     child: Text(
                       'Submit',
-                      style: TextStyle(
-                        fontSize: 22,
-                        color: Colors.white,
-                      ),
+                      style: TextStyle(fontSize: 22, color: Colors.white),
                     ),
                   ),
                 ),
@@ -1173,77 +1255,97 @@ onReorder: (oldIndex, newIndex) {
     );
   }
 
-  Widget _buildDefinitionLayer(dynamic layer, {String? letterKey}) {
-    if (layer is Map && layer.containsKey('definition')) {
-      // Case: {1: def} or {a: def}
+  Widget _buildDefinitionLayer(Map layer, List<dynamic> path,
+      {required bool isEditMode}) {
+    // Base Case: This is a leaf node containing a definition.
+    if (layer.containsKey('definition')) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (letterKey != null)
-            MWTaggedText(
-              "{b}$letterKey){/b} ${layer['definition'] ?? ''}",
-              style: const TextStyle(fontSize: 16),
-            )
-          else
-            MWTaggedText(
-              "${layer['definition'] ?? ''}",
-              style: const TextStyle(fontSize: 16),
-            ),
+          MWTaggedText("${layer['definition'] ?? ''}",
+              style: const TextStyle(fontSize: 16)),
           if (layer['example'] != null)
             ...List<String>.from(layer['example']).map((example) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
                   child: Container(
                     decoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(
-                          color: Colors.blue.shade300,
-                          width: 4,
-                        ),
-                      ),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                    child: MWTaggedText(
-                      capitalise(example),
-                    ),
+                        border: Border(
+                            left: BorderSide(
+                                color: Colors.blue.shade300, width: 4))),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                    child: MWTaggedText(capitalise(example)),
                   ),
                 )),
         ],
       );
-    } else if (layer is Map) {
-      // Case: {a: def} or {a: {1: def}}
+    }
+
+    // Recursive Step: This is a branch node (a map of sub-definitions).
+    final entries = layer.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+    if (entries.isEmpty) return const SizedBox.shrink();
+
+    // In view mode, render a static, non-reorderable Column.
+    if (!isEditMode) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: layer.entries.map<Widget>((entry) {
-          final key = entry.key;
-          final value = entry.value;
-          if (value is Map && value.keys.every((k) => k is int)) {
-            // Case: {a: {1: def, 2: def}}
-            return Column(
+        children: entries.map<Widget>((entry) {
+          final isNumeric = entry.key is int;
+          final String prefix = isNumeric ? "${entry.key}. " : "{b}${entry.key}){/b} ";
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 0, 4),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                MWTaggedText(
-                  "{b}$key){/b}",
-                  style: const TextStyle(fontSize: 16),
-                ),
-                ...value.entries.map<Widget>((subEntry) {
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 16, bottom: 4),
-                    child: _buildDefinitionLayer(subEntry.value),
-                  );
-                }),
+                MWTaggedText(prefix, style: const TextStyle(fontSize: 16)),
+                Expanded(
+                    child: _buildDefinitionLayer(entry.value, [...path, entry.key],
+                        isEditMode: false)),
               ],
-            );
-          } else {
-            // Case: {a: def}
-            return Padding(
-              padding: const EdgeInsets.only(left: 8, bottom: 4),
-              child: _buildDefinitionLayer(value, letterKey: key),
-            );
-          }
+            ),
+          );
         }).toList(),
       );
-    } else {
-      return const SizedBox.shrink();
     }
+
+    // In edit mode, render a ReorderableListView for the sub-definitions.
+    return ReorderableListView(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      buildDefaultDragHandles: false,
+      onReorder: (oldIndex, newIndex) =>
+          _reorderSubDefinitions(path, oldIndex, newIndex),
+      children: [
+        for (int i = 0; i < entries.length; i++)
+          Row(
+            key: ValueKey('${path.join('-')}-${entries[i].key}'),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ReorderableDragStartListener(
+                index: i,
+                child: const Padding(
+                  padding: EdgeInsets.only(right: 8.0, top: 2.0),
+                  child:
+                      Icon(Icons.drag_handle, size: 18, color: Colors.white54),
+                ),
+              ),
+              MWTaggedText(
+                entries[i].key is int
+                    ? "${entries[i].key}. "
+                    : "{b}${entries[i].key}){/b} ",
+                style: const TextStyle(fontSize: 16),
+              ),
+              Expanded(
+                child: _buildDefinitionLayer(
+                  entries[i].value as Map,
+                  [...path, entries[i].key],
+                  isEditMode: true,
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
   }
 }
