@@ -286,14 +286,14 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
           defSNsub = -1;
           defSNsub2 = -1;
           if (nums.length > 1){
-            defSNsub = getAlphabetPositionSimple(nums[1]);
+            defSNsub = getAlphabetPosition(nums[1]);
             if (nums.length > 2){
               defSNsub2 = int.tryParse(nums[2].replaceAll(RegExp(r'[^0-9]'), '')) ?? -1;
             }
           }
         }
         else if (sn.startsWith(RegExp('[a-z]'))){
-          defSNsub = getAlphabetPositionSimple(nums[0]);
+          defSNsub = getAlphabetPosition(nums[0]);
           if (nums.length > 1){
             defSNsub2 = int.tryParse(nums[1].replaceAll(RegExp(r'[^0-9]'), '')) ?? -1;
           }
@@ -361,7 +361,7 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
   return allSenses;
 }
 
-int getAlphabetPositionSimple(String letter) {
+int getAlphabetPosition(String letter) {
   if (letter.length != 1) {
     return 0;
   }
