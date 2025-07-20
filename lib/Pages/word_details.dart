@@ -964,15 +964,17 @@ class WordDetailsState extends State<WordDetails> {
                                                 ),
                                               ),
                                               if (organisedDefinitionEntries[i].value.containsKey('definition'))
-                                              _buildDefinitionLayer(
-                                                organisedDefinitionEntries[i].value,
-                                                [
-                                                  'entries',
-                                                  speechType.key,
-                                                  'definitions',
-                                                  organisedDefinitionEntries[i].key,
-                                                ],
-                                                isEditMode: true,
+                                              Expanded(
+                                                child: _buildDefinitionLayer(
+                                                  organisedDefinitionEntries[i].value,
+                                                  [
+                                                    'entries',
+                                                    speechType.key,
+                                                    'definitions',
+                                                    organisedDefinitionEntries[i].key,
+                                                  ],
+                                                  isEditMode: true,
+                                                ),
                                               ),
                                               const Spacer(),
                                               if (!organisedDefinitionEntries[i].value.containsKey('definition'))
@@ -1044,15 +1046,17 @@ class WordDetailsState extends State<WordDetails> {
                                           if (!organisedDefinitionEntries[i].value.containsKey('definition'))
                                           Padding(
                                             padding: const EdgeInsets.only(left: 16.0),
-                                            child: _buildDefinitionLayer(
-                                              organisedDefinitionEntries[i].value,
-                                              [
-                                                'entries',
-                                                speechType.key,
-                                                'definitions',
-                                                organisedDefinitionEntries[i].key,
-                                              ],
-                                              isEditMode: true,
+                                            child: Expanded(
+                                              child: _buildDefinitionLayer(
+                                                organisedDefinitionEntries[i].value,
+                                                [
+                                                  'entries',
+                                                  speechType.key,
+                                                  'definitions',
+                                                  organisedDefinitionEntries[i].key,
+                                                ],
+                                                isEditMode: true,
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -1511,7 +1515,8 @@ class WordDetailsState extends State<WordDetails> {
   }
 
   Widget _buildDefinitionLayer(Map layer, List<dynamic> path,
-      {required bool isEditMode}) {
+      {required bool isEditMode}) 
+    {
     if (layer.containsKey('definition')) {
       return GestureDetector(
         onHorizontalDragEnd: (details) {
@@ -1530,10 +1535,10 @@ class WordDetailsState extends State<WordDetails> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            MWTaggedText(
-              "${layer['definition'] ?? ''}",
-              style: const TextStyle(fontSize: 16),
-            ),
+              MWTaggedText(
+                "${layer['definition'] ?? ''}",
+                style: const TextStyle(fontSize: 16),
+              ),
             if (layer['example'] != null)
               ...List<String>.from(layer['example']).map(
                 (example) => Padding(
