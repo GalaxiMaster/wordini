@@ -276,7 +276,7 @@ class WordDetailsState extends State<WordDetails> {
                               ..sort())
                             .last +
                             1;
-                    organisedDefinitions[newKey] = {
+                    organisedDefinitions[newKey] = { // Create SN
                       'definition': definition,
                       'example': exampleController.text.trim().isEmpty
                           ? []
@@ -895,16 +895,17 @@ class WordDetailsState extends State<WordDetails> {
                                             speechType.value['selected']),
                                         onPressed: () {
                                           setState(() {
+                                            if (speechType.value['selected'] == null) return;
                                             speechType.value['selected'] =
                                                 !speechType.value['selected'];
                                             saveWord();
                                           });
                                         },
                                         icon: Icon(
-                                          speechType.value['selected']
+                                          speechType.value?['selected'] ?? false
                                               ? Icons.check
                                               : Icons.close,
-                                          color: speechType.value['selected']
+                                          color: speechType.value?['selected']?? false
                                               ? Colors.green
                                               : Colors.red,
                                         ),
@@ -990,57 +991,6 @@ class WordDetailsState extends State<WordDetails> {
                                                   padding: EdgeInsets.zero,
                                                   constraints: const BoxConstraints(),
                                                 ),
-                                              PopupMenuButton<String>(
-                                                icon: const Icon(
-                                                  Icons.more_vert,
-                                                  size: 18,
-                                                ),
-                                                tooltip: "More actions",
-                                                onSelected: (value) {
-                                                  if (value == 'delete') {
-                                                    setState(() {
-                                                      organisedDefinitions.remove(organisedDefinitionEntries[i].key);
-                                                      final items = organisedDefinitions.values.toList();
-                                                      final Map newOrganisedMap = {};
-                                                      for (int i = 0; i < items.length; i++) {
-                                                        newOrganisedMap[i + 1] = items[i];
-                                                      }
-                                                      speechType.value['definitions'] =newOrganisedMap;
-                                                      saveWord();
-                                                    });
-                                                  }
-                                                },
-                                                itemBuilder: (context) => [
-                                                  const PopupMenuItem(
-                                                    value: 'edit',
-                                                    child: Row(
-                                                      children: [
-                                                        Icon(
-                                                          Icons.edit,
-                                                          size: 18,
-                                                          color: Colors.white,
-                                                        ),
-                                                        SizedBox(width: 8),
-                                                        Text('Edit'),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  const PopupMenuItem(
-                                                    value: 'delete',
-                                                    child: Row(
-                                                      children: [
-                                                        Icon(
-                                                          Icons.delete,
-                                                          size: 18,
-                                                          color: Colors.red,
-                                                        ),
-                                                        SizedBox(width: 8),
-                                                        Text('Delete'),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
                                             ],
                                           ),
                                           if (!organisedDefinitionEntries[i].value.containsKey('definition'))
@@ -1517,13 +1467,14 @@ class WordDetailsState extends State<WordDetails> {
   Widget _buildDefinitionLayer(Map layer, List<dynamic> path,
       {required bool isEditMode}) 
     {
+    final parentLayer = path.sublist(0, path.length-1).fold(wordState, (current, key) => current[key]);
+
     if (layer.containsKey('definition')) {
       return GestureDetector(
         onHorizontalDragEnd: (details) {
           if (!isEditMode) return;
           bool nesting = details.velocity.pixelsPerSecond.dx < 0 ? false : true;
-          final result = path.sublist(0, path.length-1).fold(wordState, (current, key) => current[key]);
-          if (result.length > 1 && !nesting) return;
+          if (parentLayer.length > 1 && !nesting) return;
           setState((){
             adjustNesting(
               data: wordState[path[0]][path[1]][path[2]] as Map<int, dynamic>,
@@ -1532,38 +1483,134 @@ class WordDetailsState extends State<WordDetails> {
             );
           });
         },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-              MWTaggedText(
-                "${layer['definition'] ?? ''}",
-                style: const TextStyle(fontSize: 16),
-              ),
-            if (layer['example'] != null)
-              ...List<String>.from(layer['example']).map(
-                (example) => Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8.0,
-                    horizontal: 8,
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(
-                          color: Colors.blue.shade300,
-                          width: 4,
+        child: ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+                MWTaggedText(
+                  "${layer['definition'] ?? ''}",
+                  style: const TextStyle(fontSize: 16),
+                ),
+              if (layer['example'] != null)
+                ...List<String>.from(layer['example']).map(
+                  (example) => Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8.0,
+                      horizontal: 8,
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          left: BorderSide(
+                            color: Colors.blue.shade300,
+                            width: 4,
+                          ),
                         ),
                       ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 6,
+                        horizontal: 10,
+                      ),
+                      child: MWTaggedText(capitalise(example)),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 6,
-                      horizontal: 10,
-                    ),
-                    child: MWTaggedText(capitalise(example)),
                   ),
                 ),
+            ],
+          ),
+          trailing: editMode ? PopupMenuButton<String>(
+            icon: const Icon(
+              Icons.more_vert,
+              size: 18,
+            ),
+            tooltip: "More actions",
+            onSelected: (value) {
+              if (value == 'delete') {
+                setState(() {
+                  if (parentLayer.length == 1){
+                    parentLayer.remove(path.last);
+                    if (parentLayer.isEmpty){
+                      Map nextLayer = {};
+                      int i = 1;
+                      while (nextLayer.isEmpty){
+                        i++;
+                        nextLayer = path.sublist(0, path.length-i).fold(wordState, (current, key) => current[key]);
+                        int index = nextLayer.keys.toList().indexOf(path[path.length-i]);
+                        if (nextLayer.length == 1){
+                          i++;
+                          nextLayer = path.sublist(0, path.length-i).fold(wordState, (current, key) => current[key]);
+                          // nextLayer.remove(path[path.length-i]);
+                        }
+                        if (index != nextLayer.length-1){
+                          for (int j = index + 1; j < nextLayer.length; j++) {
+                            final key = nextLayer.keys.elementAt(j);
+                            final newKey = key is int ? key - 1 : String.fromCharCode(key.codeUnitAt(0) - 1);
+
+                            nextLayer[newKey] = nextLayer[key];
+
+                            nextLayer.remove(key);
+                          }
+                        } else{
+                          nextLayer.remove(path[path.length-i]);
+                        }
+                        // nextLayer.remove(path[path.length-i]);
+
+                      }
+                    }
+                  } else{
+                    int index = parentLayer.keys.toList().indexOf(path.last);
+                    if (index != parentLayer.length-1){
+                      for (int i = index + 1; i < parentLayer.length; i++) {
+                        final key = parentLayer.keys.elementAt(i);
+                        final newKey = key is int ? key - 1 : String.fromCharCode(key.codeUnitAt(0) - 1);
+                        // final newSn = parentLayer[newKey]['sn'];
+                        // if (parentLayer[key].containsKey)
+                        // parentLayer[key]['sn'] = newSn;
+                        parentLayer[newKey] = parentLayer[key];
+
+                        parentLayer.remove(key);
+                      }
+                    } else{
+                      parentLayer.remove(path.last);
+                      debugPrint('removed');
+                    }
+                    // cascading deletions
+                  }
+                  saveWord();
+                });
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.edit,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    SizedBox(width: 8),
+                    Text('Edit'),
+                  ],
+                ),
               ),
-          ],
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.delete,
+                      size: 18,
+                      color: Colors.red,
+                    ),
+                    SizedBox(width: 8),
+                    Text('Delete'),
+                  ],
+                ),
+              ),
+            ],
+          ) : null,
         ),
       );
     }
@@ -1602,8 +1649,7 @@ class WordDetailsState extends State<WordDetails> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       buildDefaultDragHandles: false,
-      onReorder: (oldIndex, newIndex) =>
-          _reorderSubDefinitions(path, oldIndex, newIndex),
+      onReorder: (oldIndex, newIndex) => _reorderSubDefinitions(path, oldIndex, newIndex),
       children: [
         for (int i = 0; i < entries.length; i++)
           Row(
@@ -1615,7 +1661,7 @@ class WordDetailsState extends State<WordDetails> {
                 child: const Padding(
                   padding: EdgeInsets.only(
                     right: 8.0,
-                    top: 2.0,
+                    top: 15,
                   ),
                   child: Icon(
                     Icons.drag_indicator,
@@ -1639,8 +1685,7 @@ class WordDetailsState extends State<WordDetails> {
                         const Spacer(),
                         if (!entries[i].value.containsKey('definition'))
                           IconButton(
-                            onPressed: () =>
-                                _addSubDefinition([...path, entries[i].key]),
+                            onPressed: () => _addSubDefinition([...path, entries[i].key]),
                             icon: const Icon(Icons.add),
                             tooltip: "Add Sub-definition",
                             padding: EdgeInsets.zero,
@@ -1666,17 +1711,16 @@ class WordDetailsState extends State<WordDetails> {
     required Map<int, dynamic> data, 
     required Map definition,
     required bool nest
-    }) {
+    }) { // function not happy if 'sn' isnt a key, which shouldnt happen, but if it does it crashes
     String sn = definition['sn'];
     List<String> parts = sn.split(' ');
-    List path = [];
-    for (String part in parts){
-      dynamic intPart = int.parse(part);
-      if (parts.indexOf(part) == 1){
-        intPart = indexToLetter(intPart-1);
-      }
-      path.add(intPart);
-    }
+    List path = parts.asMap().entries.map((entry) {
+      int index = entry.key;
+      String value = entry.value;
+      int intValue = int.tryParse(value) ?? 0; 
+      
+      return index == 1 ? indexToLetter(intValue - 1) : intValue;
+    }).toList();
     if (nest){ // ! case for nesting a definition
       if (!parts.contains('-1')){
         return false;
