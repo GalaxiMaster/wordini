@@ -264,7 +264,7 @@ class WordDetailsState extends State<WordDetails> {
             ElevatedButton(
               onPressed: () {
                 final definition = definitionController.text.trim();
-                if (definition.isNotEmpty) {
+                if (definition.isNotEmpty) { // ! test
                   setState(() {
                     final Map speechPartData =
                         wordState['entries'][speechPartKey];
@@ -276,7 +276,22 @@ class WordDetailsState extends State<WordDetails> {
                               ..sort())
                             .last +
                             1;
-                    organisedDefinitions[newKey] = { // Create SN
+                    final List<String> sn;
+                    if (organisedDefinitions.isNotEmpty) {
+                      List keys = organisedDefinitions.keys.toList();
+                       sn = organisedDefinitions[keys.last]['sn'].split(' ');
+                      int lastIndex = sn.indexOf('-1');
+                      if (lastIndex == -1) {
+                        lastIndex = sn.length;
+                      }
+                      sn[lastIndex-1] = ((int.tryParse(sn[lastIndex-1]) ?? 0) + 1).toString();
+                    }else {
+                      sn = ['1', '-1', '-1'];
+                    }
+
+
+                    organisedDefinitions[newKey] = {
+                      'sn': sn.join(' '),
                       'definition': definition,
                       'example': exampleController.text.trim().isEmpty
                           ? []
@@ -362,8 +377,15 @@ class WordDetailsState extends State<WordDetails> {
                         newKey = String.fromCharCode(lastKey.codeUnitAt(0) + 1);
                       }
                     }
+                    List sn = path.sublist(3, path.length);
+                    sn += newKey is int ? [newKey] : [letterToIndex(newKey) + 1];
+                    if (sn.length != 3) {
+                      sn = [...sn, '-1'];
+                      sn = sn.sublist(0, 3);
+                    }
 
                     node[newKey] = {
+                      'sn': sn.join(' '),
                       'definition': definition,
                       'example': example.isEmpty ? [] : [example],
                     };
@@ -895,7 +917,7 @@ class WordDetailsState extends State<WordDetails> {
                                             speechType.value['selected']),
                                         onPressed: () {
                                           setState(() {
-                                            if (speechType.value['selected'] == null) return;
+                                            if (speechType.value['selected'] == null) speechType.value['selected'] = false;
                                             speechType.value['selected'] =
                                                 !speechType.value['selected'];
                                             saveWord();
@@ -1534,10 +1556,12 @@ class WordDetailsState extends State<WordDetails> {
                       int i = 1;
                       while (nextLayer.isEmpty){
                         i++;
+                        if (path[path.length-i] == 'definitions') break;
                         nextLayer = path.sublist(0, path.length-i).fold(wordState, (current, key) => current[key]);
                         int index = nextLayer.keys.toList().indexOf(path[path.length-i]);
                         if (nextLayer.length == 1){
                           i++;
+                          if (path[path.length-i] == 'definitions') break;
                           nextLayer = path.sublist(0, path.length-i).fold(wordState, (current, key) => current[key]);
                           // nextLayer.remove(path[path.length-i]);
                         }

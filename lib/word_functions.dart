@@ -462,3 +462,6 @@ Future<bool?> checkDefinition(word, userDef, partOfSpeech, context) async{
 String indexToLetter(int index) {
   return String.fromCharCode('a'.codeUnitAt(0) + index);
 }
+int letterToIndex(String letter) {
+  return letter.codeUnitAt(0) - 'a'.codeUnitAt(0);
+}
