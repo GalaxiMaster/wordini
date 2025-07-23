@@ -1599,6 +1599,48 @@ class WordDetailsState extends State<WordDetails> {
                   saveWord();
                 });
               }
+              else if (value == 'edit') {
+                // Show popup to edit the definition
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    final TextEditingController editController = TextEditingController(
+                      text: layer['definition'],
+                    );
+                    return AlertDialog(
+                      title: const Text('Edit Definition'),
+                      content: SizedBox(
+                        width: double.infinity,
+                        child: TextField(
+                          controller: editController,
+                          autofocus: true,
+                          maxLines: null,
+                          decoration: const InputDecoration(
+                            labelText: 'Definition',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              layer['definition'] = editController.text;
+                              saveWord(); 
+                            });
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('Save'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }
             },
             itemBuilder: (context) => [
               const PopupMenuItem(
