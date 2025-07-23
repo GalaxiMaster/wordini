@@ -125,9 +125,14 @@ class QuizzesState extends State<Quizzes> {
                                 details.forEach((value) {
                                   examples += value['example'];
                                 });
-                                message = examples[0]; // ADD index's later
-                              } on RangeError {
-                                message = 'No example available';
+                                message = 'Example: ${examples[0]}'; // ADD index's later
+                              } on RangeError { // ! No example available
+                                final String? firstDef = currentWord['attributes']['definitions'].first['definition'];
+                                if (firstDef == null) {
+                                  message = 'No hint available';
+                                } else {
+                                  message = 'Def: $firstDef';
+                                }
                               }
                               messageOverlay(
                                 context, 
