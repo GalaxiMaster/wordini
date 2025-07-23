@@ -1030,8 +1030,8 @@ class WordDetailsState extends State<WordDetails> {
                                                   isEditMode: true,
                                                 ),
                                               ),
-                                              const Spacer(),
-                                              if (!organisedDefinitionEntries[i].value.containsKey('definition'))
+                                              if (!organisedDefinitionEntries[i].value.containsKey('definition'))...[
+                                                const Spacer(),
                                                 IconButton(
                                                   onPressed: () => _addSubDefinition([
                                                     'entries',
@@ -1044,6 +1044,7 @@ class WordDetailsState extends State<WordDetails> {
                                                   padding: EdgeInsets.zero,
                                                   constraints: const BoxConstraints(),
                                                 ),
+                                              ]
                                             ],
                                           ),
                                           if (!organisedDefinitionEntries[i].value.containsKey('definition'))
