@@ -279,12 +279,7 @@ class WordDetailsState extends State<WordDetails> {
                     final List<String> sn;
                     if (organisedDefinitions.isNotEmpty) {
                       List keys = organisedDefinitions.keys.toList();
-                       sn = organisedDefinitions[keys.last]['sn'].split(' ');
-                      int lastIndex = sn.indexOf('-1');
-                      if (lastIndex == -1) {
-                        lastIndex = sn.length;
-                      }
-                      sn[lastIndex-1] = ((int.tryParse(sn[lastIndex-1]) ?? 0) + 1).toString();
+                      sn = [keys.last.toString(), '-1', '-1'];
                     }else {
                       sn = ['1', '-1', '-1'];
                     }
@@ -378,10 +373,16 @@ class WordDetailsState extends State<WordDetails> {
                       }
                     }
                     List sn = path.sublist(3, path.length);
-                    sn += newKey is int ? [newKey] : [letterToIndex(newKey) + 1];
+                    try {
+                      sn[1] = letterToIndex(sn[1]) + 1; // convert letter in path to sn index
+                    } catch (e) {
+                      debugPrint('Second index not available...');
+                    }
+
+                    int snKey = newKey is int ? newKey : letterToIndex(newKey) + 1;
+                    sn.add(snKey);
                     if (sn.length != 3) {
-                      sn = [...sn, '-1'];
-                      sn = sn.sublist(0, 3);
+                      sn.add('-1');
                     }
 
                     node[newKey] = {
@@ -1499,7 +1500,8 @@ class WordDetailsState extends State<WordDetails> {
           if (parentLayer.length > 1 && !nesting) return;
           setState((){
             adjustNesting(
-              data: wordState[path[0]][path[1]][path[2]] as Map<int, dynamic>,
+              data: wordState[path[0]][path[1]][path[2]],
+              fullPath: path,
               definition: layer,
               nest: nesting,
             );
@@ -1556,29 +1558,23 @@ class WordDetailsState extends State<WordDetails> {
                       int i = 1;
                       while (nextLayer.isEmpty){
                         i++;
-                        if (path[path.length-i] == 'definitions') break;
+                        if (nextLayer.containsKey('definitions')) break;
                         nextLayer = path.sublist(0, path.length-i).fold(wordState, (current, key) => current[key]);
                         int index = nextLayer.keys.toList().indexOf(path[path.length-i]);
-                        if (nextLayer.length == 1){
-                          i++;
-                          if (path[path.length-i] == 'definitions') break;
-                          nextLayer = path.sublist(0, path.length-i).fold(wordState, (current, key) => current[key]);
-                          // nextLayer.remove(path[path.length-i]);
-                        }
+                        
                         if (index != nextLayer.length-1){
                           for (int j = index + 1; j < nextLayer.length; j++) {
                             final key = nextLayer.keys.elementAt(j);
                             final newKey = key is int ? key - 1 : String.fromCharCode(key.codeUnitAt(0) - 1);
-
+                            int keyIndex = nextLayer.keys.toList().indexOf(key);
                             nextLayer[newKey] = nextLayer[key];
-
-                            nextLayer.remove(key);
+                            if (keyIndex == nextLayer.keys.length-1){
+                              nextLayer.remove(key);
+                            }
                           }
                         } else{
                           nextLayer.remove(path[path.length-i]);
                         }
-                        // nextLayer.remove(path[path.length-i]);
-
                       }
                     }
                   } else{
@@ -1587,13 +1583,13 @@ class WordDetailsState extends State<WordDetails> {
                       for (int i = index + 1; i < parentLayer.length; i++) {
                         final key = parentLayer.keys.elementAt(i);
                         final newKey = key is int ? key - 1 : String.fromCharCode(key.codeUnitAt(0) - 1);
-                        // final newSn = parentLayer[newKey]['sn'];
-                        // if (parentLayer[key].containsKey)
-                        // parentLayer[key]['sn'] = newSn;
+
+                        int keyIndex = parentLayer.keys.toList().indexOf(key);                        
                         parentLayer[newKey] = parentLayer[key];
 
-                        parentLayer.remove(key);
-                      }
+                        if (keyIndex == parentLayer.keys.length-1){
+                          parentLayer.remove(key);
+                        }                      }
                     } else{
                       parentLayer.remove(path.last);
                       debugPrint('removed');
@@ -1732,35 +1728,27 @@ class WordDetailsState extends State<WordDetails> {
   }
 
   bool adjustNesting({
-    required Map<int, dynamic> data, 
+    required Map data,  // <int, dynamic>
+    required List fullPath,
     required Map definition,
     required bool nest
-    }) { // function not happy if 'sn' isnt a key, which shouldnt happen, but if it does it crashes
-    String sn = definition['sn'];
-    List<String> parts = sn.split(' ');
-    List path = parts.asMap().entries.map((entry) {
-      int index = entry.key;
-      String value = entry.value;
-      int intValue = int.tryParse(value) ?? 0; 
-      
-      return index == 1 ? indexToLetter(intValue - 1) : intValue;
-    }).toList();
+    }) {
+
+    List path = fullPath.sublist(3, fullPath.length);
     if (nest){ // ! case for nesting a definition
-      if (!parts.contains('-1')){
+      if (path.length == 3){
         return false;
       }else {
-        int index = parts.indexOf('-1');
+        int index = path.length;
         
         switch (index){
           case 1:
             // from 1 -> a
-            definition['sn'] = '${parts[0]} 1 -1';
             data[path[0]] = {
               'a': definition,
             };
           case 2:
             // from a -> 1
-            definition['sn'] = '${parts[0]} ${parts[1]} 1';
             data[path[0]][path[1]] = {
               1: definition
             };
@@ -1768,18 +1756,15 @@ class WordDetailsState extends State<WordDetails> {
         }
       }
     }else{ // ! case for de-nesting a definition
-      int count = parts.where((element) => element == '-1').length;
-      if (count > 1){
+      if (path.length <= 1){
         return false;
       } else{
-        int index = parts.indexOf('-1');
-        if (index == -1){
+        int index = path.length;
+        if (index == 3){
           // from 1 -> a
-          definition['sn'] = '${parts[0]} ${parts[1]} -1';
           data[path[0]][path[1]] = definition;
         } else {
           // from a -> 1
-          definition['sn'] = '${parts[0]} -1 -1';
           data[path[0]] = definition;
         }
       }
