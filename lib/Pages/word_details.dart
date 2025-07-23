@@ -224,181 +224,211 @@ class WordDetailsState extends State<WordDetails> {
     );
   }
 
-  void _addDefinition(String speechPartKey) {
+  void _showDefinitionDialog({
+    required String speechPartKey,
+    Map? existingData,
+    List<dynamic>? path,
+    required Function onSave,
+  }) {
+    final TextEditingController definitionController = TextEditingController(
+      text: existingData?['definition'] ?? '',
+    );
+
+    List<String> initialExamples = [];
+    if (existingData != null && existingData['example'] != null) {
+      initialExamples = List<String>.from(existingData['example']);
+    }
+    List<TextEditingController> exampleControllers = [
+      for (var ex in initialExamples) TextEditingController(text: ex)
+    ];
+    if (exampleControllers.isEmpty) exampleControllers.add(TextEditingController());
+
     showDialog(
       context: context,
       builder: (context) {
-        final TextEditingController definitionController =
-            TextEditingController();
-        final TextEditingController exampleController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Add Definition'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: definitionController,
-                autofocus: true,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Definition',
-                  border: OutlineInputBorder(),
-                ),
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: Text(existingData == null
+                ? (path != null ? 'Add Sub-Definition' : 'Add Definition')
+                : (path != null ? 'Edit Sub-Definition' : 'Edit Definition')),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: definitionController,
+                    autofocus: true,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Definition',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...List.generate(exampleControllers.length, (i) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: exampleControllers[i],
+                            maxLines: 2,
+                            decoration: InputDecoration(
+                              labelText: 'Example ${i + 1}',
+                              border: const OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.remove_circle, color: Colors.red),
+                          onPressed: exampleControllers.length > 1
+                              ? () {
+                                  setState(() {
+                                    exampleControllers.removeAt(i);
+                                  });
+                                }
+                              : null,
+                        ),
+                      ],
+                    ),
+                  )),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Example'),
+                      onPressed: () {
+                        setState(() {
+                          exampleControllers.add(TextEditingController());
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: exampleController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Example (optional)',
-                  border: OutlineInputBorder(),
-                ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final definition = definitionController.text.trim();
+                  final examples = exampleControllers
+                      .map((c) => c.text.trim())
+                      .where((ex) => ex.isNotEmpty)
+                      .toList();
+                  if (definition.isNotEmpty) {
+                    onSave(definition, examples);
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: Text(existingData == null ? 'Add' : 'Save'),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final definition = definitionController.text.trim();
-                if (definition.isNotEmpty) { // ! test
-                  setState(() {
-                    final Map speechPartData =
-                        wordState['entries'][speechPartKey];
-                    final Map organisedDefinitions =
-                        speechPartData['definitions'];
-                    final int newKey = organisedDefinitions.isEmpty
-                        ? 1
-                        : (organisedDefinitions.keys.cast<int>().toList()
-                              ..sort())
-                            .last +
-                            1;
-                    final List<String> sn;
-                    if (organisedDefinitions.isNotEmpty) {
-                      List keys = organisedDefinitions.keys.toList();
-                      sn = [keys.last.toString(), '-1', '-1'];
-                    }else {
-                      sn = ['1', '-1', '-1'];
-                    }
-
-
-                    organisedDefinitions[newKey] = {
-                      'sn': sn.join(' '),
-                      'definition': definition,
-                      'example': exampleController.text.trim().isEmpty
-                          ? []
-                          : [exampleController.text.trim()]
-                    };
-                    saveWord();
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-          ],
         );
       },
     );
   }
 
-  void _addSubDefinition(List<dynamic> path) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final TextEditingController definitionController =
-            TextEditingController();
-        final TextEditingController exampleController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Add Sub-Definition'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: definitionController,
-                autofocus: true,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Definition',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: exampleController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Example (optional)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final definition = definitionController.text.trim();
-                final example = exampleController.text.trim();
-                if (definition.isNotEmpty) {
-                  setState(() {
-                    dynamic target = wordState;
-                    for (final key in path) {
-                      target = target[key];
-                    }
-                    Map node = target as Map;
+  void _addDefinition(String speechPartKey, {Map? existingData, List<dynamic>? path}) {
+    _showDefinitionDialog(
+      speechPartKey: speechPartKey,
+      existingData: existingData,
+      path: path,
+      onSave: (definition, examples) {
+        setState(() {
+          if (path != null) {
+            // Add or edit subdefinition
+            dynamic target = wordState;
+            for (final key in path) {
+              target = target[key];
+            }
+            Map node = target as Map;
+            node['definition'] = definition;
+            node['example'] = examples;
+          } else {
+            // Add or edit main definition
+            final Map speechPartData = wordState['entries'][speechPartKey];
+            final Map organisedDefinitions = speechPartData['definitions'];
+            final int newKey = organisedDefinitions.isEmpty
+                ? 1
+                : (organisedDefinitions.keys.cast<int>().toList()..sort()).last + 1;
+            final List<String> sn;
+            if (organisedDefinitions.isNotEmpty) {
+              List keys = organisedDefinitions.keys.toList();
+              sn = [keys.last.toString(), '-1', '-1'];
+            } else {
+              sn = ['1', '-1', '-1'];
+            }
+            organisedDefinitions[newKey] = {
+              'sn': sn.join(' '),
+              'definition': definition,
+              'example': examples,
+            };
+          }
+          saveWord();
+        });
+      },
+    );
+  }
 
-                    final parentKey = path.last;
-                    final bool keysAreNumeric = parentKey is String;
+  void _addSubDefinition(List<dynamic> path, {Map? existingData}) {
+    // Find the speech part key for this path
+    String speechPartKey = path[1];
+    _showDefinitionDialog(
+      speechPartKey: speechPartKey,
+      existingData: existingData,
+      path: path,
+      onSave: (definition, examples) {
+        setState(() {
+          dynamic target = wordState;
+          for (final key in path) {
+            target = target[key];
+          }
+          Map node = target as Map;
 
-                    dynamic newKey;
-                    if (keysAreNumeric) {
-                      final int maxKey = node.keys.isEmpty
-                          ? 0
-                          : (node.keys.cast<int>().toList()..sort()).last;
-                      newKey = maxKey + 1;
-                    } else {
-                      if (node.keys.isEmpty) {
-                        newKey = 'a';
-                      } else {
-                        final String lastKey =
-                            (node.keys.cast<String>().toList()..sort()).last;
-                        newKey = String.fromCharCode(lastKey.codeUnitAt(0) + 1);
-                      }
-                    }
-                    List sn = path.sublist(3, path.length);
-                    try {
-                      sn[1] = letterToIndex(sn[1]) + 1; // convert letter in path to sn index
-                    } catch (e) {
-                      debugPrint('Second index not available...');
-                    }
+          // Add new subdefinition key
+          final parentKey = path.last;
+          final bool keysAreNumeric = parentKey is String;
 
-                    int snKey = newKey is int ? newKey : letterToIndex(newKey) + 1;
-                    sn.add(snKey);
-                    if (sn.length != 3) {
-                      sn.add('-1');
-                    }
+          dynamic newKey;
+          if (keysAreNumeric) {
+            final int maxKey = node.keys.isEmpty
+                ? 0
+                : (node.keys.cast<int>().toList()..sort()).last;
+            newKey = maxKey + 1;
+          } else {
+            if (node.keys.isEmpty) {
+              newKey = 'a';
+            } else {
+              final String lastKey =
+                  (node.keys.cast<String>().toList()..sort()).last;
+              newKey = String.fromCharCode(lastKey.codeUnitAt(0) + 1);
+            }
+          }
+          List sn = path.sublist(3, path.length);
+          try {
+            sn[1] = letterToIndex(sn[1]) + 1; // convert letter in path to sn index
+          } catch (e) {
+            debugPrint('Second index not available...');
+          }
 
-                    node[newKey] = {
-                      'sn': sn.join(' '),
-                      'definition': definition,
-                      'example': example.isEmpty ? [] : [example],
-                    };
-                    saveWord();
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        );
+          int snKey = newKey is int ? newKey : letterToIndex(newKey) + 1;
+          sn.add(snKey);
+          if (sn.length != 3) {
+            sn.add('-1');
+          }
+
+          node[newKey] = {
+            'sn': sn.join(' '),
+            'definition': definition,
+            'example': examples,
+          };
+          saveWord();
+        });
       },
     );
   }
@@ -1019,17 +1049,15 @@ class WordDetailsState extends State<WordDetails> {
                                           if (!organisedDefinitionEntries[i].value.containsKey('definition'))
                                           Padding(
                                             padding: const EdgeInsets.only(left: 16.0),
-                                            child: Expanded(
-                                              child: _buildDefinitionLayer(
-                                                organisedDefinitionEntries[i].value,
-                                                [
-                                                  'entries',
-                                                  speechType.key,
-                                                  'definitions',
-                                                  organisedDefinitionEntries[i].key,
-                                                ],
-                                                isEditMode: true,
-                                              ),
+                                            child: _buildDefinitionLayer(
+                                              organisedDefinitionEntries[i].value,
+                                              [
+                                                'entries',
+                                                speechType.key,
+                                                'definitions',
+                                                organisedDefinitionEntries[i].key,
+                                              ],
+                                              isEditMode: true,
                                             ),
                                           ),
                                         ],
@@ -1493,6 +1521,7 @@ class WordDetailsState extends State<WordDetails> {
     final parentLayer = path.sublist(0, path.length-1).fold(wordState, (current, key) => current[key]);
 
     if (layer.containsKey('definition')) {
+      final isNested = path.length > 4; // Adjust this number as needed for your structure
       return GestureDetector(
         onHorizontalDragEnd: (details) {
           if (!isEditMode) return;
@@ -1513,28 +1542,30 @@ class WordDetailsState extends State<WordDetails> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
                 MWTaggedText(
-                  "${layer['definition'] ?? ''}",
+                  "${(layer['definition'] ?? '').replaceAll('\n', ' ')}",
                   style: const TextStyle(fontSize: 16),
                 ),
               if (layer['example'] != null)
                 ...List<String>.from(layer['example']).map(
                   (example) => Padding(
-                    padding: const EdgeInsets.symmetric(
+                    padding: EdgeInsets.symmetric(
                       vertical: 8.0,
-                      horizontal: 8,
+                      horizontal: isNested ? 8 : 0, // Only indent if nested
                     ),
                     child: Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          left: BorderSide(
-                            color: Colors.blue.shade300,
-                            width: 4,
-                          ),
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(
+                      decoration: isNested
+                          ? BoxDecoration(
+                              border: Border(
+                                left: BorderSide(
+                                  color: Colors.blue.shade300,
+                                  width: 4,
+                                ),
+                              ),
+                            )
+                          : null,
+                      padding: EdgeInsets.symmetric(
                         vertical: 6,
-                        horizontal: 10,
+                        horizontal: isNested ? 10 : 0,
                       ),
                       child: MWTaggedText(capitalise(example)),
                     ),
@@ -1583,10 +1614,10 @@ class WordDetailsState extends State<WordDetails> {
                       for (int i = index + 1; i < parentLayer.length; i++) {
                         final key = parentLayer.keys.elementAt(i);
                         final newKey = key is int ? key - 1 : String.fromCharCode(key.codeUnitAt(0) - 1);
-
+      
                         int keyIndex = parentLayer.keys.toList().indexOf(key);                        
                         parentLayer[newKey] = parentLayer[key];
-
+      
                         if (keyIndex == parentLayer.keys.length-1){
                           parentLayer.remove(key);
                         }                      }
@@ -1600,45 +1631,10 @@ class WordDetailsState extends State<WordDetails> {
                 });
               }
               else if (value == 'edit') {
-                // Show popup to edit the definition
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    final TextEditingController editController = TextEditingController(
-                      text: layer['definition'],
-                    );
-                    return AlertDialog(
-                      title: const Text('Edit Definition'),
-                      content: SizedBox(
-                        width: double.infinity,
-                        child: TextField(
-                          controller: editController,
-                          autofocus: true,
-                          maxLines: null,
-                          decoration: const InputDecoration(
-                            labelText: 'Definition',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Cancel'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              layer['definition'] = editController.text;
-                              saveWord(); 
-                            });
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('Save'),
-                        ),
-                      ],
-                    );
-                  },
+                _addDefinition(
+                  path[1], // speechPartKey
+                  existingData: layer,
+                  path: path,
                 );
               }
             },
@@ -1744,8 +1740,8 @@ class WordDetailsState extends State<WordDetails> {
                               : "{b}${entries[i].key}){/b} ",
                           style: const TextStyle(fontSize: 16),
                         ),
-                        const Spacer(),
-                        if (!entries[i].value.containsKey('definition'))
+                        if (!entries[i].value.containsKey('definition'))...[
+                          const Spacer(),
                           IconButton(
                             onPressed: () => _addSubDefinition([...path, entries[i].key]),
                             icon: const Icon(Icons.add),
@@ -1753,6 +1749,7 @@ class WordDetailsState extends State<WordDetails> {
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                           ),
+                        ],
                       ],
                     ),
                     _buildDefinitionLayer(
