@@ -121,14 +121,9 @@ class QuizzesState extends State<Quizzes> {
                               String message;
                               try {
                                 List examples = [];
-                                final details = currentWord['attributes']['details'] ?? {};
+                                final details = currentWord['attributes']['definitions'] ?? {};
                                 details.forEach((value) {
-                                  final definitions = value['definitions'] ?? [];
-                                  for (var defGroup in definitions) {
-                                    for (var subGroup in defGroup) {
-                                      examples += subGroup['example'];
-                                    }
-                                  }
+                                  examples += value['example'];
                                 });
                                 message = examples[0]; // ADD index's later
                               } on RangeError {
