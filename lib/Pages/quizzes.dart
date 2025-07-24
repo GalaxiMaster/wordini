@@ -115,6 +115,18 @@ class QuizzesState extends State<Quizzes> {
                       width: MediaQuery.of(context).size.width,
                       child: Row(
                         children: [
+                          if (maxQuestions != null)
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: const Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: Icon(
+                                Icons.arrow_back,
+                                color: Colors.white,
+                                size: 25,
+                              ),
+                            ),
+                          ),
                           IconButton(
                             icon: const Icon(Icons.lightbulb),
                             onPressed: () {
