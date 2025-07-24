@@ -109,7 +109,7 @@ class QuizzesState extends State<Quizzes> {
               return Stack(
                 children: [
                   Positioned(
-                    top: 25,
+                    top: 40,
                     child: SizedBox(
                       height: 50,
                       width: MediaQuery.of(context).size.width,
