@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:wordini/file_handling.dart';
+import 'package:wordini/utils.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
 
@@ -46,13 +47,8 @@ class WordDetailsState extends State<WordDetails> {
   @override
   void initState() {
     super.initState();
-    wordState = Map.from(
-      widget.word.map((key, value) {
-        if (value is Map) return MapEntry(key, Map.from(value));
-        if (value is List) return MapEntry(key, List.from(value));
-        return MapEntry(key, value);
-      }),
-    );
+    wordState = deepCopy(widget.word);
+
     if (wordState.containsKey('entries')) {
       final entries = wordState['entries'] as Map;
       for (var speechPartKey in entries.keys) {
@@ -744,6 +740,7 @@ class WordDetailsState extends State<WordDetails> {
         final speechPartData = entries[speechPartKey];
         if (speechPartData.containsKey('definitions')) {
           speechPartData['definitions'] = _deconstructAndRenumber(speechPartData['definitions']);
+          debugPrint('Writing definitions format: ${speechPartData['definitions'].runtimeType}');
         }
       }
       
@@ -1809,6 +1806,7 @@ class WordDetailsState extends State<WordDetails> {
         }
       }
     }
+    saveWord();
     return true;
   }
 }
