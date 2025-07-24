@@ -51,10 +51,31 @@ Future<void> resetData(context, {String? path}) async {
   List? choices;
   if (path != null){
     choices = [path];
-  }else {
+  } else {
     choices = await getChoices(context);
   }
-  if (choices != null){
+  if (choices != null && choices.isNotEmpty) {
+    // Add confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Reset'),
+        content: Text(
+          'Are you sure you want to reset the following data?\n\n${choices!.join(', ')}\n\nThis action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
     for (String choice in choices){
       final box = await Hive.openBox(choice);
       await box.clear();
