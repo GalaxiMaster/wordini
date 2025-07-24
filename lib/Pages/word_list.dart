@@ -332,7 +332,7 @@ class WordListState extends State<WordList> {
               decoration: BoxDecoration(
                 color: Color.fromARGB(255, 18, 18, 18),
               ),
-              padding: const EdgeInsets.fromLTRB(16, 35, 16, 5),
+              padding: const EdgeInsets.fromLTRB(16, 50, 16, 5),
               child: Stack(
                 children: [
                   TextField(
@@ -481,7 +481,7 @@ class WordListState extends State<WordList> {
                         ),
                         subtitle: Text(
                           (firstWordDetails['shortDefs']?.isNotEmpty ? firstWordDetails['shortDefs']?.first : firstWordDetails['definitions']?.first?.first['definition']) ?? '',
-                        ),
+                        ), 
                       ),
                     );
                   },
@@ -535,9 +535,7 @@ class WordListState extends State<WordList> {
   Map getFirstData(Map words, String word) {
     Map entries = words[word]['entries']; // ?.first?.value['details']?.first
     for (MapEntry entry in entries.entries){
-      for (Map detailEntry in entry.value['details']){
-        return detailEntry;
-      }
+        return entry.value;
     }
     return {};
   }

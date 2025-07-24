@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'dart:convert';
@@ -49,10 +51,31 @@ Future<void> resetData(context, {String? path}) async {
   List? choices;
   if (path != null){
     choices = [path];
-  }else {
+  } else {
     choices = await getChoices(context);
   }
-  if (choices != null){
+  if (choices != null && choices.isNotEmpty) {
+    // Add confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Reset'),
+        content: Text(
+          'Are you sure you want to reset the following data?\n\n${choices!.join(', ')}\n\nThis action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
     for (String choice in choices){
       final box = await Hive.openBox(choice);
       await box.clear();
@@ -254,4 +277,49 @@ void _showErrorDialog(BuildContext context, String message) {
       ],
     ),
   );
+}
+
+Future<void> getUserPermissions() async {
+  Map<String, dynamic> permissions;
+  const defaultPermissions = {'canQuiz': false};
+
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance
+          .collection('User-Permissions')
+          .doc(user.uid)
+          .get();
+      
+      permissions = doc.exists ? doc.data() as Map<String, dynamic> : defaultPermissions;
+    } else {
+      permissions = defaultPermissions;
+    }
+  } catch (e) {
+    debugPrint('Error fetching permissions: $e');
+    permissions = defaultPermissions;
+  }
+
+  final permissionsBox = Hive.box('permissions');
+
+  permissionsBox.put('canQuiz', permissions['canQuiz'] ?? false);
+}
+
+Future<void> createDefaultPermissions(UserCredential userCredential) async {
+  final user = userCredential.user;
+  if (user == null) return;
+
+  final defaultPermissions = {
+    'canQuiz': false,
+  };
+
+  try {
+    await FirebaseFirestore.instance
+        .collection('User-Permissions')
+        .doc(user.uid)
+        .set(defaultPermissions);
+  } catch (e) {
+    debugPrint("Error creating permissions document: $e");
+  }
 }

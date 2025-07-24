@@ -5,24 +5,42 @@ import 'package:wordini/Pages/home.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:wordini/Pages/quizzes.dart';
+import 'package:wordini/encryption_controller.dart';
+import 'package:wordini/file_handling.dart';
 import 'package:wordini/notification_controller.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 void main() async{
-  // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter(); // Initializes Hive using path_provider
-  await Hive.openBox('myBox'); // Open a box
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  ); 
+  // Load gpt api key from .env file
+  await dotenv.load();
+  OpenAI.apiKey = dotenv.env['GPT_API_KEY'] ?? ''; 
+  // Initialize the encryption service
+  await EncryptionService.instance.initialize();
 
+  // Ensure Hive is initialized
+  await Hive.initFlutter(); // Initializes Hive using path_provider
+  await Hive.openBox('userData'); // Open a box
+  await Hive.openBox('permissions'); // Open a box
+
+  // intiialize notificaiton stuff
   initializeNotifications();
   // Initialize timezone database
   tz.initializeTimeZones();
-  await dotenv.load();
-  OpenAI.apiKey = dotenv.env['GPT_API_KEY'] ?? ''; 
+
+  getUserPermissions();
+  
   runApp(const MainApp());
 }
+
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
@@ -47,6 +65,3 @@ class MainApp extends StatelessWidget {
     );
   }
 }
-
-
-  

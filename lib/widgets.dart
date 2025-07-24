@@ -125,13 +125,13 @@ class MWTaggedText extends StatelessWidget {
     final buffer = StringBuffer();
     final styleStack = <TextStyle>[];
     var currentStyle = const TextStyle();
-
     int lastIndex = 0;
+    text = parseMerriamWebsterTags(text);
     final matches = tagPattern.allMatches(text);
 
     void flushBuffer() {
       if (buffer.isNotEmpty) {
-        spans.add(TextSpan(text: parseMerriamWebsterTags(buffer.toString()), style: currentStyle));
+        spans.add(TextSpan(text:buffer.toString(), style: currentStyle));
         buffer.clear();
       }
     }
@@ -206,8 +206,11 @@ class MWTaggedText extends StatelessWidget {
             // {dxt|flower|flower|illustration} → "flower (see illustration)"
             return '$part1 (see $part3)';
           case 'sx':
-            // {sx|fashion||} → "fashion"
+            // {sx|fashion||} → "— fashion"
             return '— $part1';
+          case 'Sx':
+            // {Sx|fashion||} → "fashion"
+            return '{it}$part1{/it}';
           case 'a_link':
             return part1;
           case 'd_link':

@@ -1,9 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:wordini/Pages/Account/account.dart';
+import 'package:wordini/Pages/Account/sign_in.dart';
 import 'package:wordini/Pages/word_details.dart';
 import 'package:wordini/file_handling.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
+import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -32,6 +36,36 @@ class SettingsPageState extends State<SettingsPage> {
             return ListView(
               padding: const EdgeInsets.all(16.0),
               children: [
+                settingsHeader('Account'),
+                const SizedBox(height: 8),
+                _buildSettingsTile(
+                  icon: Icons.person,
+                  label: 'Account',
+                  function: () async{
+                    final LoadingOverlay loadingOverlay = LoadingOverlay();
+                    loadingOverlay.showLoadingOverlay(context);
+                    User? user = FirebaseAuth.instance.currentUser;
+                    if (user != null){
+                      await reAuthUser(user, context);
+                      user = FirebaseAuth.instance.currentUser;
+                      loadingOverlay.removeLoadingOverlay();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AccountPage(accountDetails: user!),
+                        ),
+                      );  
+                    }else{
+                      loadingOverlay.removeLoadingOverlay();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SignInPage(),
+                        ),
+                      );  
+                    }
+                  },
+                ),
                 settingsHeader('Functions'),
                 const SizedBox(height: 8),
                 _buildSettingsTile(
