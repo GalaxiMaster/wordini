@@ -1520,155 +1520,159 @@ class WordDetailsState extends State<WordDetails> {
 
     if (layer.containsKey('definition')) {
       final isNested = path.length > 4; // Adjust this number as needed for your structure
-      return GestureDetector(
-        onHorizontalDragEnd: (details) {
-          if (!isEditMode) return;
-          bool nesting = details.velocity.pixelsPerSecond.dx < 0 ? false : true;
-          if (parentLayer.length > 1 && !nesting) return;
-          setState((){
-            adjustNesting(
-              data: wordState[path[0]][path[1]][path[2]],
-              fullPath: path,
-              definition: layer,
-              nest: nesting,
-            );
-          });
-        },
-        child: ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-                MWTaggedText(
-                  "${(layer['definition'] ?? '').replaceAll('\n', ' ')}",
-                  style: const TextStyle(fontSize: 16),
-                ),
-              if (layer['example'] != null)
-                ...List<String>.from(layer['example']).map(
-                  (example) => Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 8.0,
-                      horizontal: isNested ? 8 : 0, // Only indent if nested
-                    ),
-                    child: Container(
-                      decoration: isNested
-                          ? BoxDecoration(
-                              border: Border(
-                                left: BorderSide(
-                                  color: Colors.blue.shade300,
-                                  width: 4,
-                                ),
+      Widget definitionTile = ListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            MWTaggedText(
+              "${(layer['definition'] ?? '').replaceAll('\n', ' ')}",
+              style: const TextStyle(fontSize: 16),
+            ),
+            if (layer['example'] != null)
+              ...List<String>.from(layer['example']).map(
+                (example) => Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: 8.0,
+                    horizontal: isNested ? 8 : 0, // Only indent if nested
+                  ),
+                  child: Container(
+                    decoration: isNested
+                        ? BoxDecoration(
+                            border: Border(
+                              left: BorderSide(
+                                color: Colors.blue.shade300,
+                                width: 4,
                               ),
-                            )
-                          : null,
-                      padding: EdgeInsets.symmetric(
-                        vertical: 6,
-                        horizontal: isNested ? 10 : 0,
-                      ),
-                      child: MWTaggedText(capitalise(example)),
+                            ),
+                          )
+                        : null,
+                    padding: EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: isNested ? 10 : 0,
                     ),
+                    child: MWTaggedText(capitalise(example)),
                   ),
                 ),
-            ],
+              ),
+          ],
+        ),
+        trailing: editMode ? PopupMenuButton<String>(
+          icon: const Icon(
+            Icons.more_vert,
+            size: 18,
           ),
-          trailing: editMode ? PopupMenuButton<String>(
-            icon: const Icon(
-              Icons.more_vert,
-              size: 18,
-            ),
-            tooltip: "More actions",
-            onSelected: (value) {
-              if (value == 'delete') {
-                setState(() {
-                  if (parentLayer.length == 1){
-                    parentLayer.remove(path.last);
-                    if (parentLayer.isEmpty){
-                      Map nextLayer = {};
-                      int i = 1;
-                      while (nextLayer.isEmpty){
-                        i++;
-                        if (nextLayer.containsKey('definitions')) break;
-                        nextLayer = path.sublist(0, path.length-i).fold(wordState, (current, key) => current[key]);
-                        int index = nextLayer.keys.toList().indexOf(path[path.length-i]);
-                        
-                        if (index != nextLayer.length-1){
-                          for (int j = index + 1; j < nextLayer.length; j++) {
-                            final key = nextLayer.keys.elementAt(j);
-                            final newKey = key is int ? key - 1 : String.fromCharCode(key.codeUnitAt(0) - 1);
-                            int keyIndex = nextLayer.keys.toList().indexOf(key);
-                            nextLayer[newKey] = nextLayer[key];
-                            if (keyIndex == nextLayer.keys.length-1){
-                              nextLayer.remove(key);
-                            }
+          tooltip: "More actions",
+          onSelected: (value) {
+            if (value == 'delete') {
+              setState(() {
+                if (parentLayer.length == 1){
+                  parentLayer.remove(path.last);
+                  if (parentLayer.isEmpty){
+                    Map nextLayer = {};
+                    int i = 1;
+                    while (nextLayer.isEmpty){
+                      i++;
+                      if (nextLayer.containsKey('definitions')) break;
+                      nextLayer = path.sublist(0, path.length-i).fold(wordState, (current, key) => current[key]);
+                      int index = nextLayer.keys.toList().indexOf(path[path.length-i]);
+                      
+                      if (index != nextLayer.length-1){
+                        for (int j = index + 1; j < nextLayer.length; j++) {
+                          final key = nextLayer.keys.elementAt(j);
+                          final newKey = key is int ? key - 1 : String.fromCharCode(key.codeUnitAt(0) - 1);
+                          int keyIndex = nextLayer.keys.toList().indexOf(key);
+                          nextLayer[newKey] = nextLayer[key];
+                          if (keyIndex == nextLayer.keys.length-1){
+                            nextLayer.remove(key);
                           }
-                        } else{
-                          nextLayer.remove(path[path.length-i]);
                         }
+                      } else{
+                        nextLayer.remove(path[path.length-i]);
                       }
                     }
-                  } else{
-                    int index = parentLayer.keys.toList().indexOf(path.last);
-                    if (index != parentLayer.length-1){
-                      for (int i = index + 1; i < parentLayer.length; i++) {
-                        final key = parentLayer.keys.elementAt(i);
-                        final newKey = key is int ? key - 1 : String.fromCharCode(key.codeUnitAt(0) - 1);
-      
-                        int keyIndex = parentLayer.keys.toList().indexOf(key);                        
-                        parentLayer[newKey] = parentLayer[key];
-      
-                        if (keyIndex == parentLayer.keys.length-1){
-                          parentLayer.remove(key);
-                        }                      }
-                    } else{
-                      parentLayer.remove(path.last);
-                      debugPrint('removed');
-                    }
-                    // cascading deletions
                   }
-                  saveWord();
-                });
-              }
-              else if (value == 'edit') {
-                _addDefinition(
-                  path[1], // speechPartKey
-                  existingData: layer,
-                  path: path,
-                );
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.edit,
-                      size: 18,
-                      color: Colors.white,
-                    ),
-                    SizedBox(width: 8),
-                    Text('Edit'),
-                  ],
-                ),
+                } else{
+                  int index = parentLayer.keys.toList().indexOf(path.last);
+                  if (index != parentLayer.length-1){
+                    for (int i = index + 1; i < parentLayer.length; i++) {
+                      final key = parentLayer.keys.elementAt(i);
+                      final newKey = key is int ? key - 1 : String.fromCharCode(key.codeUnitAt(0) - 1);
+      
+                      int keyIndex = parentLayer.keys.toList().indexOf(key);                        
+                      parentLayer[newKey] = parentLayer[key];
+      
+                      if (keyIndex == parentLayer.keys.length-1){
+                        parentLayer.remove(key);
+                      }                      }
+                  } else{
+                    parentLayer.remove(path.last);
+                    debugPrint('removed');
+                  }
+                  // cascading deletions
+                }
+                saveWord();
+              });
+            }
+            else if (value == 'edit') {
+              _addDefinition(
+                path[1], // speechPartKey
+                existingData: layer,
+                path: path,
+              );
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'edit',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.edit,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: 8),
+                  Text('Edit'),
+                ],
               ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.delete,
-                      size: 18,
-                      color: Colors.red,
-                    ),
-                    SizedBox(width: 8),
-                    Text('Delete'),
-                  ],
-                ),
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.delete,
+                    size: 18,
+                    color: Colors.red,
+                  ),
+                  SizedBox(width: 8),
+                  Text('Delete'),
+                ],
               ),
-            ],
-          ) : null,
-        ),
+            ),
+          ],
+        ) : null
       );
+      if (editMode) {
+        return GestureDetector(
+          onHorizontalDragEnd: (details) {
+            bool nesting = details.velocity.pixelsPerSecond.dx < 0 ? false : true;
+            if (parentLayer.length > 1 && !nesting) return;
+            setState(() {
+              adjustNesting(
+                data: wordState[path[0]][path[1]][path[2]],
+                fullPath: path,
+                definition: layer,
+                nest: nesting,
+              );
+            });
+          },
+          child: definitionTile,
+        );
+      } else {
+        return definitionTile;
+      }
     }
 
     final entries = layer.entries.toList()
