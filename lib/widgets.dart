@@ -752,7 +752,7 @@ class _GoalOptionsState extends State<GoalOptions> {
                     try {
                       await writeKey(widget.goal, path: 'settings', _combinedValue.toString());
                       if (context.mounted) {
-                        Navigator.pop(context);
+                        Navigator.pop(context, _combinedValue);
                       }
                     } catch (e) {
                       debugPrint('Error saving goal: $e');
