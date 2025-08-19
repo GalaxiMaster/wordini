@@ -10,14 +10,14 @@ import 'package:wordini/file_handling.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:wordini/widgets.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
   HomePageState createState() => HomePageState();
 }
 
-class HomePageState extends State<HomePage> {
+class HomePageState extends ConsumerState<HomePage> {
   int _currentIndex = 1;
   final List<Widget> _pages = [
     WordList(),
