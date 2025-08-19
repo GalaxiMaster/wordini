@@ -6,18 +6,19 @@ import 'package:wordini/Pages/quizzes.dart';
 import 'package:wordini/Pages/settings.dart';
 import 'package:wordini/Pages/statistics_page.dart';
 import 'package:wordini/Pages/word_list.dart';
+import 'package:wordini/Providers/goal_providers.dart';
 import 'package:wordini/file_handling.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:wordini/widgets.dart';
 
-class HomePage extends ConsumerStatefulWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
   HomePageState createState() => HomePageState();
 }
 
-class HomePageState extends ConsumerState<HomePage> {
+class HomePageState extends State<HomePage> {
   int _currentIndex = 1;
   final List<Widget> _pages = [
     WordList(),
@@ -81,14 +82,18 @@ class HomePageContent extends ConsumerStatefulWidget {
 }
 
 class HomePageContentState extends ConsumerState<HomePageContent> {
+  late Future<Map> inputData;
   @override
   void initState() {
     super.initState();
+    inputData = fetchInputData();
   }
   @override
   Widget build(BuildContext context) {
+    final Map wtGoal = ref.watch(wtGoalProvider);
+
     return FutureBuilder(
-      future: fetchInputData(),
+      future: inputData,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -142,13 +147,15 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                           ),
                           GestureDetector(
                             onTap: () async {
-                              await showModalBottomSheet(
+                              final int? value = await showModalBottomSheet(
                                 context: context,
                                 builder: (context) {
                                   return const GoalOptions(goal: 'wordsThisWeek');
                                 },
                               );
-                              setState(() {});
+                              if (value != null) {
+                                ref.read(wtGoalProvider.notifier).set({'wordsThisWeek': value});
+                              }
                             },
                             child: Container(
                               decoration: BoxDecoration(
@@ -173,7 +180,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                       height: 6,
                                     ),
                                     Text(
-                                      '${snapshot.data!['homePage']['wordsThisWeek']} / ${int.parse(snapshot.data!['settings']['wordsThisWeek'] ?? '20')}',
+                                      '${snapshot.data!['homePage']['wordsThisWeek']} / ${wtGoal['wordsThisWeek']}',
                                       style: TextStyle(
                                         fontSize: 17,
                                         fontWeight: FontWeight.bold,
@@ -217,7 +224,6 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                       return const GoalOptions(goal: 'WT-today');
                                     },
                                   );
-                                  setState(() {});
                                 },
                                 child: dataGaugeChart('Today', snapshot.data!['homePage']['guessesToday'], int.parse(snapshot.data!['settings']['WT-today'] ?? '4'), context)
                               ),
@@ -229,7 +235,6 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                       return const GoalOptions(goal: 'WT-thisWeek');
                                     },
                                   );
-                                  setState(() {});
                                 },
                                 child: dataGaugeChart('This week', snapshot.data!['homePage']['guessesThisWeek'], int.parse(snapshot.data!['settings']['WT-thisWeek'] ?? '20'), context)
                               ),
