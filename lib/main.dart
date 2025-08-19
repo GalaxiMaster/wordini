@@ -1,6 +1,7 @@
 import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wordini/Pages/home.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -38,7 +39,7 @@ void main() async{
 
   getUserPermissions();
   
-  runApp(const MainApp());
+  runApp(const ProviderScope(child: MainApp()));
 }
 
 
