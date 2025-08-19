@@ -1,5 +1,6 @@
 // import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wordini/Pages/add_word.dart';
 import 'package:wordini/Pages/quizzes.dart';
 import 'package:wordini/Pages/settings.dart';
@@ -73,13 +74,13 @@ class HomePageState extends State<HomePage> {
   }
 }
 
-class HomePageContent extends StatefulWidget {
+class HomePageContent extends ConsumerStatefulWidget {
   const HomePageContent({super.key});
   @override
   HomePageContentState createState() => HomePageContentState();
 }
 
-class HomePageContentState extends State<HomePageContent> {
+class HomePageContentState extends ConsumerState<HomePageContent> {
   @override
   void initState() {
     super.initState();
