@@ -1488,7 +1488,8 @@ class WordDetailsState extends State<WordDetails> {
                     ),
                   ),
                   onPressed: () {
-                    saveWord(save: true);
+                    saveWord(save: true);                    
+                    Navigator.pop(context, true);
                     Navigator.pushNamedAndRemoveUntil(
                       context,
                       '/home',

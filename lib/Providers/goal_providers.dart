@@ -8,12 +8,11 @@ final appDataProvider = FutureProvider<Map>((ref) async {
   return fetchInputData();
 });
 
-// 1. Define the generic Notifier that uses a parameter.
-// FamilyNotifier<State_Type, Parameter_Type>
 class WritableDataNotifier extends FamilyNotifier<Map, String> {
 
   @override
   Map build(String arg) {
+    // 'statistics', 'homePage', '
     final asyncData = ref.watch(appDataProvider);
 
     return asyncData.when(
@@ -25,6 +24,11 @@ class WritableDataNotifier extends FamilyNotifier<Map, String> {
 
   void updateValue(String key, dynamic value) {
     state = {...state, key: value};
+  }
+  void incrimentKey(key){
+    if (state[key] is num){
+      state[key]++;
+    }
   }
 }
 

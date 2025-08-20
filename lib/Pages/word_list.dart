@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wordini/Pages/word_details.dart';
+import 'package:wordini/Providers/otherproviders.dart';
 import 'package:wordini/file_handling.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
@@ -24,14 +26,13 @@ class BoxDetails {
   });
 }
 
-class WordList extends StatefulWidget {
+class WordList extends ConsumerStatefulWidget {
   const WordList({super.key});
   @override
   WordListState createState() => WordListState();
 }
 
-class WordListState extends State<WordList> {
-  late Future<Map<String, dynamic>> _wordsFuture;
+class WordListState extends ConsumerState<WordList> {
   String searchTerm = '';
   Map filters = {
     'wordTypes': [],
@@ -61,7 +62,6 @@ class WordListState extends State<WordList> {
   @override
   void initState() {
     super.initState();
-    _wordsFuture = readData();
   }
   void _showTagPopup(BuildContext context, TagPopupType tagMode) {
     if (_tagOverlayEntry != null) return;
@@ -254,24 +254,20 @@ class WordListState extends State<WordList> {
     _tagOverlayEntry = null;
     setState(() {});
   }
+  
   @override
   void dispose() {
     _tagController.dispose();
     _tagFocusNode.dispose();
     super.dispose();
   }
+ 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _wordsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
-        Map<String, dynamic> words = snapshot.data!;
+    final asyncData = ref.watch(wordDataFutureProvider);
+
+    return asyncData.when(
+      data: (words) {
 
         List filteredWords = words.entries.where((word) { // all word filtering logic here
           final lowerWord = word.key.toLowerCase();
@@ -450,9 +446,9 @@ class WordListState extends State<WordList> {
                             builder: (context) => WordDetails(word: words[word], allTags: allTags),
                           ),
                         );
-                        setState(() {
-                          _wordsFuture = readData();
-                        });
+                        // setState(() {
+                        //   _wordsFuture = readData();
+                        // });
                       },
                       child: ListTile(
                         title: Row(
@@ -491,6 +487,12 @@ class WordListState extends State<WordList> {
           ],
         );
       },
+      error: (err, stack) => Scaffold(
+        body: Center(child: Text('Error loading data: $err')),
+      ),
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
     );
   }
 
