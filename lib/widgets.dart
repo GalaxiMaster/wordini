@@ -750,7 +750,7 @@ class _GoalOptionsState extends State<GoalOptions> {
                 onPressed: _isLoading ? null : () async {
                   if (_combinedValue > 0){
                     try {
-                      await writeKey(widget.goal, path: 'settings', _combinedValue.toString());
+                      await writeKey(widget.goal, path: 'settings', _combinedValue);
                       if (context.mounted) {
                         Navigator.pop(context, _combinedValue);
                       }
