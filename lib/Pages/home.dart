@@ -116,215 +116,224 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
             ),
           ],
         ),
-        body: SizedBox(
-          height: double.infinity,
-          child: Stack(
-            children: [
-              SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(25),
-                  child: Column(
-                    // crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Statistics',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () async {
-                          final int? value = await showModalBottomSheet(
-                            context: context,
-                            builder: (context) {
-                              return const GoalOptions(goal: 'wordsThisWeek');
-                            },
-                          );
-                          if (value != null) {
-                            ref.read(writableDataProvider('settings').notifier).updateValue('wordsThisWeek', value);                          
-                          }
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            color: Color.fromARGB(255, 30, 30, 30)
-                          ),
-                          width: double.infinity,
-                          height: 100,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Words Added this week',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 6,
-                                ),
-                                Text(
-                                  '${progressData['wordsThisWeek']} / ${settingsData['wordsThisWeek'] ?? 20}',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.5
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 6.5,
-                                ),
-                                LinearProgressIndicator(
-                                  value: progressData['wordsThisWeek'] / (settingsData['wordsThisWeek'] ?? 20),
-                                  backgroundColor: Colors.grey.shade800,
-                                  borderRadius: BorderRadius.circular(10),
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-                                  minHeight: 12,
-                                ),
-                              ],
+        body: RefreshIndicator(
+          onRefresh: () async {
+            final _ = ref.refresh(appDataProvider);
+            debugPrint('Refreshing data...');
+          },
+          
+          child: SizedBox(
+            height: double.infinity,
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+
+                  child: Padding(
+                    padding: const EdgeInsets.all(25),
+                    child: Column(
+                      // crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Statistics',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold
                             ),
-                          )
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          'Word Testing',
-                          style: TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1
                           ),
                         ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          GestureDetector(
-                            onLongPress: () async {
-                              final int? value = await showModalBottomSheet(
-                                context: context,
-                                builder: (context) {
-                                  return const GoalOptions(goal: 'WT-today');
-                                },
-                              );
-                              if (value != null) {
-                                ref.read(writableDataProvider('settings').notifier).updateValue('WT-today', value);                          
-                              }
-                            },
-                            child: dataGaugeChart('Today', progressData['guessesToday'], settingsData['WT-today'] ?? 4, context)
-                          ),
-                          GestureDetector(
-                            onLongPress: () async{
-                              final int? value = await showModalBottomSheet(
-                                context: context,
-                                builder: (context) {
-                                  return const GoalOptions(goal: 'WT-thisWeek');
-                                },
-                              );
-                              if (value != null) {
-                                ref.read(writableDataProvider('settings').notifier).updateValue('WT-thisWeek', value);                          
-                              }
-                            },
-                            child: dataGaugeChart('This week', progressData['guessesThisWeek'], settingsData['WT-thisWeek'] ?? 20, context)
-                          ),
-                        ],
-                      ),
-                      Align(
-                        alignment: Alignment.bottomLeft,
-                        child: Text(
-                          'Quizzes',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          double totalSpacing = 12 * 4; // 4 gaps between 4 chips
-                          double chipWidth = (constraints.maxWidth - totalSpacing) / 4;
-                          
-                          return Align(
-                            alignment: Alignment.centerLeft,
-                            child: Wrap(
-                              runSpacing: 5,
-                              children: List.generate(8, (index) {
-                                int value = 5 * (index + 1);
-                                return Container(
-                                  width: chipWidth,
-                                  margin: EdgeInsets.only(
-                                    right: (index + 1) % 4 == 0 ? 0 : 12, // allow perfect margining for 4 chips per row
+                        GestureDetector(
+                          onTap: () async {
+                            final int? value = await showModalBottomSheet(
+                              context: context,
+                              builder: (context) {
+                                return const GoalOptions(goal: 'wordsThisWeek');
+                              },
+                            );
+                            if (value != null) {
+                              ref.read(writableDataProvider('settings').notifier).updateValue('wordsThisWeek', value);                          
+                            }
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              color: Color.fromARGB(255, 30, 30, 30)
+                            ),
+                            width: double.infinity,
+                            height: 100,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Words Added this week',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold
+                                    ),
                                   ),
-                                  child: RawChip(
-                                    onPressed: (){
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (context) => Quizzes(questions: value))
-                                      );
-                                    },
-                                    label: SizedBox(
-                                      width: double.infinity,
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 5),
-                                        child: Text(
-                                          value.toString(),
-                                          style: TextStyle(fontSize: 16),
-                                          overflow: TextOverflow.ellipsis,
-                                          textAlign: TextAlign.center,
+                                  SizedBox(
+                                    height: 6,
+                                  ),
+                                  Text(
+                                    '${progressData['wordsThisWeek']} / ${settingsData['wordsThisWeek'] ?? 20}',
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.5
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 6.5,
+                                  ),
+                                  LinearProgressIndicator(
+                                    value: progressData['wordsThisWeek'] / (settingsData['wordsThisWeek'] ?? 20),
+                                    backgroundColor: Colors.grey.shade800,
+                                    borderRadius: BorderRadius.circular(10),
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                                    minHeight: 12,
+                                  ),
+                                ],
+                              ),
+                            )
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text(
+                            'Word Testing',
+                            style: TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1
+                            ),
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            GestureDetector(
+                              onLongPress: () async {
+                                final int? value = await showModalBottomSheet(
+                                  context: context,
+                                  builder: (context) {
+                                    return const GoalOptions(goal: 'WT-today');
+                                  },
+                                );
+                                if (value != null) {
+                                  ref.read(writableDataProvider('settings').notifier).updateValue('WT-today', value);                          
+                                }
+                              },
+                              child: dataGaugeChart('Today', progressData['guessesToday'], settingsData['WT-today'] ?? 4, context)
+                            ),
+                            GestureDetector(
+                              onLongPress: () async{
+                                final int? value = await showModalBottomSheet(
+                                  context: context,
+                                  builder: (context) {
+                                    return const GoalOptions(goal: 'WT-thisWeek');
+                                  },
+                                );
+                                if (value != null) {
+                                  ref.read(writableDataProvider('settings').notifier).updateValue('WT-thisWeek', value);                          
+                                }
+                              },
+                              child: dataGaugeChart('This week', progressData['guessesThisWeek'], settingsData['WT-thisWeek'] ?? 20, context)
+                            ),
+                          ],
+                        ),
+                        Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Text(
+                            'Quizzes',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            double totalSpacing = 12 * 4; // 4 gaps between 4 chips
+                            double chipWidth = (constraints.maxWidth - totalSpacing) / 4;
+                            
+                            return Align(
+                              alignment: Alignment.centerLeft,
+                              child: Wrap(
+                                runSpacing: 5,
+                                children: List.generate(8, (index) {
+                                  int value = 5 * (index + 1);
+                                  return Container(
+                                    width: chipWidth,
+                                    margin: EdgeInsets.only(
+                                      right: (index + 1) % 4 == 0 ? 0 : 12, // allow perfect margining for 4 chips per row
+                                    ),
+                                    child: RawChip(
+                                      onPressed: (){
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => Quizzes(questions: value))
+                                        );
+                                      },
+                                      label: SizedBox(
+                                        width: double.infinity,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                                          child: Text(
+                                            value.toString(),
+                                            style: TextStyle(fontSize: 16),
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.center,
+                                          ),
                                         ),
                                       ),
+                                      backgroundColor: Color.fromARGB(255, 30, 30, 30),
+                                      elevation: 0,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16.5),
+                                        side: BorderSide(color: Colors.transparent, width: 0.1),
+                                      ),
+                                      visualDensity: VisualDensity.compact,
+                                      pressElevation: 0,
                                     ),
-                                    backgroundColor: Color.fromARGB(255, 30, 30, 30),
-                                    elevation: 0,
-                                    shadowColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16.5),
-                                      side: BorderSide(color: Colors.transparent, width: 0.1),
-                                    ),
-                                    visualDensity: VisualDensity.compact,
-                                    pressElevation: 0,
-                                  ),
-                                );
-                              }),
-                            ),
-                          );
-                        },
-                      )
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 10,
-                bottom: 10,
-                child: FloatingActionButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AddWord(),
+                                  );
+                                }),
+                              ),
+                            );
+                          },
                         )
-                    );
-                  },
-                  backgroundColor: Colors.blue,
-                  child: Text(
-                    "+",
-                    style: TextStyle(
-                      fontSize: 30,
-                      color: Colors.white,
+                      ],
                     ),
                   ),
+                ),
+                Positioned(
+                  right: 10,
+                  bottom: 10,
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddWord(),
+                          )
+                      );
+                    },
+                    backgroundColor: Colors.blue,
+                    child: Text(
+                      "+",
+                      style: TextStyle(
+                        fontSize: 30,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
                 )
-              )
-            ],
+              ],
+            ),
           ),
         ),
       );
