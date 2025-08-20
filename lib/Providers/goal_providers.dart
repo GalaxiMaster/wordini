@@ -1,12 +1,31 @@
+// home.dart
+
+// This provider remains the same.
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wordini/Pages/home.dart';
 
-// Define a Notifier that manages a counter
-class GoalNotifier extends Notifier<Map> {
+final appDataProvider = FutureProvider<Map>((ref) async {
+  return fetchInputData();
+});
+
+// 1. Define the generic Notifier that uses a parameter.
+// FamilyNotifier<State_Type, Parameter_Type>
+class WritableDataNotifier extends FamilyNotifier<Map, String> {
+
   @override
-  Map build() => {}; // initial state
+  Map build(String arg) {
+    final asyncData = ref.watch(appDataProvider);
 
-  void set(value) => state = value;
+    return asyncData.when(
+      data: (data) => data[arg] as Map? ?? {}, // Use arg to get the specific sub-map
+      loading: () => {},
+      error: (_, __) => {},
+    );
+  }
+
+  void updateValue(String key, dynamic value) {
+    state = {...state, key: value};
+  }
 }
 
-// Create the provider
-final wtGoalProvider = NotifierProvider<GoalNotifier, Map>(GoalNotifier.new);
+final writableDataProvider = NotifierProvider.family<WritableDataNotifier, Map, String>(WritableDataNotifier.new);

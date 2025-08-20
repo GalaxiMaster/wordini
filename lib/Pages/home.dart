@@ -10,15 +10,14 @@ import 'package:wordini/Providers/goal_providers.dart';
 import 'package:wordini/file_handling.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:wordini/widgets.dart';
-
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
   HomePageState createState() => HomePageState();
 }
 
-class HomePageState extends State<HomePage> {
+class HomePageState extends ConsumerState<HomePage> {
   int _currentIndex = 1;
   final List<Widget> _pages = [
     WordList(),
@@ -28,49 +27,47 @@ class HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-        // showInstantNotification(
-    //   title: 'YOU JUST GOT NOTIFIED', 
-    //   description: 'notified', 
-    //   androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
-    //   payload: 'wordReminder'
-    // );
-    // scheduleNotification(
-    //   title: 'YOU JUST GOT NOTIFIED', 
-    //   description: 'notified', 
-    //   duration: Duration(seconds: 1), 
-    //   androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
-    //   payload: 'wordReminder'
-    // );
   }
   @override
   Widget build(BuildContext context) {
-    // resetData(true, false, false);
-    return Scaffold(
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (int index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        indicatorColor: const Color.fromARGB(255, 112, 173, 252),
-        selectedIndex: _currentIndex,
-        destinations: const <Widget>[
-          NavigationDestination(
-            icon: Icon(Icons.list_alt_outlined),
-            label: 'Words list',
+    final asyncData = ref.watch(appDataProvider);
+
+    return asyncData.when(
+      data: (_) {
+        return Scaffold(
+          bottomNavigationBar: NavigationBar(
+            onDestinationSelected: (int index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            indicatorColor: const Color.fromARGB(255, 112, 173, 252),
+            selectedIndex: _currentIndex,
+            destinations: const <Widget>[
+              NavigationDestination(
+                icon: Icon(Icons.list_alt_outlined),
+                label: 'Words list',
+              ),
+              NavigationDestination(
+                selectedIcon: Icon(Icons.home),
+                icon: Icon(Icons.home_outlined),
+                label: 'Home',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.quiz),
+                label: 'Questions',
+              ),
+            ],
           ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.home),
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.quiz),
-            label: 'Questions',
-          ),
-        ],
+          body: _pages[_currentIndex],
+        );
+      },
+      error: (err, stack) => Scaffold(
+        body: Center(child: Text('Error loading data: $err')),
       ),
-      body: _pages[_currentIndex],
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
     );
   }
 }
@@ -90,253 +87,248 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
   }
   @override
   Widget build(BuildContext context) {
-    final Map wtGoal = ref.watch(wtGoalProvider);
+    final Map progressData = ref.watch(writableDataProvider('homePage'));
+    final Map settingsData = ref.watch(writableDataProvider('settings'));
+    final Map statisticsData = ref.watch(writableDataProvider('statistics'));
 
-    return FutureBuilder(
-      future: inputData,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error loading data ${snapshot.error}'));
-        } else if (snapshot.hasData) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Center(child: Text('Wordini')),
-              automaticallyImplyLeading: false,
-              leading: IconButton(
-                onPressed: (){
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SettingsPage())
-                  );
-                }, 
-                icon: Icon(Icons.settings)
-              ),
-              actions: [
-                IconButton(
-                  onPressed: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => WordGameStatsScreen(gameData: snapshot.data!['statistics'],))
-                    );
-                  }, 
-                  icon: Icon(Icons.bar_chart)
-                ),
-              ],
+    return Scaffold(
+        appBar: AppBar(
+          title: Center(child: Text('Wordini')),
+          automaticallyImplyLeading: false,
+          leading: IconButton(
+            onPressed: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SettingsPage())
+              );
+            }, 
+            icon: Icon(Icons.settings)
+          ),
+          actions: [
+            IconButton(
+              onPressed: (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => WordGameStatsScreen(gameData: statisticsData['stats'],))
+                );
+              }, 
+              icon: Icon(Icons.bar_chart)
             ),
-            body: SizedBox(
-              height: double.infinity,
-              child: Stack(
-                children: [
-                  SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(25),
-                      child: Column(
-                        // crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Statistics',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold
-                              ),
-                            ),
+          ],
+        ),
+        body: SizedBox(
+          height: double.infinity,
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(25),
+                  child: Column(
+                    // crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Statistics',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold
                           ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          final int? value = await showModalBottomSheet(
+                            context: context,
+                            builder: (context) {
+                              return const GoalOptions(goal: 'wordsThisWeek');
+                            },
+                          );
+                          if (value != null) {
+                            ref.read(writableDataProvider('settings').notifier).updateValue('wordsThisWeek', value);                          
+                          }
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15),
+                            color: Color.fromARGB(255, 30, 30, 30)
+                          ),
+                          width: double.infinity,
+                          height: 100,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Words Added this week',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 6,
+                                ),
+                                Text(
+                                  '${progressData['wordsThisWeek']} / ${settingsData['wordsThisWeek'] ?? 20}',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.5
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 6.5,
+                                ),
+                                LinearProgressIndicator(
+                                  value: progressData['wordsThisWeek'] / (settingsData['wordsThisWeek'] ?? 20),
+                                  backgroundColor: Colors.grey.shade800,
+                                  borderRadius: BorderRadius.circular(10),
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                                  minHeight: 12,
+                                ),
+                              ],
+                            ),
+                          )
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Text(
+                          'Word Testing',
+                          style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1
+                          ),
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
                           GestureDetector(
-                            onTap: () async {
+                            onLongPress: () async {
                               final int? value = await showModalBottomSheet(
                                 context: context,
                                 builder: (context) {
-                                  return const GoalOptions(goal: 'wordsThisWeek');
+                                  return const GoalOptions(goal: 'WT-today');
                                 },
                               );
                               if (value != null) {
-                                ref.read(wtGoalProvider.notifier).set({'wordsThisWeek': value});
+                                ref.read(writableDataProvider('settings').notifier).updateValue('WT-today', value);                          
                               }
                             },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                color: Color.fromARGB(255, 30, 30, 30)
-                              ),
-                              width: double.infinity,
-                              height: 100,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Words Added this week',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      height: 6,
-                                    ),
-                                    Text(
-                                      '${snapshot.data!['homePage']['wordsThisWeek']} / ${wtGoal['wordsThisWeek']}',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1.5
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      height: 6.5,
-                                    ),
-                                    LinearProgressIndicator(
-                                      value: snapshot.data!['homePage']['wordsThisWeek'] / 20,
-                                      backgroundColor: Colors.grey.shade800,
-                                      borderRadius: BorderRadius.circular(10),
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-                                      minHeight: 12,
-                                    ),
-                                  ],
-                                ),
-                              )
-                            ),
+                            child: dataGaugeChart('Today', progressData['guessesToday'], settingsData['WT-today'] ?? 4, context)
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              'Word Testing',
-                              style: TextStyle(
-                                fontSize: 19,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1
-                              ),
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              GestureDetector(
-                                onLongPress: () async {
-                                  await showModalBottomSheet(
-                                    context: context,
-                                    builder: (context) {
-                                      return const GoalOptions(goal: 'WT-today');
-                                    },
-                                  );
+                          GestureDetector(
+                            onLongPress: () async{
+                              final int? value = await showModalBottomSheet(
+                                context: context,
+                                builder: (context) {
+                                  return const GoalOptions(goal: 'WT-thisWeek');
                                 },
-                                child: dataGaugeChart('Today', snapshot.data!['homePage']['guessesToday'], int.parse(snapshot.data!['settings']['WT-today'] ?? '4'), context)
-                              ),
-                              GestureDetector(
-                                onLongPress: () async{
-                                  await showModalBottomSheet(
-                                    context: context,
-                                    builder: (context) {
-                                      return const GoalOptions(goal: 'WT-thisWeek');
-                                    },
-                                  );
-                                },
-                                child: dataGaugeChart('This week', snapshot.data!['homePage']['guessesThisWeek'], int.parse(snapshot.data!['settings']['WT-thisWeek'] ?? '20'), context)
-                              ),
-                            ],
-                          ),
-                          Align(
-                            alignment: Alignment.bottomLeft,
-                            child: Text(
-                              'Quizzes',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              double totalSpacing = 12 * 4; // 4 gaps between 4 chips
-                              double chipWidth = (constraints.maxWidth - totalSpacing) / 4;
-                              
-                              return Align(
-                                alignment: Alignment.centerLeft,
-                                child: Wrap(
-                                  runSpacing: 5,
-                                  children: List.generate(8, (index) {
-                                    int value = 5 * (index + 1);
-                                    return Container(
-                                      width: chipWidth,
-                                      margin: EdgeInsets.only(
-                                        right: (index + 1) % 4 == 0 ? 0 : 12, // allow perfect margining for 4 chips per row
-                                      ),
-                                      child: RawChip(
-                                        onPressed: (){
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(builder: (context) => Quizzes(questions: value))
-                                          );
-                                        },
-                                        label: SizedBox(
-                                          width: double.infinity,
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 5),
-                                            child: Text(
-                                              value.toString(),
-                                              style: TextStyle(fontSize: 16),
-                                              overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        ),
-                                        backgroundColor: Color.fromARGB(255, 30, 30, 30),
-                                        elevation: 0,
-                                        shadowColor: Colors.transparent,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16.5),
-                                          side: BorderSide(color: Colors.transparent, width: 0.1),
-                                        ),
-                                        visualDensity: VisualDensity.compact,
-                                        pressElevation: 0,
-                                      ),
-                                    );
-                                  }),
-                                ),
                               );
+                              if (value != null) {
+                                ref.read(writableDataProvider('settings').notifier).updateValue('WT-thisWeek', value);                          
+                              }
                             },
-                          )
+                            child: dataGaugeChart('This week', progressData['guessesThisWeek'], settingsData['WT-thisWeek'] ?? 20, context)
+                          ),
                         ],
                       ),
-                    ),
-                  ),
-                  Positioned(
-                    right: 10,
-                    bottom: 10,
-                    child: FloatingActionButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AddWord(),
-                            )
-                        );
-                      },
-                      backgroundColor: Colors.blue,
-                      child: Text(
-                        "+",
-                        style: TextStyle(
-                          fontSize: 30,
-                          color: Colors.white,
+                      Align(
+                        alignment: Alignment.bottomLeft,
+                        child: Text(
+                          'Quizzes',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    )
-                  )
-                ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          double totalSpacing = 12 * 4; // 4 gaps between 4 chips
+                          double chipWidth = (constraints.maxWidth - totalSpacing) / 4;
+                          
+                          return Align(
+                            alignment: Alignment.centerLeft,
+                            child: Wrap(
+                              runSpacing: 5,
+                              children: List.generate(8, (index) {
+                                int value = 5 * (index + 1);
+                                return Container(
+                                  width: chipWidth,
+                                  margin: EdgeInsets.only(
+                                    right: (index + 1) % 4 == 0 ? 0 : 12, // allow perfect margining for 4 chips per row
+                                  ),
+                                  child: RawChip(
+                                    onPressed: (){
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => Quizzes(questions: value))
+                                      );
+                                    },
+                                    label: SizedBox(
+                                      width: double.infinity,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                                        child: Text(
+                                          value.toString(),
+                                          style: TextStyle(fontSize: 16),
+                                          overflow: TextOverflow.ellipsis,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                    backgroundColor: Color.fromARGB(255, 30, 30, 30),
+                                    elevation: 0,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16.5),
+                                      side: BorderSide(color: Colors.transparent, width: 0.1),
+                                    ),
+                                    visualDensity: VisualDensity.compact,
+                                    pressElevation: 0,
+                                  ),
+                                );
+                              }),
+                            ),
+                          );
+                        },
+                      )
+                    ],
+                  ),
+                ),
               ),
-            ),
-          );
-        } else {
-          return const Center(child: Text('No data available'));
-        }
-      },
-    );
-  }
+              Positioned(
+                right: 10,
+                bottom: 10,
+                child: FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddWord(),
+                        )
+                    );
+                  },
+                  backgroundColor: Colors.blue,
+                  child: Text(
+                    "+",
+                    style: TextStyle(
+                      fontSize: 30,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              )
+            ],
+          ),
+        ),
+      );
+    }
 
   Padding dataGaugeChart(String title, int value, int goal, BuildContext context) {
     return Padding(
@@ -420,70 +412,72 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
       ),
     );
   }
-  
-  Future<Map> fetchInputData() async {
-    final Map<String, dynamic> inputData = await readData(path: 'inputs');
-    final int week = getWeekNumber(DateTime.now());
+}
 
-    int wordsGuessed = 0;
-    int speechTypesGuessed = 0;
-    int totalGuesses = 0;
-    int totalSkips = 0;
-    int correctGuesses = 0;
-    final Map<String, int> wordGuesses = {};
-    int guessesThisWeek = 0;
-    int guessesToday = 0;
+Future<Map> fetchInputData() async {
+  final Map<String, dynamic> inputData = await readData(path: 'inputs');
+  final int week = getWeekNumber(DateTime.now());
 
-    for (final MapEntry<String, dynamic> word in inputData.entries) {
-      wordsGuessed++;
-      wordGuesses[word.key] = (wordGuesses[word.key] ?? 0) + 1;
+  int wordsGuessed = 0;
+  int speechTypesGuessed = 0;
+  int totalGuesses = 0;
+  int totalSkips = 0;
+  int correctGuesses = 0;
+  final Map<String, int> wordGuesses = {};
+  int guessesThisWeek = 0;
+  int guessesToday = 0;
 
-      if (word.value is Map) {
-        final Map speechTypes = word.value;
-        for (final MapEntry speechType in speechTypes.entries) {
-          speechTypesGuessed++;
-          for (Map guess in speechType.value){
-            if (guess['correct'] ?? false){
-              final int guessWeek = getWeekNumber(DateTime.parse(guess['date']));
-              if (guessWeek == week){
-                guessesThisWeek += 1;
-              }
-              if (isSameDay(DateTime.parse(guess['date']), DateTime.now())){
-                guessesToday += 1;
-              }
-              correctGuesses++;
+  for (final MapEntry<String, dynamic> word in inputData.entries) {
+    wordsGuessed++;
+    wordGuesses[word.key] = (wordGuesses[word.key] ?? 0) + 1;
+
+    if (word.value is Map) {
+      final Map speechTypes = word.value;
+      for (final MapEntry speechType in speechTypes.entries) {
+        speechTypesGuessed++;
+        for (Map guess in speechType.value){
+          if (guess['correct'] ?? false){
+            final int guessWeek = getWeekNumber(DateTime.parse(guess['date']));
+            if (guessWeek == week){
+              guessesThisWeek += 1;
             }
-            if (guess['skipped'] ?? false){
-              totalSkips++;
-            } else {
-              totalGuesses++;
+            if (isSameDay(DateTime.parse(guess['date']), DateTime.now())){
+              guessesToday += 1;
             }
+            correctGuesses++;
+          }
+          if (guess['skipped'] ?? false){
+            totalSkips++;
+          } else {
+            totalGuesses++;
           }
         }
       }
     }
-    final Map<String, dynamic> wordData = await readData();
+  }
+  final Map<String, dynamic> wordData = await readData();
 
-    int wordsThisWeek = 0;
-    
-    for (MapEntry word in wordData.entries){
-      final int wordWeek = getWeekNumber(DateTime.parse(word.value['dateAdded']));
-      if (wordWeek == week){
-        wordsThisWeek += 1;
-      }
+  int wordsThisWeek = 0;
+  
+  for (MapEntry word in wordData.entries){
+    final int wordWeek = getWeekNumber(DateTime.parse(word.value['dateAdded']));
+    if (wordWeek == week){
+      wordsThisWeek += 1;
     }
+  }
 
-    // int averageTimesGuessed = wordsGuessed > 0
-    //     ? wordGuesses.values.reduce((a, b) => a + b) ~/ wordsGuessed
-    //     : 0;
-    Map settings = await readData(path: 'settings');
-    Map output = {
-      'homePage': {
-        'guessesThisWeek': guessesThisWeek,
-        'guessesToday': guessesToday,
-        'wordsThisWeek': wordsThisWeek
-      },
-      'statistics': GameStats(
+  // int averageTimesGuessed = wordsGuessed > 0
+  //     ? wordGuesses.values.reduce((a, b) => a + b) ~/ wordsGuessed
+  //     : 0;
+  Map settings = await readData(path: 'settings');
+  Map output = {
+    'homePage': {
+      'guessesThisWeek': guessesThisWeek,
+      'guessesToday': guessesToday,
+      'wordsThisWeek': wordsThisWeek
+    },
+    'statistics': {'stats': 
+      GameStats(
         wordsGuessed: wordsGuessed,
         speechTypesGuessed: speechTypesGuessed,
         totalGuesses: totalGuesses,
@@ -491,32 +485,33 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
         correctGuesses: correctGuesses,
         wordGuesses: wordGuesses,
         wordsAdded: wordData.length,
-      ),
-      'settings': settings,
-    };
-    return output;
-  }
-  bool isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
-  int getWeekNumber(DateTime date) {
-    // Find the first day of the year
-    DateTime firstDayOfYear = DateTime(date.year, 1, 1);
-    
-    // Find the first Monday of the year (ISO week standard)
-    DateTime firstMonday = firstDayOfYear;
-    while (firstMonday.weekday != DateTime.monday) {
-      firstMonday = firstMonday.add(Duration(days: 1));
-    }
-    
-    // If the date is before the first Monday, it belongs to the previous year's last week
-    if (date.isBefore(firstMonday)) {
-      return getWeekNumber(DateTime(date.year - 1, 12, 31));
-    }
-    
-    // Calculate the week number
-    int daysDifference = date.difference(firstMonday).inDays;
-    return (daysDifference / 7).floor() + 1;
-  }
+      )
+    },
+    'settings': settings,
+  };
+  return output;
 }
 
+bool isSameDay(DateTime a, DateTime b) {
+  return a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+int getWeekNumber(DateTime date) {
+  // Find the first day of the year
+  DateTime firstDayOfYear = DateTime(date.year, 1, 1);
+  
+  // Find the first Monday of the year (ISO week standard)
+  DateTime firstMonday = firstDayOfYear;
+  while (firstMonday.weekday != DateTime.monday) {
+    firstMonday = firstMonday.add(Duration(days: 1));
+  }
+  
+  // If the date is before the first Monday, it belongs to the previous year's last week
+  if (date.isBefore(firstMonday)) {
+    return getWeekNumber(DateTime(date.year - 1, 12, 31));
+  }
+  
+  // Calculate the week number
+  int daysDifference = date.difference(firstMonday).inDays;
+  return (daysDifference / 7).floor() + 1;
+}
