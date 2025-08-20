@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wordini/Pages/word_details.dart';
+import 'package:wordini/Providers/goal_providers.dart';
+import 'package:wordini/Providers/otherproviders.dart';
 import 'package:wordini/file_handling.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
 
-class AddWord extends StatefulWidget {
+class AddWord extends ConsumerStatefulWidget {
   const AddWord({super.key});
   @override
   AddWordState createState() => AddWordState();
 }
 
-class AddWordState extends State<AddWord> {
+class AddWordState extends ConsumerState<AddWord> {
   final FocusNode _addWordTextBoxFN = FocusNode();
   final TextEditingController _addWordTextBoxController = TextEditingController();
   @override
@@ -58,8 +61,14 @@ class AddWordState extends State<AddWord> {
                       style: const TextStyle(
                         fontSize: 20,
                       ), 
-                      onSubmitted: (value) {
-                        addWordToList(value.toLowerCase(), context);
+                      onSubmitted: (value) async{
+                        addWordToList(value.toLowerCase(), context).then((result) {
+                          if (result) {
+                            ref.read(writableDataProvider('homePage').notifier).incrimentKey('wordsThisWeek');
+                            // ignore: unused_result
+                            ref.refresh(wordDataFutureProvider);
+                          }
+                        });
                       },
                       onChanged: (value) => setState(() {}), // TODO optomise
                     ),
@@ -129,42 +138,38 @@ class AddWordState extends State<AddWord> {
   }
   
 }
-void addWordToList(String word, context) {
+Future<bool> addWordToList(String word, context) async{
   LoadingOverlay loadingOverlay = LoadingOverlay();
-  readData().then((data) async {
-    if (data.containsKey(word)) {
-      messageOverlay(context, 'Already added word');
-      return;
-    }
-    loadingOverlay.showLoadingOverlay(context);
-    Map wordDetails;
-    
-    try {
-      wordDetails = await getWordDetails(word);
-    } on FormatException {
-      loadingOverlay.removeLoadingOverlay();
-      messageOverlay(context, 'Invalid word');
-      return;
-    } catch (e) {
-      loadingOverlay.removeLoadingOverlay();
-      messageOverlay(context, 'Error fetching word details: $e');
-      return;
-    }
-    if (wordDetails['entries'].isEmpty) {
-      loadingOverlay.removeLoadingOverlay();
-      messageOverlay(context, 'Word not found');
-      return;
-    }
-
+  final Map data = await readData();
+  if (data.containsKey(word)) {
+    messageOverlay(context, 'Already added word');
+    return false;
+  }
+  loadingOverlay.showLoadingOverlay(context);
+  Map wordDetails;
+  
+  try {
+    wordDetails = await getWordDetails(word);
+  } on FormatException {
     loadingOverlay.removeLoadingOverlay();
-    final Set allTags = await gatherTags();
-    bool? result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => WordDetails(word: wordDetails, addWordMode: true, allTags: allTags,))
-    );
-    if (!(result ?? false)) {
-      return;
-    }
-    writeKey(word, wordDetails);
-  });
+    messageOverlay(context, 'Invalid word');
+    return false;
+  } catch (e) {
+    loadingOverlay.removeLoadingOverlay();
+    messageOverlay(context, 'Error fetching word details: $e');
+    return false;
+  }
+  if (wordDetails['entries'].isEmpty) {
+    loadingOverlay.removeLoadingOverlay();
+    messageOverlay(context, 'Word not found');
+    return false;
+  }
+
+  loadingOverlay.removeLoadingOverlay();
+  final Set allTags = await gatherTags();
+  bool? result = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => WordDetails(word: wordDetails, addWordMode: true, allTags: allTags,))
+  );
+  return result ?? false;
 }

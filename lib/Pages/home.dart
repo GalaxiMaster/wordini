@@ -7,6 +7,7 @@ import 'package:wordini/Pages/settings.dart';
 import 'package:wordini/Pages/statistics_page.dart';
 import 'package:wordini/Pages/word_list.dart';
 import 'package:wordini/Providers/goal_providers.dart';
+import 'package:wordini/Providers/otherproviders.dart';
 import 'package:wordini/file_handling.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:wordini/widgets.dart';
@@ -118,17 +119,19 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
         ),
         body: RefreshIndicator(
           onRefresh: () async {
-            final _ = ref.refresh(appDataProvider);
+            // ignore: unused_result
+            ref.refresh(appDataProvider);
+            // ignore: unused_result
+            ref.refresh(wordDataFutureProvider);
+
             debugPrint('Refreshing data...');
           },
-          
           child: SizedBox(
             height: double.infinity,
             child: Stack(
               children: [
                 SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-
                   child: Padding(
                     padding: const EdgeInsets.all(25),
                     child: Column(
