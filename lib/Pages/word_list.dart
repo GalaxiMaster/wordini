@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wordini/Pages/word_details.dart';
 import 'package:wordini/Providers/otherproviders.dart';
-import 'package:wordini/file_handling.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
 
@@ -33,20 +32,13 @@ class WordList extends ConsumerStatefulWidget {
 }
 
 class WordListState extends ConsumerState<WordList> {
-  String searchTerm = '';
-  Map filters = {
-    'wordTypes': [],
-    'wordTypeMode': 'any',
-    'selectedTags': <String>{},
-    'selectedTagsMode': 'any',
-    'sortBy': 'Alphabetical',
-    'sortOrder': 'Ascending'
-  };
+  late String searchTerm;
+  late Map filters;
   final Map sortOrderOptions = {
     'Alphabetical': ['Ascending', 'Descending'],
     'Date Added': ['Newest', 'Oldest'],
   };
-  bool _showBar = false;
+  late bool _showBar;
 
   OverlayEntry? _tagOverlayEntry;
   final TextEditingController _tagController = TextEditingController();
@@ -63,6 +55,7 @@ class WordListState extends ConsumerState<WordList> {
   void initState() {
     super.initState();
   }
+
   void _showTagPopup(BuildContext context, TagPopupType tagMode) {
     if (_tagOverlayEntry != null) return;
 
@@ -161,10 +154,10 @@ class WordListState extends ConsumerState<WordList> {
     });
   }
 
-  Widget _buildListItems(void Function(void Function()) setState, bool isTag) {
+  Widget _buildListItems(void Function(void Function()) setPopupState, bool isTag) {
     final Set items = isTag ? allTags : allTypes;
     final filterKey = isTag ? 'selectedTags' : 'wordTypes';
-    final selected = filters[filterKey];
+    final selected = ref.read(filtersProvider)[filterKey];
 
     if (items.isEmpty) {
       return const ListTile(
@@ -177,17 +170,20 @@ class WordListState extends ConsumerState<WordList> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: items.map((item) {
-        final isSelected = selected.contains(item);
+        bool isSelected = selected.contains(item);
         return ListTile(
           leading: isSelected ? const Icon(Icons.check, size: 20) : null,
           title: Text(item, style: const TextStyle(fontSize: 16)),
           onTap: () {
+            final newSelected = Set.from(selected);
             if (isSelected) {
-              selected.remove(item);
+              newSelected.remove(item);
             } else {
-              selected.add(item);
+              newSelected.add(item);
             }
-            setState(() {});
+            final newFilters = {...filters, filterKey: newSelected};
+            ref.read(filtersProvider.notifier).state = newFilters;
+            setPopupState((){});
           },
         );
       }).toList(),
@@ -211,7 +207,7 @@ class WordListState extends ConsumerState<WordList> {
     );
   }
   
-  Widget _buildSearchBar(void Function(void Function()) setState, bool isTag) {
+  Widget _buildSearchBar(void Function(void Function()) setPopupState, bool isTag) {
     return SizedBox(
       height: 44,
       child: Row(
@@ -237,14 +233,14 @@ class WordListState extends ConsumerState<WordList> {
     );
   }
 
-  Widget _buildToggleSwitch(void Function(void Function()) setState, bool isTag) {
+  Widget _buildToggleSwitch(void Function(void Function()) setPopupState, bool isTag) {
     final key = isTag ? 'selectedTagsMode' : 'wordTypeMode';
     return AnimatedToggleSwitch(
       options: const ['Any', 'All'],
       initialIndex: filters[key] == 'any' ? 0 : 1,
       onToggle: (index) {
         filters[key] = index == 0 ? 'any' : 'all';
-        setState(() {});
+        setPopupState(() {});
       },
     );
   }
@@ -265,9 +261,13 @@ class WordListState extends ConsumerState<WordList> {
   @override
   Widget build(BuildContext context) {
     final asyncData = ref.watch(wordDataFutureProvider);
+    filters = ref.watch(filtersProvider);
+    searchTerm = ref.watch(searchTermProvider);
+    _showBar = ref.watch(showBarProvider);
 
     return asyncData.when(
-      data: (words) {
+      data: (_) {
+        Map words = ref.watch(wordDataProvider);
 
         List filteredWords = words.entries.where((word) { // all word filtering logic here
           final lowerWord = word.key.toLowerCase();
@@ -277,7 +277,7 @@ class WordListState extends ConsumerState<WordList> {
           if (!lowerWord.contains(searchLower)) return false;
 
           // Type filter
-          final selectedTypes = (filters['wordTypes'] as List).map((e) => e.toLowerCase()).toList();
+          final selectedTypes = (filters['wordTypes'] as Set).map((e) => e.toLowerCase()).toList();
           final wordTypes = getWordType(word.value).map((e) => e.toLowerCase()).toList();
           final typeModeAll = filters['wordTypeMode'] == 'all';
 
@@ -343,9 +343,7 @@ class WordListState extends ConsumerState<WordList> {
                       ),
                     ),
                     onChanged: (value) {
-                      setState(() {
-                        searchTerm = value;
-                      });
+                      ref.read(searchTermProvider.notifier).state = value;
                     },
                   ),
                   Positioned(
@@ -354,9 +352,8 @@ class WordListState extends ConsumerState<WordList> {
                     child: IconButton(
                       icon: const Icon(Icons.filter_list),
                       onPressed: () async{
-                        setState(() {
-                          _showBar = !_showBar;
-                        });
+                        ref.read(showBarProvider.notifier).state = !_showBar;
+
                       },
                     ),
                   ),
@@ -434,10 +431,7 @@ class WordListState extends ConsumerState<WordList> {
                     final Map firstWordDetails = getFirstData(words, word);
                     return InkWell(
                       onLongPress: () async {
-                        deleteKey(word);
-                        setState(() {
-                          words.remove(word); 
-                        });
+                        ref.read(wordDataProvider.notifier).removeKey(word);
                       },
                       onTap: () async{
                         await Navigator.push(
@@ -446,9 +440,7 @@ class WordListState extends ConsumerState<WordList> {
                             builder: (context) => WordDetails(word: words[word], allTags: allTags),
                           ),
                         );
-                        // setState(() {
-                        //   _wordsFuture = readData();
-                        // });
+                        // ! there was a refresh here but i think it is not needed soon
                       },
                       child: ListTile(
                         title: Row(
