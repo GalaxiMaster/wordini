@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:wordini/Providers/otherproviders.dart';
 import 'package:wordini/file_handling.dart';
 import 'package:wordini/utils.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
 
-class WordDetails extends StatefulWidget {
+class WordDetails extends ConsumerStatefulWidget {
   final bool addWordMode;
   final Map word;
   final Set allTags;
@@ -32,7 +34,7 @@ class WordDetails extends StatefulWidget {
   WordDetailsState createState() => WordDetailsState();
 }
 
-class WordDetailsState extends State<WordDetails> {
+class WordDetailsState extends ConsumerState<WordDetails> {
   late final PageController _controller;
   late double currentPage;
   bool editMode = false;
@@ -744,7 +746,7 @@ class WordDetailsState extends State<WordDetails> {
         }
       }
       
-      writeKey(wordState['word'], wordToSave);
+      ref.read(wordDataProvider.notifier).updateWord(wordState['word'], wordToSave);
     }
   }
 
