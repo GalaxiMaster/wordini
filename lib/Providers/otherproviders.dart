@@ -18,8 +18,9 @@ class WordDataWriteableNotifier extends Notifier<Map> {
     );
   }
 
-  void updateValue(String key, dynamic value) {
-    state = {...state, key: value};
+  void updateWord(String word, dynamic value) {
+    state = {...state, word: value};
+    file.writeKey(word, value);
   }
   void removeKey(String word) {
     final newState = {...state};
