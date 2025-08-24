@@ -8,7 +8,7 @@ final appDataProvider = FutureProvider<Map>((ref) async {
   return fetchInputData();
 });
 
-class WritableDataNotifier extends FamilyNotifier<Map, String> {
+class WritableDataNotifierFamily extends FamilyNotifier<Map, String> {
 
   @override
   Map build(String arg) {
@@ -32,5 +32,5 @@ class WritableDataNotifier extends FamilyNotifier<Map, String> {
   }
 }
 
-final writableDataProvider = NotifierProvider.family<WritableDataNotifier, Map, String>(WritableDataNotifier.new);
+final writableDataProvider = NotifierProvider.family<WritableDataNotifierFamily, Map, String>(WritableDataNotifierFamily.new);
 

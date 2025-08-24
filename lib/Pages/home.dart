@@ -89,8 +89,8 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
   @override
   Widget build(BuildContext context) {
     final Map progressData = ref.watch(writableDataProvider('homePage'));
-    final Map settingsData = ref.watch(writableDataProvider('settings'));
     final Map statisticsData = ref.watch(writableDataProvider('statistics'));
+    final Map settingsData = ref.watch(settingsProvider);
 
     return Scaffold(
         appBar: AppBar(
@@ -427,8 +427,9 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
 }
 
 Future<Map> fetchInputData() async {
-  final Map<String, dynamic> inputData = await readData(path: 'inputs');
   final int week = getWeekNumber(DateTime.now());
+
+  final Map<String, dynamic> inputData = await readData(path: 'inputs');
 
   int wordsGuessed = 0;
   int speechTypesGuessed = 0;
@@ -467,6 +468,8 @@ Future<Map> fetchInputData() async {
       }
     }
   }
+
+
   final Map<String, dynamic> wordData = await readData();
 
   int wordsThisWeek = 0;
@@ -481,7 +484,6 @@ Future<Map> fetchInputData() async {
   // int averageTimesGuessed = wordsGuessed > 0
   //     ? wordGuesses.values.reduce((a, b) => a + b) ~/ wordsGuessed
   //     : 0;
-  Map settings = await readData(path: 'settings');
   Map output = {
     'homePage': {
       'guessesThisWeek': guessesThisWeek,
@@ -499,7 +501,6 @@ Future<Map> fetchInputData() async {
         wordsAdded: wordData.length,
       )
     },
-    'settings': settings,
   };
   return output;
 }
