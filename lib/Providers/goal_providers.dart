@@ -33,3 +33,4 @@ class WritableDataNotifier extends FamilyNotifier<Map, String> {
 }
 
 final writableDataProvider = NotifierProvider.family<WritableDataNotifier, Map, String>(WritableDataNotifier.new);
+

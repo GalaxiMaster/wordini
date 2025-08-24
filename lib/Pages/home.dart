@@ -448,7 +448,7 @@ Future<Map> fetchInputData() async {
       for (final MapEntry speechType in speechTypes.entries) {
         speechTypesGuessed++;
         for (Map guess in speechType.value){
-          if (guess['correct'] ?? false){
+          if (guess['correct'] != null){
             final int guessWeek = getWeekNumber(DateTime.parse(guess['date']));
             if (guessWeek == week){
               guessesThisWeek += 1;
