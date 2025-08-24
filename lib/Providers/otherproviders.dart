@@ -44,3 +44,28 @@ final filtersProvider = StateProvider<Map>((ref) => {
 });
 
 final showBarProvider = StateProvider<bool>((ref) => false);
+
+
+final futureSettingsDataProvider = FutureProvider<Map>((ref) async {
+  return file.readData(path: 'settings');
+});
+
+class SettingsDataNotifier extends Notifier<Map> {
+
+  @override
+  Map build() {
+    final asyncData = ref.watch(futureSettingsDataProvider);
+
+    return asyncData.when(
+      data: (data) => data,
+      loading: () => {},
+      error: (_, __) => {},
+    );
+  }
+
+  void updateValue(String key, dynamic value) {
+    state = {...state, key: value};
+  }
+}
+
+final settingsProvider = NotifierProvider<SettingsDataNotifier, Map>(SettingsDataNotifier.new);
