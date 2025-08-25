@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wordini/Pages/Account/account.dart';
 import 'package:wordini/Pages/Account/sign_in.dart';
 import 'package:wordini/Pages/word_details.dart';
+import 'package:wordini/Providers/otherproviders.dart';
 import 'package:wordini/file_handling.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -10,14 +12,14 @@ import 'package:csv/csv.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
 
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
   SettingsPageState createState() => SettingsPageState();
 }
 
-class SettingsPageState extends State<SettingsPage> {
+class SettingsPageState extends ConsumerState<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,6 +82,8 @@ class SettingsPageState extends State<SettingsPage> {
                   label: 'Import Data',
                   function: () async {
                     await importData(context);
+                    // ignore: unused_result
+                    ref.refresh(wordDataFutureProvider);
                   },
                 ),
                 _buildSettingsTile(
@@ -93,7 +97,9 @@ class SettingsPageState extends State<SettingsPage> {
                   icon: Icons.download_rounded,
                   label: 'Import CSV',
                   function: () async {
-                    await processCsvRows(context);
+                    await processCsvRows(context, ref.read(wordDataProvider).keys.toList());
+                    // ignore: unused_result
+                    ref.refresh(wordDataFutureProvider);
                   },
                 ),
               ],
@@ -143,7 +149,7 @@ class SettingsPageState extends State<SettingsPage> {
   }
 }
 
-Future<void> processCsvRows(context) async {
+Future<void> processCsvRows(context, List existingWords) async {
   final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
 
   if (result != null) {
@@ -155,6 +161,8 @@ Future<void> processCsvRows(context) async {
     for (var row in rows) {
       String word = row[0].toString();
       // final String definition = row[1].toString();
+      if (existingWords.contains(word)) continue; // skip iteration if its already in words
+      
       final Map wordDetails = await getWordDetails(word.toLowerCase());
       word = wordDetails['word'];
       if (wordDetails.isNotEmpty) {
