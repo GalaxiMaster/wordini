@@ -106,7 +106,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
               onPressed: (){
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => WordGameStatsScreen())
+                  MaterialPageRoute(builder: (context) => WordGameStatsScreen(gameData: inputToGameStats(ref.read(inputDataProvider), ref.read(wordDataProvider)),))
                 );
               }, 
               icon: Icon(Icons.bar_chart)
@@ -422,6 +422,18 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
       ),
     );
   }
+}
+
+GameStats inputToGameStats(Map input, Map wordData) {
+  return GameStats(
+    wordsGuessed: input['wordsGuessed'], 
+    speechTypesGuessed: input['speechTypesGuessed'], 
+    totalGuesses: input['totalGuesses'], 
+    totalSkips: input['totalSkips'], 
+    correctGuesses: input['correctGuesses'], 
+    wordGuesses: input['wordGuesses'], 
+    wordsAdded: wordData.length
+  );
 }
 
 bool isSameDay(DateTime a, DateTime b) {

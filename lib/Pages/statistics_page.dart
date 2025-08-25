@@ -2,7 +2,8 @@
 import 'package:flutter/material.dart';
 
 class WordGameStatsScreen extends StatefulWidget {
-  const WordGameStatsScreen({super.key});
+  final GameStats gameData;
+  const WordGameStatsScreen({required this.gameData, super.key});
 
   @override
   WordGameStatsScreenState createState() => WordGameStatsScreenState();
@@ -16,7 +17,7 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    // gameStats = widget.gameData; TODO use providers
+    gameStats = widget.gameData;
   }
 
   @override
