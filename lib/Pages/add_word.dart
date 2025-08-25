@@ -64,7 +64,6 @@ class AddWordState extends ConsumerState<AddWord> {
                       onSubmitted: (value) async{
                         addWordToList(value.toLowerCase(), context).then((result) {
                           if (result) {
-                            ref.read(writableDataProvider('homePage').notifier).incrimentKey('wordsThisWeek');
                             // ignore: unused_result
                             ref.refresh(wordDataFutureProvider);
                           }
@@ -78,7 +77,7 @@ class AddWordState extends ConsumerState<AddWord> {
                         if (_addWordTextBoxController.text.isNotEmpty){
                           final allTags = await gatherTags();
                           if (!context.mounted) return;
-                          await Navigator.push(
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => WordDetails(
                               word: {
@@ -115,6 +114,11 @@ class AddWordState extends ConsumerState<AddWord> {
                               addWordMode: true,
                             ))
                           );
+                          if (result ?? false) {
+                            ref.read(wordsThisWeekDataProvider.notifier).incriment();
+                            // ignore: unused_result
+                            ref.refresh(wordDataFutureProvider); // TODO optomise by adding to the existing wordData provider instead of refreshing
+                          }
                         }
                       },
                       child: Text(
