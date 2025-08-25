@@ -8,7 +8,6 @@ import 'package:wordini/Pages/statistics_page.dart';
 import 'package:wordini/Pages/word_list.dart';
 import 'package:wordini/Providers/goal_providers.dart';
 import 'package:wordini/Providers/otherproviders.dart';
-import 'package:wordini/file_handling.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:wordini/widgets.dart';
 class HomePage extends ConsumerStatefulWidget {
@@ -31,7 +30,7 @@ class HomePageState extends ConsumerState<HomePage> {
   }
   @override
   Widget build(BuildContext context) {
-    final asyncData = ref.watch(appDataProvider);
+    final asyncData = ref.watch(futureInputDataProvider); // Todo adjust to wait for all needed data
 
     return asyncData.when(
       data: (_) {
@@ -80,18 +79,15 @@ class HomePageContent extends ConsumerStatefulWidget {
 }
 
 class HomePageContentState extends ConsumerState<HomePageContent> {
-  late Future<Map> inputData;
   @override
   void initState() {
     super.initState();
-    inputData = fetchInputData();
   }
   @override
   Widget build(BuildContext context) {
-    final Map progressData = ref.watch(writableDataProvider('homePage'));
-    final Map statisticsData = ref.watch(writableDataProvider('statistics'));
+    final Map inputData = ref.watch(inputDataProvider);
     final Map settingsData = ref.watch(settingsProvider);
-
+    final int wordsThisWeek = ref.watch(wordsThisWeekDataProvider);
     return Scaffold(
         appBar: AppBar(
           title: Center(child: Text('Wordini')),
@@ -110,7 +106,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
               onPressed: (){
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => WordGameStatsScreen(gameData: statisticsData['stats'],))
+                  MaterialPageRoute(builder: (context) => WordGameStatsScreen())
                 );
               }, 
               icon: Icon(Icons.bar_chart)
@@ -120,7 +116,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
         body: RefreshIndicator(
           onRefresh: () async {
             // ignore: unused_result
-            ref.refresh(appDataProvider);
+            // ref.refresh(appDataProvider);
             // ignore: unused_result
             ref.refresh(wordDataFutureProvider);
 
@@ -156,7 +152,8 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                               },
                             );
                             if (value != null) {
-                              ref.read(writableDataProvider('settings').notifier).updateValue('wordsThisWeek', value);                          
+                              ref.read(settingsProvider.notifier).updateValue('wordsThisWeek', value);     
+                              // TODO perminence                     
                             }
                           },
                           child: Container(
@@ -182,7 +179,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                     height: 6,
                                   ),
                                   Text(
-                                    '${progressData['wordsThisWeek']} / ${settingsData['wordsThisWeek'] ?? 20}',
+                                    '$wordsThisWeek / ${settingsData['wordsThisWeek'] ?? 20}',
                                     style: TextStyle(
                                       fontSize: 17,
                                       fontWeight: FontWeight.bold,
@@ -193,7 +190,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                     height: 6.5,
                                   ),
                                   LinearProgressIndicator(
-                                    value: progressData['wordsThisWeek'] / (settingsData['wordsThisWeek'] ?? 20),
+                                    value: wordsThisWeek / (settingsData['wordsThisWeek'] ?? 20),
                                     backgroundColor: Colors.grey.shade800,
                                     borderRadius: BorderRadius.circular(10),
                                     valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
@@ -227,10 +224,11 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                   },
                                 );
                                 if (value != null) {
-                                  ref.read(writableDataProvider('settings').notifier).updateValue('WT-today', value);                          
+                                  ref.read(settingsProvider.notifier).updateValue('WT-today', value);   
+                                  // TODO permindence                       
                                 }
                               },
-                              child: dataGaugeChart('Today', progressData['guessesToday'], settingsData['WT-today'] ?? 4, context)
+                              child: dataGaugeChart('Today', inputData['guessesToday'], settingsData['WT-today'] ?? 4, context)
                             ),
                             GestureDetector(
                               onLongPress: () async{
@@ -241,10 +239,10 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                   },
                                 );
                                 if (value != null) {
-                                  ref.read(writableDataProvider('settings').notifier).updateValue('WT-thisWeek', value);                          
+                                  ref.read(settingsProvider.notifier).updateValue('WT-thisWeek', value);                          
                                 }
                               },
-                              child: dataGaugeChart('This week', progressData['guessesThisWeek'], settingsData['WT-thisWeek'] ?? 20, context)
+                              child: dataGaugeChart('This week', inputData['guessesThisWeek'], settingsData['WT-thisWeek'] ?? 20, context)
                             ),
                           ],
                         ),
@@ -424,85 +422,6 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
       ),
     );
   }
-}
-
-Future<Map> fetchInputData() async {
-  final int week = getWeekNumber(DateTime.now());
-
-  final Map<String, dynamic> inputData = await readData(path: 'inputs');
-
-  int wordsGuessed = 0;
-  int speechTypesGuessed = 0;
-  int totalGuesses = 0;
-  int totalSkips = 0;
-  int correctGuesses = 0;
-  final Map<String, int> wordGuesses = {};
-  int guessesThisWeek = 0;
-  int guessesToday = 0;
-
-  for (final MapEntry<String, dynamic> word in inputData.entries) {
-    wordsGuessed++;
-    wordGuesses[word.key] = (wordGuesses[word.key] ?? 0) + 1;
-
-    if (word.value is Map) {
-      final Map speechTypes = word.value;
-      for (final MapEntry speechType in speechTypes.entries) {
-        speechTypesGuessed++;
-        for (Map guess in speechType.value){
-          if (guess['correct'] != null){
-            final int guessWeek = getWeekNumber(DateTime.parse(guess['date']));
-            if (guessWeek == week){
-              guessesThisWeek += 1;
-            }
-            if (isSameDay(DateTime.parse(guess['date']), DateTime.now())){
-              guessesToday += 1;
-            }
-            correctGuesses++;
-          }
-          if (guess['skipped'] ?? false){
-            totalSkips++;
-          } else {
-            totalGuesses++;
-          }
-        }
-      }
-    }
-  }
-
-
-  final Map<String, dynamic> wordData = await readData();
-
-  int wordsThisWeek = 0;
-  
-  for (MapEntry word in wordData.entries){
-    final int wordWeek = getWeekNumber(DateTime.parse(word.value['dateAdded']));
-    if (wordWeek == week){
-      wordsThisWeek += 1;
-    }
-  }
-
-  // int averageTimesGuessed = wordsGuessed > 0
-  //     ? wordGuesses.values.reduce((a, b) => a + b) ~/ wordsGuessed
-  //     : 0;
-  Map output = {
-    'homePage': {
-      'guessesThisWeek': guessesThisWeek,
-      'guessesToday': guessesToday,
-      'wordsThisWeek': wordsThisWeek
-    },
-    'statistics': {'stats': 
-      GameStats(
-        wordsGuessed: wordsGuessed,
-        speechTypesGuessed: speechTypesGuessed,
-        totalGuesses: totalGuesses,
-        totalSkips: totalSkips,
-        correctGuesses: correctGuesses,
-        wordGuesses: wordGuesses,
-        wordsAdded: wordData.length,
-      )
-    },
-  };
-  return output;
 }
 
 bool isSameDay(DateTime a, DateTime b) {
