@@ -432,6 +432,8 @@ class WordListState extends ConsumerState<WordList> {
                     return InkWell(
                       onLongPress: () async {
                         ref.read(wordDataProvider.notifier).removeKey(word);
+                        // ignore: unused_result
+                        ref.refresh(wordDataFutureProvider);
                       },
                       onTap: () async{
                         await Navigator.push(
@@ -468,7 +470,7 @@ class WordListState extends ConsumerState<WordList> {
                           ],
                         ),
                         subtitle: Text(
-                          (firstWordDetails['shortDefs']?.isNotEmpty ? firstWordDetails['shortDefs']?.first : firstWordDetails['definitions']?.first?.first['definition']) ?? '',
+                          (firstWordDetails['shortDefs']?.isNotEmpty ?? false ? firstWordDetails['shortDefs']?.first : firstWordDetails['definitions']?.first?['definition']) ?? '',
                         ), 
                       ),
                     );
