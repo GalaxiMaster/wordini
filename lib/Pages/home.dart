@@ -106,7 +106,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
               onPressed: (){
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => WordGameStatsScreen(gameData: inputToGameStats(ref.read(inputDataProvider), ref.read(wordDataProvider)),))
+                  MaterialPageRoute(builder: (context) => WordGameStatsScreen(gameData: inputToGameStats(ref.read(statisticsDataProvider), ref.read(wordDataProvider)),))
                 );
               }, 
               icon: Icon(Icons.bar_chart)
