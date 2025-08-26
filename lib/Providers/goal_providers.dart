@@ -1,6 +1,3 @@
-// home.dart
-
-// This provider remains the same.
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wordini/Pages/home.dart';
 import 'package:wordini/Providers/otherproviders.dart';
@@ -11,6 +8,20 @@ final futureInputDataProvider = FutureProvider<Map>((ref) async {
 });
 
 class InputDataNotifier extends Notifier<Map> {
+  @override
+  Map build() {
+    final asyncData = ref.watch(futureInputDataProvider);
+
+    return asyncData.when(
+      data: (data) => data,
+      loading: () => {},
+      error: (_, __) => {},
+    );
+  }
+}
+final inputDataProvider = NotifierProvider<InputDataNotifier, Map>(InputDataNotifier.new);
+
+class StatisticsDataNotifier extends Notifier<Map> {
   @override
   Map build() {
     final asyncData = ref.watch(futureInputDataProvider);
@@ -77,7 +88,7 @@ class InputDataNotifier extends Notifier<Map> {
   }
 }
 
-final inputDataProvider = NotifierProvider<InputDataNotifier, Map>(InputDataNotifier.new);
+final statisticsDataProvider = NotifierProvider<StatisticsDataNotifier, Map>(StatisticsDataNotifier.new);
 
 class WordsThisWeekDataNotifier extends Notifier<int> {
   @override
