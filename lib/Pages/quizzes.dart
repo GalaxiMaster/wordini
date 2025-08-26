@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
+import 'package:wordini/Providers/goal_providers.dart';
+import 'package:wordini/Providers/otherproviders.dart';
 import 'package:wordini/file_handling.dart';
 import 'package:wordini/notification_controller.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
 
-class Quizzes extends StatefulWidget {
+class Quizzes extends ConsumerStatefulWidget {
   final int? questions;
   const Quizzes({super.key, this.questions});
   @override
   QuizzesState createState() => QuizzesState();
 }
 
-class QuizzesState extends State<Quizzes> {
+class QuizzesState extends ConsumerState<Quizzes> {
   bool canQuiz = false;
   Future<List>? words; // Make nullable to avoid LateInitializationError
   int _currentIndex = 0;
   Map currentWord = {};
+  
   // session stats
   int questionsDone = 0;
   int questionsRight = 0;
-  Map<String, dynamic> rawWords = {};
   late int? maxQuestions;
   final TextEditingController entryController = TextEditingController();
   final FocusNode _entryFocusNode = FocusNode();
@@ -30,30 +33,26 @@ class QuizzesState extends State<Quizzes> {
   @override
   void initState() {
     super.initState();
-    Box permissionsBox = Hive.box('permissions');
+    Box permissionsBox = Hive.box('permissions'); // TODO move to provider
     canQuiz = permissionsBox.get('canQuiz', defaultValue: false);
     if (!canQuiz) {
       return;
     }
-    readData().then((data) {
-      rawWords = data; // store the raw data for later use
-      _gatherSelectedDefinitions(data).then((selectedDefs) {
-        setState(() {
-          if (widget.questions != null ){
-            maxQuestions = widget.questions!.clamp(0, selectedDefs.length);
-          } else{
-            maxQuestions = null;
-          }
-          if (maxQuestions == null){
-            words = Future.value(randomise(selectedDefs));
-          } else{
-            selectedDefs.shuffle();
-            words = Future.value(selectedDefs);
-          }
-        });
+    Map data = ref.read(wordDataProvider);
+    _gatherSelectedDefinitions(data).then((selectedDefs) {
+      setState(() {
+        if (widget.questions != null ){
+          maxQuestions = widget.questions!.clamp(0, selectedDefs.length);
+        } else{
+          maxQuestions = null;
+        }
+        if (maxQuestions == null){
+          words = Future.value(randomise(selectedDefs));
+        } else{
+          selectedDefs.shuffle();
+          words = Future.value(selectedDefs);
+        }
       });
-
-
     });
   }
     @override
@@ -65,7 +64,7 @@ class QuizzesState extends State<Quizzes> {
 
   // Gather selected definitions from the data (returns a List)
   Future<List<Map>> _gatherSelectedDefinitions(Map words) async{
-    Map inputs = await readData(path: 'inputs');
+    Map inputs = ref.read(inputDataProvider);
     List<Map> selectedWords = [];
     for (var word in words.entries) {
       Map wordData = Map<String, dynamic>.from(word.value);
@@ -234,6 +233,7 @@ class QuizzesState extends State<Quizzes> {
                                       'date': DateTime.now().toString(),
                                     }
                                   );
+                                  // i think don't refresh inputData provider after so it can keep the same order
                                 }
                               },
                             ),
