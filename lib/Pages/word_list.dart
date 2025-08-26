@@ -432,8 +432,7 @@ class WordListState extends ConsumerState<WordList> {
                     return InkWell(
                       onLongPress: () async {
                         ref.read(wordDataProvider.notifier).removeKey(word);
-                        // ignore: unused_result
-                        ref.refresh(wordDataFutureProvider);
+                        ref.invalidate(wordDataFutureProvider);
                       },
                       onTap: () async{
                         await Navigator.push(

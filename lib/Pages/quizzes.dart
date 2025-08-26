@@ -233,7 +233,7 @@ class QuizzesState extends ConsumerState<Quizzes> {
                                       'date': DateTime.now().toString(),
                                     }
                                   );
-                                  // i think don't refresh inputData provider after so it can keep the same order
+                                  ref.invalidate(futureInputDataProvider);
                                 }
                               },
                             ),
@@ -316,6 +316,7 @@ class QuizzesState extends ConsumerState<Quizzes> {
                                   'date': DateTime.now().toString(),
                                 }
                               );
+                              ref.invalidate(futureInputDataProvider);
                               if (_currentIndex < words.length - 1) {
                                 setState(() {
                                   _currentIndex++;
