@@ -85,7 +85,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
   }
   @override
   Widget build(BuildContext context) {
-    final Map inputData = ref.watch(inputDataProvider);
+    final Map statisticsData = ref.watch(statisticsDataProvider);
     final Map settingsData = ref.watch(settingsProvider);
     final int wordsThisWeek = ref.watch(wordsThisWeekDataProvider);
     return Scaffold(
@@ -115,10 +115,8 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
         ),
         body: RefreshIndicator(
           onRefresh: () async {
-            // ignore: unused_result
-            // ref.refresh(appDataProvider);
-            // ignore: unused_result
-            ref.refresh(wordDataFutureProvider);
+            ref.invalidate(inputDataProvider);
+            ref.invalidate(wordDataFutureProvider);
 
             debugPrint('Refreshing data...');
           },
@@ -228,7 +226,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                   // TODO permindence                       
                                 }
                               },
-                              child: dataGaugeChart('Today', inputData['guessesToday'], settingsData['WT-today'] ?? 4, context)
+                              child: dataGaugeChart('Today', statisticsData['guessesToday'], settingsData['WT-today'] ?? 4, context)
                             ),
                             GestureDetector(
                               onLongPress: () async{
@@ -242,7 +240,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                   ref.read(settingsProvider.notifier).updateValue('WT-thisWeek', value);                          
                                 }
                               },
-                              child: dataGaugeChart('This week', inputData['guessesThisWeek'], settingsData['WT-thisWeek'] ?? 20, context)
+                              child: dataGaugeChart('This week', statisticsData['guessesThisWeek'], settingsData['WT-thisWeek'] ?? 20, context)
                             ),
                           ],
                         ),

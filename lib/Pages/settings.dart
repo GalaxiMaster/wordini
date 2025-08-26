@@ -82,8 +82,7 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
                   label: 'Import Data',
                   function: () async {
                     await importData(context);
-                    // ignore: unused_result
-                    ref.refresh(wordDataFutureProvider);
+                    ref.invalidate(wordDataFutureProvider);
                   },
                 ),
                 _buildSettingsTile(
@@ -98,8 +97,7 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
                   label: 'Import CSV',
                   function: () async {
                     await processCsvRows(context, ref.read(wordDataProvider).keys.toList());
-                    // ignore: unused_result
-                    ref.refresh(wordDataFutureProvider);
+                    ref.invalidate(wordDataFutureProvider);
                   },
                 ),
               ],
