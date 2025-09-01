@@ -24,8 +24,10 @@ class LoadingOverlay {
   void removeLoadingOverlay() {
     if (!overlayOn) return;
     _overlayEntry.remove();
-    _overlayEntry.dispose();
     overlayOn = false;
+  }
+  void dispose() {
+    _overlayEntry.dispose();
   }
 }
 
@@ -570,10 +572,10 @@ class GoalOptions extends StatefulWidget {
   const GoalOptions({super.key, required this.goal});
 
   @override
-  _GoalOptionsState createState() => _GoalOptionsState();
+  GoalOptionsState createState() => GoalOptionsState();
 }
 
-class _GoalOptionsState extends State<GoalOptions> {
+class GoalOptionsState extends State<GoalOptions> {
   int _selectedIndex1 = 0; // First digit (tens)
   int _selectedIndex2 = 0; // Second digit (ones)
   final List<String> _options = List.generate(10, (index) => '$index'); // 0-9
@@ -629,7 +631,7 @@ class _GoalOptionsState extends State<GoalOptions> {
       }
     } catch (e) {
       // Handle any errors during loading
-      print('Error loading starting point: $e');
+      debugPrint('Error loading starting point: $e');
       if (mounted) {
         setState(() {
           _selectedIndex1 = 2; // Default to 20
@@ -645,7 +647,7 @@ class _GoalOptionsState extends State<GoalOptions> {
       String value = (await readKey(widget.goal, path: 'settings', defaultValue: 20)).toString();
       return value;
     } catch (e) {
-      print('Error reading key: $e');
+      debugPrint('Error reading key: $e');
       return '20'; // Return default value on error
     }
   }
