@@ -15,7 +15,7 @@ class AccountPage extends StatefulWidget {
 
 class _AccountPageState extends State<AccountPage> {
   late User account;
-
+  final EncryptionService encryption = EncryptionService.instance;
   @override
   void initState() {
     account = widget.accountDetails;
@@ -47,7 +47,7 @@ class _AccountPageState extends State<AccountPage> {
               String? newEmail = await showDialog(
                 context: context,
                 builder: (BuildContext context) => const ChangeEmailDialog(),
-              );
+              );  
     
               if (newEmail != null) {
                 _encryptionService.writeToSecureStorage(key: 'emailChange', value: newEmail);
@@ -74,13 +74,13 @@ class _AccountPageState extends State<AccountPage> {
                 context: context,
                 builder: (BuildContext context) => ChangePasswordDialog(),
               );
-              if (context.mounted){
-                await reAuthUser(account, context);
-              }
 
               if (newPass != null) {
+                newPass = newPass.trim();
+                if (newPass == '') throw 'Password cannot be empty';
+                await reAuthUser(account);
                 await account.updatePassword(newPass);
-                _encryptionService.writeToSecureStorage(key: 'password', value: newPass);
+                _encryptionService.writeToSecureStorage(key: 'password', value: encryption.encrypt(newPass));
               }
             } catch (e) {
               if (context.mounted){
@@ -172,7 +172,7 @@ class _AccountPageState extends State<AccountPage> {
   }
 }
 
-Future<void> reAuthUser(User account, context, {String? email}) async {
+Future<void> reAuthUser(User account, {String? email}) async {
   String? emailChange = await _encryptionService.readFromSecureStorage(key: 'emailChange');
   try {
     String? oldPass = await _encryptionService.readFromSecureStorage(key: 'password');
@@ -262,7 +262,7 @@ class ChangeEmailDialogState extends State<ChangeEmailDialog> {
         });
         return;
       }
-      reAuthUser(user, context);
+      await reAuthUser(user);
       await user.verifyBeforeUpdateEmail(newEmail.text);
       if (mounted) {
         Navigator.pop(context, newEmail.text);
