@@ -48,20 +48,24 @@ class _AccountPageState extends State<AccountPage> {
                 context: context,
                 builder: (BuildContext context) => const ChangeEmailDialog(),
               );
-
+    
               if (newEmail != null) {
                 _encryptionService.writeToSecureStorage(key: 'emailChange', value: newEmail);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Verification email sent. Please check your email to complete the change.'),
-                    duration: Duration(seconds: 5),
-                  ),
-                );
+                if (context.mounted){
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Verification email sent. Please check your email to complete the change.'),
+                      duration: Duration(seconds: 5),
+                    ),
+                  );
+                }
               }
             } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('An unexpected error occurred: $e')),
-              );
+              if (context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('An unexpected error occurred: $e')),
+                );
+              }
             }
           }),
           infoBox('Password: ', '***********', Icons.edit, () async {
@@ -70,23 +74,27 @@ class _AccountPageState extends State<AccountPage> {
                 context: context,
                 builder: (BuildContext context) => ChangePasswordDialog(),
               );
-              await reAuthUser(account, context);
+              if (context.mounted){
+                await reAuthUser(account, context);
+              }
 
               if (newPass != null) {
                 await account.updatePassword(newPass);
                 _encryptionService.writeToSecureStorage(key: 'password', value: newPass);
               }
             } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                errorSnackBar(e),
-              );
+              if (context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(
+                  errorSnackBar(e),
+                );
+              }
             }
           }),
           GestureDetector(
             onTap: () async {
               await FirebaseAuth.instance.signOut();
               _encryptionService.clearAllSecureStorage ();
-              Navigator.pop(context);
+              if (context.mounted) Navigator.pop(context);
             },
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 10),
@@ -216,10 +224,10 @@ class ChangeEmailDialog extends StatefulWidget {
   const ChangeEmailDialog({super.key});
 
   @override
-  _ChangeEmailDialogState createState() => _ChangeEmailDialogState();
+  ChangeEmailDialogState createState() => ChangeEmailDialogState();
 }
 
-class _ChangeEmailDialogState extends State<ChangeEmailDialog> {
+class ChangeEmailDialogState extends State<ChangeEmailDialog> {
   final TextEditingController newEmail = TextEditingController();
   String? error;
   bool isLoading = false;
@@ -256,7 +264,9 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> {
       }
       reAuthUser(user, context);
       await user.verifyBeforeUpdateEmail(newEmail.text);
-      Navigator.pop(context, newEmail.text);
+      if (mounted) {
+        Navigator.pop(context, newEmail.text);
+      }
     } on FirebaseAuthException catch (e) {
       setState(() {
         switch (e.code) {
@@ -340,10 +350,10 @@ class ChangePasswordDialog extends StatefulWidget {
   const ChangePasswordDialog({super.key});
 
   @override
-  _ChangePasswordDialogState createState() => _ChangePasswordDialogState();
+  ChangePasswordDialogState createState() => ChangePasswordDialogState();
 }
 
-class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
+class ChangePasswordDialogState extends State<ChangePasswordDialog> {
   final TextEditingController newPassword = TextEditingController();
   final TextEditingController confirmNewPassword = TextEditingController();
   Set error1Set = {};

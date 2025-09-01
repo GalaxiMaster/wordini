@@ -20,6 +20,12 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class SettingsPageState extends ConsumerState<SettingsPage> {
+  final LoadingOverlay loadingOverlay = LoadingOverlay();
+  @override
+  void dispose() {
+    loadingOverlay.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,86 +33,74 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
         title: const Text('Settings'),
         centerTitle: true,
       ),
-      body: FutureBuilder(
-        future: readData(path: 'settings'),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return const Center(child: Text('Error loading data'));
-          } else if (snapshot.hasData) {
-            return ListView(
-              padding: const EdgeInsets.all(16.0),
-              children: [
-                settingsHeader('Account'),
-                const SizedBox(height: 8),
-                _buildSettingsTile(
-                  icon: Icons.person,
-                  label: 'Account',
-                  function: () async{
-                    final LoadingOverlay loadingOverlay = LoadingOverlay();
-                    loadingOverlay.showLoadingOverlay(context);
-                    User? user = FirebaseAuth.instance.currentUser;
-                    if (user != null){
-                      await reAuthUser(user, context);
-                      user = FirebaseAuth.instance.currentUser;
-                      loadingOverlay.removeLoadingOverlay();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AccountPage(accountDetails: user!),
-                        ),
-                      );  
-                    }else{
-                      loadingOverlay.removeLoadingOverlay();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SignInPage(),
-                        ),
-                      );  
-                    }
-                  },
-                ),
-                settingsHeader('Functions'),
-                const SizedBox(height: 8),
-                _buildSettingsTile(
-                  icon: Icons.upload_rounded,
-                  label: 'Export Data',
-                  function: () async {
-                    await exportJson(context);
-                  },
-                ),
-                _buildSettingsTile(
-                  icon: Icons.download_rounded,
-                  label: 'Import Data',
-                  function: () async {
-                    await importData(context);
-                    ref.invalidate(wordDataFutureProvider);
-                  },
-                ),
-                _buildSettingsTile(
-                  icon: Icons.restart_alt,
-                  label: 'Reset Data',
-                  function: () async {
-                    await resetData(context);
-                  },
-                ),
-                _buildSettingsTile(
-                  icon: Icons.download_rounded,
-                  label: 'Import CSV',
-                  function: () async {
-                    await processCsvRows(context, ref.read(wordDataProvider).keys.toList());
-                    ref.invalidate(wordDataFutureProvider);
-                  },
-                ),
-              ],
-            );
-          } else {
-            return const Center(child: Text('No data available'));
-          }
-        },
-      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          settingsHeader('Account'),
+          const SizedBox(height: 8),
+          _buildSettingsTile(
+            icon: Icons.person,
+            label: 'Account',
+            function: () async {
+              loadingOverlay.showLoadingOverlay(context);
+              User? user = FirebaseAuth.instance.currentUser;
+              if (user != null){
+                // await reAuthUser(user, context);
+                user = FirebaseAuth.instance.currentUser;
+                if (context.mounted){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AccountPage(accountDetails: user!),
+                    ),
+                  );
+                }
+                loadingOverlay.removeLoadingOverlay();
+              }else{
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SignInPage(),
+                  ),
+                );
+                loadingOverlay.removeLoadingOverlay();
+              }
+            },
+          ),
+          settingsHeader('Functions'),
+          const SizedBox(height: 8),
+          _buildSettingsTile(
+            icon: Icons.upload_rounded,
+            label: 'Export Data',
+            function: () async {
+              await exportJson(context);
+            },
+          ),
+          _buildSettingsTile(
+            icon: Icons.download_rounded,
+            label: 'Import Data',
+            function: () async {
+              await importData(context);
+              ref.invalidate(wordDataFutureProvider);
+            },
+          ),
+          _buildSettingsTile(
+            icon: Icons.restart_alt,
+            label: 'Reset Data',
+            function: () async {
+              await resetData(context);
+            },
+          ),
+          _buildSettingsTile(
+            icon: Icons.download_rounded,
+            label: 'Import CSV',
+            function: () async {
+              await processCsvRows(context, ref.read(wordDataProvider).keys.toList());
+              ref.invalidate(wordDataFutureProvider);
+            },
+          ),
+        ],
+      )
     );
   }
 
