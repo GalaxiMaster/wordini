@@ -63,9 +63,6 @@ class AddWordState extends ConsumerState<AddWord> {
                       ), 
                       onSubmitted: (value) async{
                         addWordToList(value.toLowerCase(), context).then((result) {
-                          if (result) {
-                            ref.invalidate(wordDataFutureProvider);
-                          }
                         });
                       },
                       onChanged: (value) => setState(() {}), // TODO optomise
@@ -113,10 +110,9 @@ class AddWordState extends ConsumerState<AddWord> {
                               addWordMode: true,
                             ))
                           );
-                          if (result ?? false) {
-                            ref.read(wordsThisWeekDataProvider.notifier).incriment();
-                            ref.invalidate(wordDataFutureProvider); // TODO optomise by adding to the existing wordData provider instead of refreshing
-                          }
+                          // if (result ?? false) {
+                          //   ref.read(wordsThisWeekDataProvider.notifier).incriment();
+                          // }
                         }
                       },
                       child: Text(
