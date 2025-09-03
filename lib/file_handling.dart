@@ -1,12 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:wordini/Providers/goal_providers.dart';
+import 'package:wordini/Providers/otherproviders.dart';
 import 'package:wordini/widgets.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:wordini/word_functions.dart';
@@ -32,7 +35,7 @@ Future<void> writeData(
 }
 
 Future<void> deleteKey(String word, {String path = 'words'}) async {
-  final box = await Hive.openBox('words');
+  final box = await Hive.openBox(path);
   await box.delete(word);
   debugPrint('Deleted word "$word" from box "$path"');
 }
@@ -47,14 +50,15 @@ Future<dynamic> readKey(String key, {String path = 'words', dynamic defaultValue
   return box.get(key, defaultValue: defaultValue);
 }
 
-Future<void> resetData(context, {String? path}) async {
+Future<List?> resetData(BuildContext? context, WidgetRef ref, {String? path}) async {
   List? choices;
   if (path != null){
     choices = [path];
   } else {
     choices = await getChoices(context);
   }
-  if (choices != null && choices.isNotEmpty) {
+  if (choices == null || choices.isEmpty) return null;
+  if (context != null && context.mounted) {
     // Add confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
@@ -75,12 +79,22 @@ Future<void> resetData(context, {String? path}) async {
         ],
       ),
     );
-    if (confirmed != true) return;
-    for (String choice in choices){
-      final box = await Hive.openBox(choice);
-      await box.clear();
+    if (confirmed != true) return null;
+  }
+  final Map refKeys = {
+    'words': wordDataProvider,
+    'inputs': inputDataProvider,
+    'settings': settingsProvider,
+    'archivedWords': archivedWordsProvider,
+  };
+  for (String choice in choices){
+    final box = await Hive.openBox(choice);
+    await box.clear();
+    if (refKeys.containsKey(choice)){
+      ref.invalidate(refKeys[choice]);
     }
   }
+  return choices;
 }
 
 Future<Set> gatherTags() async{
