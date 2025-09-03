@@ -93,25 +93,19 @@ final statisticsDataProvider = NotifierProvider<StatisticsDataNotifier, Map>(Sta
 class WordsThisWeekDataNotifier extends Notifier<int> {
   @override
   int build() {
-    final asyncData = ref.watch(wordDataFutureProvider);
+    final data = ref.watch(wordDataProvider);
 
-    return asyncData.when(
-      data: (data) {
-        final int week = getWeekNumber(DateTime.now());
+    final int week = getWeekNumber(DateTime.now());
 
-        int wordsThisWeek = 0;
-        
-        for (MapEntry word in data.entries){
-          final int wordWeek = getWeekNumber(DateTime.parse(word.value['dateAdded']));
-          if (wordWeek == week){
-            wordsThisWeek += 1;
-          }
-        }
-        return wordsThisWeek;
-      },
-      loading: () => -1,
-      error: (_, __) => -1,
-    );
+    int wordsThisWeek = 0;
+    
+    for (MapEntry word in data.entries){
+      final int wordWeek = getWeekNumber(DateTime.parse(word.value['dateAdded']));
+      if (wordWeek == week){
+        wordsThisWeek += 1;
+      }
+    }
+    return wordsThisWeek;
   }
 
   void incriment() {
