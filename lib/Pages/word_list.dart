@@ -459,6 +459,7 @@ class WordListState extends ConsumerState<WordList> {
                           },
                           onDismissed: (direction) {
                             ref.read(wordDataProvider.notifier).removeKey(word);
+                            ref.read(archivedWordsProvider.notifier).updateValue(word, words[word]);
                             // ref.invalidate(wordDataFutureProvider);
                             // filteredWords.remove(word);
                             // setState(() {
@@ -551,12 +552,4 @@ class WordListState extends ConsumerState<WordList> {
       ],
     );
   }
-  
-  Map getFirstData(Map words, String word) {
-    Map entries = words[word]['entries']; // ?.first?.value['details']?.first
-    for (MapEntry entry in entries.entries){
-        return entry.value;
-    }
-    return {};
-  }
-}
+}  

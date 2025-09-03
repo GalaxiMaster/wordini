@@ -69,3 +69,30 @@ class SettingsDataNotifier extends Notifier<Map> {
 }
 
 final settingsProvider = NotifierProvider<SettingsDataNotifier, Map>(SettingsDataNotifier.new);
+
+final archivedWordsDataProvider = FutureProvider<Map>((ref) async {
+  return file.readData(path: 'archivedWords');
+});
+
+class ArchivedWordsNotifier extends Notifier<Map> {
+  @override
+  Map build() {
+    final asyncData = ref.watch(archivedWordsDataProvider);
+
+    return asyncData.when(
+      data: (data) => data,
+      loading: () => {},
+      error: (_, __) => {},
+    );
+  }
+
+  void updateValue(String key, dynamic value) {
+    state = {...state, key: value};
+  }
+  
+  void removeKey(String key) {
+    state = {...state}..remove(key);
+  }
+}
+
+final archivedWordsProvider = NotifierProvider<ArchivedWordsNotifier, Map>(ArchivedWordsNotifier.new);

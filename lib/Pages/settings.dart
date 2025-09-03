@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wordini/Pages/Account/account.dart';
 import 'package:wordini/Pages/Account/sign_in.dart';
+import 'package:wordini/Pages/archived_words.dart';
 import 'package:wordini/Pages/word_details.dart';
 import 'package:wordini/Providers/otherproviders.dart';
 import 'package:wordini/file_handling.dart';
@@ -98,6 +99,18 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
               await processCsvRows(context, ref.read(wordDataProvider).keys.toList());
               ref.invalidate(wordDataFutureProvider);
             },
+          ),
+          settingsHeader('Utilities'),
+          const SizedBox(height: 8),
+          _buildSettingsTile(
+            icon: Icons.local_library,
+            label: 'Archived Words',
+            function: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ArchivedWordsScreen(),
+              ),
+            )
           ),
         ],
       )
