@@ -465,3 +465,11 @@ String indexToLetter(int index) {
 int letterToIndex(String letter) {
   return letter.codeUnitAt(0) - 'a'.codeUnitAt(0);
 }
+
+Map getFirstData(Map words, String word) {
+  Map entries = words[word]['entries']; // ?.first?.value['details']?.first
+  for (MapEntry entry in entries.entries){
+      return entry.value;
+  }
+  return {};
+}
