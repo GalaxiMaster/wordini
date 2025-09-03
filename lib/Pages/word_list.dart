@@ -274,7 +274,8 @@ class WordListState extends ConsumerState<WordList> {
           final searchLower = searchTerm.toLowerCase();
 
           // Search filter
-          if (!lowerWord.contains(searchLower)) return false;
+          final String firstDef = getFirstData(words, word.key)['definitions']?.first?['definition'].toLowerCase();
+          if (!lowerWord.contains(searchLower) && !firstDef.contains(searchLower)) return false;
 
           // Type filter
           final selectedTypes = (filters['wordTypes'] as Set).map((e) => e.toLowerCase()).toList();
