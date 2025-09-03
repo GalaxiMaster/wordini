@@ -18,14 +18,12 @@ class WordDataWriteableNotifier extends Notifier<Map> {
     );
   }
 
-  void updateWord(String word, dynamic value) {
+  void updateValue(String word, dynamic value) {
     state = {...state, word: value};
     file.writeKey(word, value);
   }
   void removeKey(String word) {
-    final newState = {...state};
-    newState.remove(word);
-    state = newState;
+    state = {...state}..remove(word);
     file.deleteKey(word);
   }
 }
@@ -88,10 +86,12 @@ class ArchivedWordsNotifier extends Notifier<Map> {
 
   void updateValue(String key, dynamic value) {
     state = {...state, key: value};
+    file.writeKey(key, value, path: 'archivedWords');
   }
   
   void removeKey(String key) {
     state = {...state}..remove(key);
+    file.deleteKey(key, path: 'archivedWords');
   }
 }
 
