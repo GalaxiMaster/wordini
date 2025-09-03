@@ -429,48 +429,73 @@ class WordListState extends ConsumerState<WordList> {
                   itemBuilder: (context, index) {
                     final String word = filteredWords[index].value['word'];
                     final Map firstWordDetails = getFirstData(words, word);
-                    return InkWell(
-                      onLongPress: () async {
-                        ref.read(wordDataProvider.notifier).removeKey(word);
-                        ref.invalidate(wordDataFutureProvider);
-                      },
-                      onTap: () async{
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => WordDetails(word: words[word], allTags: allTags),
-                          ),
-                        );
-                        // ! there was a refresh here but i think it is not needed soon
-                      },
-                      child: ListTile(
-                        title: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              capitalise(word),
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                getWordType(words[word]).join(' / '),
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.grey,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                          ],
+                    return GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => WordDetails(word: words[word], allTags: allTags),
                         ),
-                        subtitle: Text(
-                          (firstWordDetails['shortDefs']?.isNotEmpty ?? false ? firstWordDetails['shortDefs']?.first : firstWordDetails['definitions']?.first?['definition']) ?? '',
-                        ), 
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Dismissible(
+                          key: ValueKey(word),
+                          direction: DismissDirection.endToStart, // only right-to-left
+                          dismissThresholds: const {
+                            DismissDirection.endToStart: 0.5,
+                          },
+                          background: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              color: Colors.teal.shade400
+                            ),
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: const Icon(Icons.archive, color: Colors.white),
+                          ),
+                          confirmDismiss: (direction) async {
+                            // Only archive if threshold reached
+                            return true;
+                          },
+                          onDismissed: (direction) {
+                            ref.read(wordDataProvider.notifier).removeKey(word);
+                            // ref.invalidate(wordDataFutureProvider);
+                            // filteredWords.remove(word);
+                            // setState(() {
+                              
+                            // });
+                            // remove input data as well
+                          },
+                          child: ListTile(
+                            title: Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  capitalise(word),
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    getWordType(words[word]).join(' / '),
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.grey,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            subtitle: Text(
+                              (firstWordDetails['shortDefs']?.isNotEmpty ?? false ? firstWordDetails['shortDefs']?.first : firstWordDetails['definitions']?.first?['definition']) ?? '',
+                            ), 
+                          ),
+                        ),
                       ),
                     );
                   },
