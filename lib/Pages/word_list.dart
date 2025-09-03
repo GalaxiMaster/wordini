@@ -491,8 +491,8 @@ class WordListState extends ConsumerState<WordList> {
                                 ),
                               ],
                             ),
-                            subtitle: Text(
-                              (firstWordDetails['shortDefs']?.isNotEmpty ?? false ? firstWordDetails['shortDefs']?.first : firstWordDetails['definitions']?.first?['definition']) ?? '',
+                            subtitle: MWTaggedText(
+                              (firstWordDetails['definitions']?.first?['definition']) ?? '',
                             ), 
                           ),
                         ),

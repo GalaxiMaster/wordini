@@ -66,7 +66,7 @@ Future<Map> getWordDetails(String word) async {
               };
             }
              
-            wordDetails['entries'][partOfSpeech]['shortDefs'] = mainData['shortdef'] ?? [];
+            // wordDetails['entries'][partOfSpeech]['shortDefs'] = mainData['shortdef'] ?? [];
             wordDetails['entries'][partOfSpeech]['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
             wordDetails['entries'][partOfSpeech]['stems'] = mainData['meta']?['stems'] ?? [];
 

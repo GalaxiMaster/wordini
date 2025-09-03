@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wordini/Pages/word_details.dart';
-import 'package:wordini/Providers/goal_providers.dart';
-import 'package:wordini/Providers/otherproviders.dart';
 import 'package:wordini/file_handling.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
@@ -73,7 +71,7 @@ class AddWordState extends ConsumerState<AddWord> {
                         if (_addWordTextBoxController.text.isNotEmpty){
                           final allTags = await gatherTags();
                           if (!context.mounted) return;
-                          final result = await Navigator.push(
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => WordDetails(
                               word: {
@@ -95,7 +93,6 @@ class AddWordState extends ConsumerState<AddWord> {
                                   //       //   //   }
                                   //       //   // ],
                                   //       // ],
-                                  //       // "shortDefs": [],
                                   //       // "firstUsed": "",
                                   //       // "stems": [],
                                   //       // "homograph": 1
