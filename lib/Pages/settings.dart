@@ -89,7 +89,7 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
             icon: Icons.restart_alt,
             label: 'Reset Data',
             function: () async {
-              await resetData(context);
+              await resetData(context, ref);
             },
           ),
           _buildSettingsTile(

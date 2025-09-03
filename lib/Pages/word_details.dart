@@ -746,7 +746,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
         }
       }
       
-      ref.read(wordDataProvider.notifier).updateWord(wordState['word'], wordToSave);
+      ref.read(wordDataProvider.notifier).updateValue(wordState['word'], wordToSave);
     }
   }
 
