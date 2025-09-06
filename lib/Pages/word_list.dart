@@ -461,7 +461,7 @@ class WordListState extends ConsumerState<WordList> {
                           onDismissed: (direction) {
                             ref.read(archivedWordsProvider.notifier).updateValue(word, words[word]);
                             ref.read(wordDataProvider.notifier).removeKey(word);
-
+                            debugPrint(ref.read(archivedWordsProvider).keys.toString());
                             // remove input data as well
                           },
                           child: ListTile(
