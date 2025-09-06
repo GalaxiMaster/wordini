@@ -115,7 +115,7 @@ class AddWordState extends ConsumerState<AddWord> {
                       child: Text(
                         'Word not found? Add manually',
                         style: TextStyle(
-                          color: _addWordTextBoxController.text.isNotEmpty ? Colors.blue : Colors.grey,
+                          color: _addWordTextBoxController.text.isNotEmpty ? Theme.of(context).colorScheme.primary : Colors.grey,
                           // decoration: TextDecoration.underline,
                           // decorationColor: Colors.blue,
                           // decorationStyle: TextDecorationStyle.dotted

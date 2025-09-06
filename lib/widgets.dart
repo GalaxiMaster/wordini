@@ -381,7 +381,7 @@ class _AnimatedToggleSwitchState extends State<AnimatedToggleSwitch>
                         width: itemWidth,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: Colors.blue,
+                          color: Theme.of(context).colorScheme.primary,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
@@ -803,7 +803,7 @@ class GoalOptionsState extends State<GoalOptions> {
                 style: TextStyle(
                   fontSize: 24,
                   color: selectedIndex == index 
-                      ? Colors.blue 
+                      ? Theme.of(context).colorScheme.primary 
                       : Colors.grey,
                   fontWeight: selectedIndex == index 
                       ? FontWeight.bold 

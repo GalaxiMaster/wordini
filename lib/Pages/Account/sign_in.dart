@@ -146,10 +146,10 @@ class SignInPageState extends State<SignInPage> {
                         MaterialPageRoute(builder: (context) => SignUpPage()),
                       );
                     },
-                    child: const Text(
+                    child: Text(
                       'Don\'t have an account?',
                       style: TextStyle(
-                        color: Colors.blue,
+                        color: Theme.of(context).colorScheme.primary,
                         fontSize: 13,
                       ),
                     ),

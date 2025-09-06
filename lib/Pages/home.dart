@@ -9,6 +9,7 @@ import 'package:wordini/Pages/word_list.dart';
 import 'package:wordini/Providers/goal_providers.dart';
 import 'package:wordini/Providers/otherproviders.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
+import 'package:wordini/utils.dart';
 import 'package:wordini/widgets.dart';
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -41,7 +42,8 @@ class HomePageState extends ConsumerState<HomePage> {
                 _currentIndex = index;
               });
             },
-            indicatorColor: const Color.fromARGB(255, 112, 173, 252),
+            indicatorColor: lighten(Theme.of(context).colorScheme.primary, 0.1),
+            // const Color.fromARGB(255, 112, 173, 252),
             selectedIndex: _currentIndex,
             destinations: const <Widget>[
               NavigationDestination(
@@ -321,7 +323,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                           )
                       );
                     },
-                    backgroundColor: Colors.blue,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     child: Text(
                       "+",
                       style: TextStyle(

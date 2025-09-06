@@ -879,7 +879,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                               child: Container(
                                 width: indicatorWidth,
                                 height: 4,
-                                color: Colors.blue,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
                           ],
