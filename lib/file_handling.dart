@@ -43,6 +43,7 @@ Future<void> deleteKey(String word, {String path = 'words'}) async {
 Future<void> writeKey(String key, dynamic data, {String path = 'words',}) async {
   final box = await Hive.openBox(path);
   box.put(key, data);
+  debugPrint('Writing Key "$key" from box "$path"');
 }
 
 Future<dynamic> readKey(String key, {String path = 'words', dynamic defaultValue}) async {
@@ -82,16 +83,22 @@ Future<List?> resetData(BuildContext? context, WidgetRef ref, {String? path}) as
     if (confirmed != true) return null;
   }
   final Map refKeys = {
-    'words': wordDataProvider,
-    'inputs': inputDataProvider,
-    'settings': settingsProvider,
-    'archivedWords': archivedWordsProvider,
+    'words': wordDataFutureProvider,
+    'inputs': futureInputDataProvider,
+    'settings': futureSettingsDataProvider,
+    'archivedWords': archivedWordsDataProvider,
   };
   for (String choice in choices){
     final box = await Hive.openBox(choice);
     await box.clear();
     if (refKeys.containsKey(choice)){
-      ref.invalidate(refKeys[choice]);
+      try {
+        final provider = refKeys[choice];
+        ref.invalidate(provider);
+      } catch (e){
+        debugPrint(e.toString());
+      }
+      
     }
   }
   return choices;
