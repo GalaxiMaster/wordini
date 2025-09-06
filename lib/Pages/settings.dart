@@ -12,6 +12,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -112,9 +113,68 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
               ),
             )
           ),
+          settingsHeader('Accessability'),
+          const SizedBox(height: 8),
+          _buildSettingsTile(
+            icon: Icons.notifications,
+            label: 'Notification Permissions',
+            function: () => null,
+          ),
+          _buildSettingsTile(
+            icon: Icons.color_lens,
+            label: 'Main Theme Color',
+            function: () async {
+              final Color? newColor = await _pickColor(context);
+              if (newColor != null){
+                ref.read(themeProvider.notifier).setTheme(newColor);
+              }
+            }
+          ),
         ],
       )
     );
+  }
+  Future<Color?> _pickColor(BuildContext context) async {
+    final selectedColor = await showDialog<Color>(
+      context: context,
+      builder: (context) {
+        Color tempColor = ref.read(themeProvider);
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Pick a color!'),
+              content: SingleChildScrollView(
+                child: ColorPicker(
+                  pickerColor: tempColor,
+                  onColorChanged: (color) {
+                    setState(() => tempColor = color);
+                  },
+                ),
+              ),
+              actions: [
+                TextButton(
+                  child: const Text('Reset color'),
+                  onPressed: () {
+                    setState(() => tempColor = Colors.blue);
+                  },
+                ),
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () => Navigator.pop(context, null),
+                ),
+                TextButton(
+                  child: const Text('Select'),
+                  onPressed: () => Navigator.pop(context, tempColor),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    return selectedColor;
   }
 
   Widget settingsHeader(String header) {
@@ -123,10 +183,10 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
       child: Text(
         header.toUpperCase(),
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Colors.grey,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.0,
-            ),
+          color: Colors.grey,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.0,
+        ),
       ),
     );
   }

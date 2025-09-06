@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wordini/file_handling.dart' as file;
 
 final wordDataFutureProvider = FutureProvider<Map>((ref) async {
@@ -96,3 +98,31 @@ class ArchivedWordsNotifier extends Notifier<Map> {
 }
 
 final archivedWordsProvider = NotifierProvider<ArchivedWordsNotifier, Map>(ArchivedWordsNotifier.new);
+
+
+class ThemeNotifier extends Notifier<Color> {
+  @override
+  Color build() {
+    // default
+    _loadTheme();
+    return Colors.blue;
+  }
+
+  Future<void> _loadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final colorValue = prefs.getInt('themeColor');
+    if (colorValue != null) {
+      state = Color(colorValue);
+    }
+  }
+
+  Future<void> setTheme(Color color) async {
+    state = color;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('themeColor', color.toARGB32());
+  }
+}
+
+final themeProvider = NotifierProvider<ThemeNotifier, Color>(() {
+  return ThemeNotifier();
+});

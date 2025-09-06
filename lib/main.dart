@@ -6,6 +6,7 @@ import 'package:wordini/Pages/home.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:wordini/Pages/quizzes.dart';
+import 'package:wordini/Providers/otherproviders.dart';
 import 'package:wordini/encryption_controller.dart';
 import 'package:wordini/file_handling.dart';
 import 'package:wordini/notification_controller.dart';
@@ -43,17 +44,17 @@ void main() async{
 }
 
 
-class MainApp extends StatelessWidget {
+class MainApp extends ConsumerWidget {
   const MainApp({super.key});
   
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     
     return MaterialApp(
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: Colors.black,
-        colorScheme: const ColorScheme.dark(
-          primary: Colors.blue,
+        colorScheme: ColorScheme.dark(
+          primary: ref.watch(themeProvider),
         )
       ),
       debugShowCheckedModeBanner: false,
