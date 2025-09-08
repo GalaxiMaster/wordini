@@ -1522,7 +1522,6 @@ class WordDetailsState extends ConsumerState<WordDetails> {
     final parentLayer = path.sublist(0, path.length-1).fold(wordState, (current, key) => current[key]);
 
     if (layer.containsKey('definition')) {
-      final isNested = path.length > 4; // Adjust this number as needed for your structure
       Widget definitionTile = ListTile(
         contentPadding: EdgeInsets.zero,
         title: Column(
@@ -1537,22 +1536,20 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                 (example) => Padding(
                   padding: EdgeInsets.symmetric(
                     vertical: 8.0,
-                    horizontal: isNested ? 8 : 0, // Only indent if nested
+                    horizontal: 8, // Only indent if nested
                   ),
                   child: Container(
-                    decoration: isNested
-                        ? BoxDecoration(
-                            border: Border(
-                              left: BorderSide(
-                                color: Colors.blue.shade300,
-                                width: 4,
-                              ),
-                            ),
-                          )
-                        : null,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          color: Colors.blue.shade300,
+                          width: 4,
+                        ),
+                      ),
+                    ),
                     padding: EdgeInsets.symmetric(
                       vertical: 6,
-                      horizontal: isNested ? 10 : 0,
+                      horizontal: 10,
                     ),
                     child: MWTaggedText(capitalise(example)),
                   ),
