@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wordini/file_handling.dart' as file;
 
@@ -125,4 +126,44 @@ class ThemeNotifier extends Notifier<Color> {
 
 final themeProvider = NotifierProvider<ThemeNotifier, Color>(() {
   return ThemeNotifier();
+});
+
+class NotificationSettings extends AsyncNotifier<Map<String, bool>> {
+  @override
+  Future<Map<String, bool>> build() async {
+    // This build logic is exactly the same as before.
+    final data = await file.readData(path: 'notificationSettings');
+    final settings = Map<String, bool>.from(data);
+    final notificationsEnabled = await Permission.notification.isGranted;
+    List boilerData = ['Quiz Reminders'];
+
+    for (String key in boilerData) {
+      if (!settings.containsKey(key)) {
+        settings[key] = notificationsEnabled;
+        await file.writeKey(key, settings[key], path: 'notificationSettings');
+      }
+    }
+    return settings;
+  }
+
+  // This update method is also exactly the same.
+  Future<void> updateValue(String key, bool value) async {
+    final oldState = await future;
+    final newState = {...oldState, key: value};
+    state = AsyncData(newState);
+    
+    try {
+      await file.writeKey(key, value, path: 'notificationSettings');
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+}
+
+
+// The Provider definition.
+// This is the global variable you will reference in your UI (e.g., ref.watch(notificationSettingsProvider)).
+final notificationSettingsProvider = 
+    AsyncNotifierProvider<NotificationSettings, Map<String, bool>>(() {
+  return NotificationSettings();
 });
