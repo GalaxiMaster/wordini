@@ -6,13 +6,25 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive/hive.dart';
 
-Future<void> initializeNotifications() async {
-  // Settings for Android
+Future<void> initializeNotifications({bool? askPermission}) async {
+  bool allowNotifications = await Permission.notification.isGranted;
   if (await Permission.notification.isDenied) {
-    await Permission.notification.request();
+    final prefs = await SharedPreferences.getInstance();
+    if (askPermission == null){
+      final bool? askedNotifsBefore = prefs.getBool('askedNotifsBefore');
+      if (!(askedNotifsBefore ?? false)){
+        askPermission = true;
+        prefs.setBool('askedNotifsBefore', true);
+      }
+    }
   }
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+  if ((askPermission ?? false)){
+    allowNotifications = (await Permission.notification.request()).isGranted;
+  }
+  if (!allowNotifications) return;
+
+  // Settings for Android
+  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('ic_stat_wordiniforeground');
 
   // Settings for iOS
   const DarwinInitializationSettings initializationSettingsIOS =
@@ -44,24 +56,25 @@ Future<void> initializeNotifications() async {
         navigatorKey.currentState?.pushNamed(
           '/testing', // Your route name
           // arguments: word,
-        );      
+        );
       }
     },
   );
 }
 
-void scheduleQuizNotification() async{
-  final currentNotifs = await Hive.openBox<int>('active-notifications');
-  if (currentNotifs.containsKey('wordReminder')) {
-    debugPrint('Notification already scheduled for word reminder.');
-    return; // Exit if notification is already scheduled
-  }
+void scheduleQuizNotification({String? word}) async {
+  // final currentNotifs = await Hive.openBox<int>('active-notifications');
+  // if (currentNotifs.containsKey('wordReminder')) {
+  //   debugPrint('Notification already scheduled for word reminder.');
+  //   return; // Exit if notification is already scheduled
+  // }
   scheduleNotification(
-    title: 'DO YOUR QUIZZES', 
+    title: word == null ? 'DO YOUR QUIZZES' : 'Do you remember what $word means?', 
     description: 'Your words are waiting for you.', 
-    duration: Duration(days: 1), 
+    duration: Duration(seconds: 4), 
     androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
     payload: 'wordReminder',
+    exact: true
   );
 }
 
@@ -106,7 +119,9 @@ Future<void> scheduleNotification(
   //   priority: Priority.high,
   // );
 
-  NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+  NotificationDetails platformChannelSpecifics = NotificationDetails(
+    android: androidPlatformChannelSpecifics,
+  );
 
   int id = await NotificationIdManager.getNextId();
   AndroidScheduleMode scheduleMode = exact ? AndroidScheduleMode.exact : AndroidScheduleMode.inexactAllowWhileIdle;
