@@ -10,6 +10,7 @@ import 'package:wordini/file_handling.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
+import 'package:wordini/notification_controller.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -30,6 +31,8 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
   }
   @override
   Widget build(BuildContext context) {
+    final Map<String, bool>? notificationSettings = ref.watch(notificationSettingsProvider).value;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -118,7 +121,17 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
           _buildSettingsTile(
             icon: Icons.notifications,
             label: 'Notification Permissions',
-            function: () => null,
+            function: () async{
+              showModalBottomSheet(
+                context: context,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (context) {
+                  return _NotificationSettingsSheet(settings: notificationSettings ?? {},);
+                },
+              );
+            },
           ),
           _buildSettingsTile(
             icon: Icons.color_lens,
@@ -253,5 +266,50 @@ Future<void> processCsvRows(context, List existingWords) async {
     }
   } else {
     debugPrint('No file selected.');
+  }
+}
+
+class _NotificationSettingsSheet extends ConsumerWidget {
+  final Map<String, bool> settings;
+
+  const _NotificationSettingsSheet({required this.settings});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the provider again to get the latest state for the switches
+    final notificationSettings = ref.watch(notificationSettingsProvider).value ?? settings;
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Notification Settings',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          ...notificationSettings.keys.map((type) {
+            return SwitchListTile(
+              title: Text(type),
+              value: notificationSettings[type]!,
+              onChanged: (bool value) {
+                ref.read(notificationSettingsProvider.notifier).updateValue(type, value);
+                
+                if (value) {
+                  // You might still want to call this, but the provider handles state
+                  initializeNotifications(askPermission: true);
+                }
+              },
+            );
+          }),
+          const SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Done'), // Changed from 'Save' as it saves instantly
+          ),
+        ],
+      ),
+    );
   }
 }
