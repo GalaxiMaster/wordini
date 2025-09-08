@@ -158,12 +158,11 @@ class NotificationSettings extends AsyncNotifier<Map<String, bool>> {
       state = AsyncError(e, st);
     }
   }
+  bool getValue(key){
+    return state.value?[key] ?? false;
+  }
 }
 
-
-// The Provider definition.
-// This is the global variable you will reference in your UI (e.g., ref.watch(notificationSettingsProvider)).
-final notificationSettingsProvider = 
-    AsyncNotifierProvider<NotificationSettings, Map<String, bool>>(() {
+final notificationSettingsProvider = AsyncNotifierProvider<NotificationSettings, Map<String, bool>>(() {
   return NotificationSettings();
 });
