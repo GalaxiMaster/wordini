@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wordini/Providers/otherproviders.dart';
 import 'package:wordini/main.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
@@ -62,7 +64,16 @@ Future<void> initializeNotifications({bool? askPermission}) async {
   );
 }
 
-void scheduleQuizNotification({String? word}) async {
+void turnNotificaitonsOff() async{
+  final currentNotifs = await Hive.openBox<int>('active-notifications');
+  for (String notif in currentNotifs.keys){
+    removeNotif(notif);
+  }
+}
+
+void scheduleQuizNotification(WidgetRef ref, {String? word}) async {
+  bool notifsOn = ref.read(notificationSettingsProvider.notifier).getValue('Quiz Reminders');
+  if (!notifsOn) return;
   final currentNotifs = await Hive.openBox<int>('active-notifications');
   if (currentNotifs.containsKey('wordReminder')) {
     removeNotif('wordReminder');
@@ -72,7 +83,7 @@ void scheduleQuizNotification({String? word}) async {
   scheduleNotification(
     title: word == null ? 'DO YOUR QUIZZES' : 'Do you remember what $word means?', 
     description: 'Your words are waiting for you.', 
-    duration: Duration(days: 1), 
+    duration: Duration(days: 2), 
     androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
     payload: 'wordReminder',
   );

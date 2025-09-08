@@ -285,8 +285,7 @@ class QuizzesState extends ConsumerState<Quizzes> {
                               value = value.trim();
                               if (value.toLowerCase() == currentWord['word'].toLowerCase()) return; // ADD error message for this
 
-                              bool? correct = await checkDefinition(currentWord['word'], value, currentWord['attributes']['partOfSpeech'], context);
-
+                              bool? correct = await checkDefinition(currentWord['word'], value, currentWord['attributes']['partOfSpeech'], context);                      
                               if (correct == null) return;
 
                               if (correct) {
@@ -305,7 +304,7 @@ class QuizzesState extends ConsumerState<Quizzes> {
                                 // errorOverlay(context, 'Wrong answer');
                               }
                               removeNotif('wordReminder');
-                              scheduleQuizNotification();
+                              scheduleQuizNotification(ref);
                               questionsDone++;
                               addInputEntry(
                                 currentWord['word'],

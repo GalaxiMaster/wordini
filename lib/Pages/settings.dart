@@ -276,7 +276,6 @@ class _NotificationSettingsSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch the provider again to get the latest state for the switches
     final notificationSettings = ref.watch(notificationSettingsProvider).value ?? settings;
 
     return Padding(
@@ -297,8 +296,9 @@ class _NotificationSettingsSheet extends ConsumerWidget {
                 ref.read(notificationSettingsProvider.notifier).updateValue(type, value);
                 
                 if (value) {
-                  // You might still want to call this, but the provider handles state
                   initializeNotifications(askPermission: true);
+                } else {
+                  turnNotificaitonsOff();
                 }
               },
             );
@@ -306,7 +306,7 @@ class _NotificationSettingsSheet extends ConsumerWidget {
           const SizedBox(height: 10),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Done'), // Changed from 'Save' as it saves instantly
+            child: const Text('Done'),
           ),
         ],
       ),
