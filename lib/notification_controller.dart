@@ -63,18 +63,18 @@ Future<void> initializeNotifications({bool? askPermission}) async {
 }
 
 void scheduleQuizNotification({String? word}) async {
-  // final currentNotifs = await Hive.openBox<int>('active-notifications');
-  // if (currentNotifs.containsKey('wordReminder')) {
-  //   debugPrint('Notification already scheduled for word reminder.');
-  //   return; // Exit if notification is already scheduled
-  // }
+  final currentNotifs = await Hive.openBox<int>('active-notifications');
+  if (currentNotifs.containsKey('wordReminder')) {
+    removeNotif('wordReminder');
+    debugPrint('Notification already scheduled for word reminder...rescheduling notif');
+    // return; // Exit if notification is already scheduled
+  }
   scheduleNotification(
     title: word == null ? 'DO YOUR QUIZZES' : 'Do you remember what $word means?', 
     description: 'Your words are waiting for you.', 
-    duration: Duration(seconds: 4), 
+    duration: Duration(days: 1), 
     androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
     payload: 'wordReminder',
-    exact: true
   );
 }
 
