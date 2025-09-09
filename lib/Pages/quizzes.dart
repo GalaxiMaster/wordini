@@ -43,14 +43,11 @@ class QuizzesState extends ConsumerState<Quizzes> {
       setState(() {
         if (widget.questions != null ){
           maxQuestions = widget.questions!.clamp(0, selectedDefs.length);
+          selectedDefs.shuffle();
+          words = Future.value(selectedDefs.sublist(0, selectedDefs.length > (maxQuestions ?? 0) ? maxQuestions : selectedDefs.length));
         } else{
           maxQuestions = null;
-        }
-        if (maxQuestions == null){
           words = Future.value(randomise(selectedDefs));
-        } else{
-          selectedDefs.shuffle();
-          words = Future.value(selectedDefs);
         }
       });
     });
@@ -285,7 +282,8 @@ class QuizzesState extends ConsumerState<Quizzes> {
                               value = value.trim();
                               if (value.toLowerCase() == currentWord['word'].toLowerCase()) return; // ADD error message for this
 
-                              bool? correct = await checkDefinition(currentWord['word'], value, currentWord['attributes']['partOfSpeech'], context);                      
+                              bool? correct = await checkDefinition(currentWord['word'], value, currentWord['attributes']['partOfSpeech'], context); 
+                              // bool correct = true;                     
                               if (correct == null) return;
 
                               if (correct) {
@@ -316,7 +314,7 @@ class QuizzesState extends ConsumerState<Quizzes> {
                                 }
                               );
                               ref.invalidate(futureInputDataProvider);
-                              if (_currentIndex < words.length - 1) {
+                              if (_currentIndex < words.length - 1 || (maxQuestions != null &&  _currentIndex < ((maxQuestions as int) - 1))) {
                                 setState(() {
                                   _currentIndex++;
                                 });
