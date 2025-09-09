@@ -327,10 +327,11 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
         for (var entry in dt) {
           if (entry[0] == 'text') {
             defText += entry[1].trim() + ' ';
-          } else if (entry[0] == 'vis') {
+          } 
+          else if (entry[0] == 'vis') {
             for (var vis in entry[1]) {
               examples.add(vis['t']);
-            }
+            } 
           }
           else if (entry[0] == 'uns'){
             for (List i in entry[1]){
