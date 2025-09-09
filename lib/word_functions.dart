@@ -332,6 +332,19 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
               examples.add(vis['t']);
             }
           }
+          else if (entry[0] == 'uns'){
+            for (List i in entry[1]){
+              for (List j in i){
+                if (j[0] == 'text'){
+                  defText += j[1].trim() + ' ';
+                } else if (j[0] == 'vis') {
+                  for (var vis in j[1]) {
+                    examples.add(vis['t']);
+                  }
+                }
+              }
+            }
+          }
         }
 
         if (defText.isEmpty) continue;
