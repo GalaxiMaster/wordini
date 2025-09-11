@@ -42,6 +42,7 @@ class WordListState extends ConsumerState<WordList> {
 
   OverlayEntry? _tagOverlayEntry;
   final TextEditingController _tagController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   final LayerLink _typeLayerLink = LayerLink();
   final LayerLink _tagLayerLink = LayerLink();
   final LayerLink _sortByLayerLink = LayerLink();
@@ -267,6 +268,7 @@ class WordListState extends ConsumerState<WordList> {
 
     return asyncData.when(
       data: (_) {
+        _searchController.text = searchTerm;
         Map words = ref.watch(wordDataProvider);
 
         List filteredWords = words.entries.where((word) { // all word filtering logic here
@@ -333,6 +335,7 @@ class WordListState extends ConsumerState<WordList> {
               child: Stack(
                 children: [
                   TextField(
+                    controller: _searchController,
                     decoration: InputDecoration(
                       labelText: 'Search for a word',
                       border: OutlineInputBorder(
