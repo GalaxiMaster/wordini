@@ -131,7 +131,6 @@ final themeProvider = NotifierProvider<ThemeNotifier, Color>(() {
 class NotificationSettings extends AsyncNotifier<Map<String, bool>> {
   @override
   Future<Map<String, bool>> build() async {
-    // This build logic is exactly the same as before.
     final data = await file.readData(path: 'notificationSettings');
     final settings = Map<String, bool>.from(data);
     final notificationsEnabled = await Permission.notification.isGranted;
@@ -146,7 +145,6 @@ class NotificationSettings extends AsyncNotifier<Map<String, bool>> {
     return settings;
   }
 
-  // This update method is also exactly the same.
   Future<void> updateValue(String key, bool value) async {
     final oldState = await future;
     final newState = {...oldState, key: value};

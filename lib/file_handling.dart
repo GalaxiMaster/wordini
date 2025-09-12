@@ -113,14 +113,6 @@ Future<Set> gatherTags() async{
   return allTags;
 }
 
-Future<void> addInputEntry(String word, String partOfSpeech, Map entry) async{
-  final Box box = await Hive.openBox('inputs');
-  Map data = box.get(word, defaultValue: {});
-  data[partOfSpeech] ??= [];
-  data[partOfSpeech].insert(0, entry);
-  box.put(word, data);
-}
-
 Future<void> exportJson(BuildContext context) async {
   LoadingOverlay loadingOverlay = LoadingOverlay();
   try {
