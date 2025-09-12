@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:wordini/Providers/goal_providers.dart';
 import 'package:wordini/Providers/otherproviders.dart';
-import 'package:wordini/file_handling.dart';
 import 'package:wordini/utils.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
@@ -72,7 +72,6 @@ class WordDetailsState extends ConsumerState<WordDetails> {
     currentPage = _controller.initialPage.toDouble();
     _controller
         .addListener(() => setState(() => currentPage = _controller.page ?? 0));
-    getInputs();
     if (widget.editModeState) {
       editMode = widget.editModeState;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -723,11 +722,6 @@ class WordDetailsState extends ConsumerState<WordDetails> {
         saveWord();
       });
 
-  void getInputs() async {
-    final data = await readKey(wordState['word'], path: 'inputs');
-    if (data != null) setState(() => inputs = data);
-  }
-
   void saveWord({bool save = false}) {
     if ((!widget.addWordMode && wordState['word'] != null) || save) {
       final Map wordToSave = {
@@ -760,6 +754,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
 
   @override
   Widget build(BuildContext context) {
+    inputs = ref.watch(inputDataProvider)[widget.word['word']] ?? {}; // TODO improve this
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -1389,9 +1384,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                                 ),
                                                 if (editMode)
                                                   IconButton(
-                                                    onPressed: () => setState(
-                                                      () => inputs[speechType.value['partOfSpeech']].removeAt(index),
-                                                    ),
+                                                    onPressed: () =>  ref.read(inputDataProvider.notifier).removeEntry(widget.word['word'], speechType.value['partOfSpeech'], index),
                                                     icon: const Icon(
                                                       Icons.close,
                                                       size: 20,
@@ -1443,9 +1436,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                                 ),
                                                 if (editMode)
                                                   IconButton(
-                                                    onPressed: () => setState(
-                                                      () => inputs[speechType.value['partOfSpeech']].removeAt(index),
-                                                    ),
+                                                    onPressed: () =>  ref.read(inputDataProvider.notifier).removeEntry(widget.word['word'], speechType.value['partOfSpeech'], index),
                                                     icon: const Icon(
                                                       Icons.close,
                                                       size: 20,

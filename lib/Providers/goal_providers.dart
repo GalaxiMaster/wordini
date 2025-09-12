@@ -18,6 +18,20 @@ class InputDataNotifier extends Notifier<Map> {
       error: (_, __) => {},
     );
   }
+  void removeEntry(word, speechPart, index){
+    Map data = state[word];
+    data[speechPart].removeAt(index);
+    state = {...state, word: data};
+    file.writeKey(word, data, path: 'inputs');
+  }
+  
+  Future<void> addInputEntry(String word, String partOfSpeech, Map entry) async{
+    Map data = state[word] ?? {};
+    data[partOfSpeech] ??= [];
+    data[partOfSpeech].insert(0, entry);
+    state = {...state, word: data};
+    file.writeKey(word, data, path: 'inputs');
+  }
 }
 final inputDataProvider = NotifierProvider<InputDataNotifier, Map>(InputDataNotifier.new);
 

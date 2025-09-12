@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:wordini/Providers/goal_providers.dart';
 import 'package:wordini/Providers/otherproviders.dart';
-import 'package:wordini/file_handling.dart';
 import 'package:wordini/notification_controller.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
@@ -222,7 +221,7 @@ class QuizzesState extends ConsumerState<Quizzes> {
                                       });
                                     });
                                   }
-                                  addInputEntry(
+                                  ref.read(inputDataProvider.notifier).addInputEntry(
                                     currentWord['word'], 
                                     currentWord['attributes']['partOfSpeech'], 
                                     {
@@ -304,14 +303,14 @@ class QuizzesState extends ConsumerState<Quizzes> {
                               removeNotif('wordReminder');
                               scheduleQuizNotification(ref);
                               questionsDone++;
-                              addInputEntry(
+                              ref.read(inputDataProvider.notifier).addInputEntry(
                                 currentWord['word'],
                                 currentWord['attributes']['partOfSpeech'], 
                                 {
                                   'guess': value,
                                   'correct': correct,
                                   'date': DateTime.now().toString(),
-                                }
+                                },
                               );
                               ref.invalidate(futureInputDataProvider);
                               if (_currentIndex < words.length - 1 || (maxQuestions != null &&  _currentIndex < ((maxQuestions as int) - 1))) {
