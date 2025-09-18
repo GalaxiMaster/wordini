@@ -71,20 +71,24 @@ void turnNotificaitonsOff() async{
   }
 }
 
+// In notification_controller.dart
+
 void scheduleQuizNotification(WidgetRef ref, {String? word}) async {
   bool notifsOn = ref.read(notificationSettingsProvider.notifier).getValue('Quiz Reminders');
   if (!notifsOn) return;
+
   final currentNotifs = await Hive.openBox<int>('active-notifications');
   if (currentNotifs.containsKey('wordReminder')) {
     removeNotif('wordReminder');
     debugPrint('Notification already scheduled for word reminder...rescheduling notif');
-    // return; // Exit if notification is already scheduled
   }
+
+  // Call the updated function
   scheduleNotification(
-    title: word == null ? 'DO YOUR QUIZZES' : 'Do you remember what $word means?', 
-    description: 'Your words are waiting for you.', 
-    duration: Duration(days: 2), 
-    androidPlatformChannelSpecifics: NotificationType.wordReminder.details, 
+    title: word == null ? 'Time for your quiz!' : 'Do you remember what "$word" means?',
+    description: 'Your words are waiting for you.',
+    duration: const Duration(days: 2),
+    notificationType: NotificationType.wordReminder,
     payload: 'wordReminder',
   );
 }
@@ -110,42 +114,39 @@ Future<void> showInstantNotification({
   );
 }
 
-Future<void> scheduleNotification(
-  {
-    required String title,
-    required String description,
-    required Duration duration, 
-    required AndroidNotificationDetails androidPlatformChannelSpecifics,
-    required String payload,
-    bool exact = false,
-  }
-  ) async {
-  await requestNotificationPermission();
-  // const AndroidNotificationDetails androidPlatformChannelSpecifics =
-  //     AndroidNotificationDetails(
-  //   'your_scheduled_channel_id',
-  //   'your_scheduled_channel_name',
-  //   channelDescription: 'your_scheduled_channel_description',
-  //   importance: Importance.max,
-  //   priority: Priority.high,
-  // );
+// In notification_controller.dart
 
+Future<void> scheduleNotification({
+  required String title,
+  required String description,
+  required Duration duration,
+  required NotificationType notificationType, // <-- Use your NotificationType class
+  required String payload,
+  bool exact = false,
+}) async {
+  // The Android-specific permission request is not needed here for iOS.
+  // The main permission is handled in initializeNotifications.
+
+  // Create platform-specific details from the NotificationType
   NotificationDetails platformChannelSpecifics = NotificationDetails(
-    android: androidPlatformChannelSpecifics,
+    android: notificationType.android,
+    iOS: notificationType.iOS,
   );
 
   int id = await NotificationIdManager.getNextId();
-  AndroidScheduleMode scheduleMode = exact ? AndroidScheduleMode.exact : AndroidScheduleMode.inexactAllowWhileIdle;
-  // Schedule notification 20 minutes from now
+  AndroidScheduleMode scheduleMode =
+      exact ? AndroidScheduleMode.exact : AndroidScheduleMode.inexactAllowWhileIdle;
+
   await flutterLocalNotificationsPlugin.zonedSchedule(
-    id, // Notification ID (different from instant notification)
+    id,
     title,
     description,
     tz.TZDateTime.now(tz.local).add(duration),
-    platformChannelSpecifics,
+    platformChannelSpecifics, // <-- This now contains iOS details!
     androidScheduleMode: scheduleMode,
     payload: payload,
   );
+
   noteNotification(id, payload);
   debugPrint('Scheduled notification with ID: $id for $payload at $duration');
 }
@@ -180,14 +181,18 @@ Future<void> requestNotificationPermission() async {
   }
 }
 
+// In notification_controller.dart
+
 class NotificationType {
   final String id;
-  final AndroidNotificationDetails details;
+  final AndroidNotificationDetails android;
+  final DarwinNotificationDetails iOS; // <-- Add this for iOS
 
-  const NotificationType._(this.id, this.details);
+  const NotificationType._(this.id, this.android, this.iOS);
 
   static const NotificationType wordReminder = NotificationType._(
     'wordReminder',
+    // Android Details
     AndroidNotificationDetails(
       'Definition_Reminders_id',
       'Definition Reminders',
@@ -195,9 +200,14 @@ class NotificationType {
       importance: Importance.max,
       priority: Priority.high,
     ),
+    // iOS Details
+    DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    ),
   );
 }
-
 
 class NotificationIdManager {
   static const String _key = 'notification_id_counter';
