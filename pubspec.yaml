@@ -1,7 +1,7 @@
 name: wordini
-description: "A new Flutter project."
+description: "Build your personal vocabulary list with Wordini. Collect words, find definitions, do quizzes and monitor your progress with in-built reports."
 publish_to: 'none'
-version: 0.1.1
+version: 0.1.2
 
 environment:
   sdk: ^3.6.0
