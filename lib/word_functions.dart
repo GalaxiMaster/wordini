@@ -34,7 +34,6 @@ Future<Map> getWordDetails(String word) async {
       throw Exception('MERRIAM_WEB_API_KEY not found in .env file');
     }
     final String url = 'https://www.dictionaryapi.com/api/v3/references/collegiate/json/$word?key=$apiKey';
-
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -268,7 +267,6 @@ Map<String, Map<String, dynamic>> parseSynonyms(Map entry) {
   return result;
 }
 
-// Improved parseDefinitions to preserve sn and flatten for easier rendering
 List<Map<String, dynamic>> parseDefinitions(Map data) {
   final List<List<dynamic>> sseq = List.from(data['sseq']);
   int defSNnum = 1;
