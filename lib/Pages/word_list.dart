@@ -276,7 +276,7 @@ class WordListState extends ConsumerState<WordList> {
           final searchLower = searchTerm.toLowerCase();
 
           // Search filter
-          final String firstDef = getFirstData(words, word.key)['definitions']?.first?['definition'].toLowerCase();
+          final String firstDef = ((getFirstData(words, word.key)['definitions'] as List?)?.elementAtOrNull(0)?['definition'] ?? '').toLowerCase();
           if (!lowerWord.contains(searchLower) && !firstDef.contains(searchLower)) return false;
 
           // Type filter
@@ -493,7 +493,7 @@ class WordListState extends ConsumerState<WordList> {
                               ],
                             ),
                             subtitle: MWTaggedText(
-                              (firstWordDetails['definitions']?.first?['definition']) ?? '',
+                              ((firstWordDetails['definitions'] as List).elementAtOrNull(0) ?? {})['definition'] ?? '',
                             ), 
                           ),
                         ),
