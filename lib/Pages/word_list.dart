@@ -493,7 +493,9 @@ class WordListState extends ConsumerState<WordList> {
                               ],
                             ),
                             subtitle: MWTaggedText(
-                              ((firstWordDetails['definitions'] as List).elementAtOrNull(0) ?? {})['definition'] ?? '',
+                              firstWordDetails['definitions'] is  List 
+                                ? ((firstWordDetails['definitions'] as List).elementAtOrNull(0) ?? {})['definition'] ?? ''
+                                : '',
                             ), 
                           ),
                         ),
