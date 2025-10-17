@@ -59,6 +59,8 @@ class AddWordState extends ConsumerState<AddWord> {
                       style: const TextStyle(
                         fontSize: 20,
                       ), 
+                      autocorrect: true,
+                      enableSuggestions: true,
                       onSubmitted: (value) async{
                         addWordToList(value.toLowerCase(), context).then((result) {
                         });
@@ -76,7 +78,7 @@ class AddWordState extends ConsumerState<AddWord> {
                             MaterialPageRoute(builder: (context) => WordDetails(
                               word: {
                                 "word": _addWordTextBoxController.text,
-                                "dateAdded": DateTime.now().toString(),
+                                "dateAdded": DateTime.now().toString(), // TODO could add default 'custom' tag
                                 "entries": {
                                   // "": {
                                   //   "synonyms": {},

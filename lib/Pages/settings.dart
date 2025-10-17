@@ -100,7 +100,14 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
             icon: Icons.download_rounded,
             label: 'Import CSV',
             function: () async {
+              loadingOverlay.showLoadingOverlay(context);
               await processCsvRows(context, ref.read(wordDataProvider).keys.toList());
+              if (mounted){
+                loadingOverlay.removeLoadingOverlay();
+              }
+              else{
+                loadingOverlay.dispose();
+              }
               ref.invalidate(wordDataFutureProvider);
             },
           ),
@@ -242,11 +249,11 @@ Future<void> processCsvRows(context, List existingWords) async {
       if (existingWords.contains(word)) continue; // skip iteration if its already in words
       
       final Map wordDetails = await getWordDetails(word.toLowerCase());
-      word = wordDetails['word'];
+      word = wordDetails['word']; // ! not safe
       if (wordDetails.isNotEmpty) {
         debugPrint('Word exists: $word');
         writeKey(word, wordDetails);
-      } else {
+      } else { // ! needs work
         await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => WordDetails(
