@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:wordini/Pages/Account/sign_in.dart';
 import 'package:wordini/encryption_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // <-- Add this import
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:wordini/widgets.dart'; // <-- Add this import
 final EncryptionService _encryptionService = EncryptionService.instance;
 
 class AccountPage extends StatefulWidget {
@@ -115,6 +116,88 @@ class _AccountPageState extends State<AccountPage> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+          Spacer(),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: GestureDetector(
+              onTap: () async {
+                final bool res = await showDialog(
+                  context: context, 
+                  builder: (BuildContext context) {
+                    String email = account.email ?? 'Erorr getting email';
+                    int lenEmail = email.length;
+                    email = email.substring(0, (lenEmail/3-(lenEmail/12).round()).round()) + ('*' * (lenEmail - (lenEmail/3*2).round())) + email.substring((lenEmail/3*2-(lenEmail/12)).round(), lenEmail);
+                    TextEditingController controller = TextEditingController();
+                    return AlertDialog(
+                      title: const Text('Delete Account'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Are you sure you want to delete your account? This action cannot be undone.'),
+                          Text(email),
+                          TextField(
+                            controller: controller,
+                            decoration: InputDecoration(
+                              labelText: 'Enter your email to confirm',
+                            ),
+                          )
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            if (controller.text == account.email){
+                              Navigator.of(context).pop(true);
+                            }else{
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Email does not match')),
+                              );
+                            }
+                          },
+                          child: const Text('Delete', style: TextStyle(color: Colors.red),),
+                        ),
+                      ],
+                    );
+                  }
+                );
+                if (res){
+                  LoadingOverlay loadingOverlay = LoadingOverlay();
+                  if (context.mounted) loadingOverlay.showLoadingOverlay(context);
+                  await reAuthUser(account);
+                  await FirebaseAuth.instance.currentUser?.delete();
+                  await FirebaseAuth.instance.signOut();
+                  _encryptionService.clearAllSecureStorage ();
+                  loadingOverlay.removeLoadingOverlay();
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.power_settings_new,
+                      color: Colors.red,
+                      size: 32.5,
+                    ),
+                    SizedBox(width: 10), // <-- Fix spacing
+                    Text(
+                      'Delete Account',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 22,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
