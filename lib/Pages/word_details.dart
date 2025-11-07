@@ -14,6 +14,7 @@ class WordDetails extends ConsumerStatefulWidget {
   final bool editModeState;
   final List activatedElements;
   final String? initialIndex;
+  final List inputs;
 
   const WordDetails({
     super.key,
@@ -28,6 +29,7 @@ class WordDetails extends ConsumerStatefulWidget {
       'quotes',
       'quizHistory',
     ],
+    this.inputs = const [],
   });
 
   @override
@@ -75,7 +77,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
     if (widget.editModeState) {
       editMode = widget.editModeState;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _addSpeechPart();
+        if (mounted) _addSpeechPart(inputs: widget.inputs);
       });
     }
   }
@@ -172,7 +174,15 @@ class WordDetailsState extends ConsumerState<WordDetails> {
     });
   }
 
-  void _addSpeechPart() {
+  void _addSpeechPart({List inputs = const []}) {
+    Map definitions = {};
+    for (int i = 0; i < inputs.length; i++) {
+      definitions[(i + 1)] = {
+        'sn': '${i + 1} -1 -1',
+        'definition': inputs[i],
+        'example': [],
+      };
+    }
     showDialog(
       context: context,
       builder: (context) {
@@ -195,15 +205,13 @@ class WordDetailsState extends ConsumerState<WordDetails> {
             ),
             ElevatedButton(
               onPressed: () {
-                final speechPart =
-                    speechPartController.text.trim().toLowerCase();
-                if (speechPart.isNotEmpty &&
-                    !wordState['entries'].containsKey(speechPart)) {
+                final speechPart = speechPartController.text.trim().toLowerCase();
+                if (speechPart.isNotEmpty && !wordState['entries'].containsKey(speechPart)) {
                   setState(() {
                     wordState['entries'][speechPart] = {
                       'partOfSpeech': speechPart,
-                      'selected': false,
-                      'definitions': {},
+                      'selected': (wordState['entries']?.length ?? 0) > 0 ? false : true,
+                      'definitions': definitions,
                       'synonyms': {},
                       'etymology': '',
                       'quotes': [],
@@ -1559,7 +1567,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
               setState(() {
                 if (parentLayer.length == 1){
                   parentLayer.remove(path.last);
-                  if (parentLayer.isEmpty){
+                  if (parentLayer.isEmpty && path.length > 4){
                     Map nextLayer = {};
                     int i = 1;
                     while (nextLayer.isEmpty){
