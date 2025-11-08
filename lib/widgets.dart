@@ -27,6 +27,10 @@ class LoadingOverlay {
     overlayOn = false;
   }
   void dispose() {
+    if (overlayOn) {
+      _overlayEntry.remove();
+      overlayOn = false;
+    }
     _overlayEntry.dispose();
   }
 }

@@ -85,8 +85,9 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
             icon: Icons.download_rounded,
             label: 'Import Data',
             function: () async {
+              final container = ProviderScope.containerOf(context);
               await importData(context);
-              ref.invalidate(wordDataFutureProvider);
+              container.invalidate(wordDataFutureProvider);
             },
           ),
           _buildSettingsTile(
@@ -100,19 +101,13 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
             icon: Icons.download_rounded,
             label: 'Import CSV',
             function: () async {
-              loadingOverlay.showLoadingOverlay(context);
+              final container = ProviderScope.containerOf(context);
               await processCsvRows(context, ref.read(wordDataProvider).keys.toList());
-              if (mounted){
-                loadingOverlay.removeLoadingOverlay();
-              }
-              else{
-                loadingOverlay.dispose();
-              }
-              ref.invalidate(wordDataFutureProvider);
+              container.invalidate(wordDataFutureProvider);
             },
           ),
           settingsHeader('Utilities'),
-          const SizedBox(height: 8),
+          const SizedBox(height: 8), 
           _buildSettingsTile(
             icon: Icons.local_library,
             label: 'Archived Words',
@@ -236,7 +231,8 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
 
 Future<void> processCsvRows(context, List existingWords) async {
   final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
-
+  final LoadingOverlay loadingOverlay = LoadingOverlay();
+  loadingOverlay.showLoadingOverlay(context);
   if (result != null) {
     final file = File(result.files.single.path!);
     final content = await file.readAsString();
@@ -250,10 +246,11 @@ Future<void> processCsvRows(context, List existingWords) async {
       
       final Map wordDetails = await getWordDetails(word.toLowerCase());
       word = wordDetails['word']; // ! not safe
-      if (wordDetails.isNotEmpty) {
+      if (wordDetails['entries'].isNotEmpty) {
         debugPrint('Word exists: $word');
         writeKey(word, wordDetails);
       } else { // ! needs work
+        loadingOverlay.removeLoadingOverlay();
         await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => WordDetails(
@@ -261,19 +258,24 @@ Future<void> processCsvRows(context, List existingWords) async {
               "word": word,
               "dateAdded": DateTime.now().toString(),
               "entries": {
-            
+                
               }
             }, 
             editModeState: true,
             allTags: allTags,
             addWordMode: true,
+            inputs: [row[1]]
           ))
         );
+        if (context.mounted){
+          loadingOverlay.showLoadingOverlay(context);
+        }
       }
     }
   } else {
     debugPrint('No file selected.');
   }
+  loadingOverlay.removeLoadingOverlay();
 }
 
 class _NotificationSettingsSheet extends ConsumerWidget {
