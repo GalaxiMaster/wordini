@@ -1563,7 +1563,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
           ),
           tooltip: "More actions",
           onSelected: (value) {
-            if (value == 'delete') {
+            if (value == 'delete') { // TODO figure out method of deletion and rearrangement for types
               setState(() {
                 if (parentLayer.length == 1){
                   parentLayer.remove(path.last);
