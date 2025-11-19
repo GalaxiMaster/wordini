@@ -102,7 +102,7 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
             label: 'Import CSV',
             function: () async {
               final container = ProviderScope.containerOf(context);
-              await processCsvRows(context, ref.read(wordDataProvider).keys.toList());
+              await processCsvRows(context, ref.read(wordDataProvider).keys.map((w) => w.toLowerCase()).toList());
               container.invalidate(wordDataFutureProvider);
             },
           ),
@@ -242,7 +242,10 @@ Future<void> processCsvRows(context, List existingWords) async {
     for (var row in rows) {
       String word = row[0].toString();
       // final String definition = row[1].toString();
-      if (existingWords.contains(word)) continue; // skip iteration if its already in words
+      if (existingWords.contains(word.toLowerCase())) {
+        debugPrint('Word already exists, skipping: $word');
+        continue;
+      } // skip iteration if its already in words
       
       final Map wordDetails = await getWordDetails(word.toLowerCase());
       word = wordDetails['word']; // ! not safe
@@ -251,24 +254,29 @@ Future<void> processCsvRows(context, List existingWords) async {
         writeKey(word, wordDetails);
       } else { // ! needs work
         loadingOverlay.removeLoadingOverlay();
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => WordDetails(
-            word: {
-              "word": word,
-              "dateAdded": DateTime.now().toString(),
-              "entries": {
-                
-              }
-            }, 
-            editModeState: true,
-            allTags: allTags,
-            addWordMode: true,
-            inputs: [row[1]]
-          ))
-        );
-        if (context.mounted){
-          loadingOverlay.showLoadingOverlay(context);
+        try{
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => WordDetails(
+              word: {
+                "word": word,
+                "dateAdded": DateTime.now().toString(),
+                "entries": {
+                  
+                }
+              }, 
+              editModeState: true,
+              allTags: allTags,
+              addWordMode: true,
+              inputs: [row[1]]
+            ))
+          );
+          if (context.mounted){
+            loadingOverlay.showLoadingOverlay(context);
+          }
+        } catch (e){
+          debugPrint('Error adding word from CSV: $e');
+          continue;
         }
       }
     }
