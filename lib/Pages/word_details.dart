@@ -775,96 +775,96 @@ class WordDetailsState extends ConsumerState<WordDetails> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    Row(
-      children: [
-        GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
-          child: const Padding(
-            padding: EdgeInsets.only(right: 8),
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-              size: 25,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            capitalise(wordState['word']),
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-        if (editMode)
-          IconButton(
-            onPressed: _addSpeechPart,
-            icon: const Icon(Icons.add_box, size: 30),
-            tooltip: 'Add Speech Part',
-          ),
-        GestureDetector(
-          onTap: () => setState(() => editMode = !editMode),
-          child: Icon(
-            editMode ? Icons.edit_outlined : Icons.edit,
-            size: 30,
-          ),
-        ),
-      ],
-    ),
-    const SizedBox(height: 8),
-    // Tags on a separate row
-    CompositedTransformTarget(
-      link: _layerLink,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (var tag in wordState['tags'] ?? [])
-              Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: Chip(
-                  label: MWTaggedText(
-                    tag,
-                    style: const TextStyle(fontSize: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: const Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: Icon(
+                                Icons.arrow_back,
+                                color: Colors.white,
+                                size: 25,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              capitalise(wordState['word']),
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                          if (editMode)
+                            IconButton(
+                              onPressed: _addSpeechPart,
+                              icon: const Icon(Icons.add_box, size: 30),
+                              tooltip: 'Add Speech Part',
+                            ),
+                          GestureDetector(
+                            onTap: () => setState(() => editMode = !editMode),
+                            child: Icon(
+                              editMode ? Icons.edit_outlined : Icons.edit,
+                              size: 30,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // Tags on a separate row
+                      CompositedTransformTarget(
+                        link: _layerLink,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              for (var tag in wordState['tags'] ?? [])
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: Chip(
+                                    label: MWTaggedText(
+                                      tag,
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    side: BorderSide.none,
+                                    labelPadding: const EdgeInsets.symmetric(
+                                      horizontal: 3,
+                                      vertical: 3,
+                                    ),
+                                  ),
+                                ),
+                              if (editMode)
+                                IconButton(
+                                  style: ButtonStyle(
+                                    backgroundColor: WidgetStateProperty.all<Color>(
+                                      const Color.fromARGB(255, 19, 54, 79),
+                                    ),
+                                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                  ),
+                                  onPressed: () => _showTagPopup(context),
+                                  icon: const Icon(Icons.add),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  backgroundColor: const Color.fromARGB(255, 19, 54, 79),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  side: BorderSide.none,
-                  labelPadding: const EdgeInsets.symmetric(
-                    horizontal: 3,
-                    vertical: 3,
-                  ),
-                ),
-              ),
-            if (editMode)
-              IconButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all<Color>(
-                    const Color.fromARGB(255, 19, 54, 79),
-                  ),
-                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                onPressed: () => _showTagPopup(context),
-                icon: const Icon(Icons.add),
-              ),
-          ],
-        ),
-      ),
-    ),
-  ],
-),
                   const SizedBox(height: 18),
                   SizedBox(
                     height: 10,
