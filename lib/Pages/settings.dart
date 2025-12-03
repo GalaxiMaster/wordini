@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:wordini/Pages/Account/account.dart';
 import 'package:wordini/Pages/Account/sign_in.dart';
 import 'package:wordini/Pages/archived_words.dart';
@@ -102,8 +104,15 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
             label: 'Import CSV',
             function: () async {
               final container = ProviderScope.containerOf(context);
-              await processCsvRows(context, ref.read(wordDataProvider).keys.map((w) => w.toLowerCase()).toList());
+              await processCsvRows(context, ref.read(wordDataProvider).keys.map((w) => w.toLowerCase()).toList(), ref);
               container.invalidate(wordDataFutureProvider);
+            },
+          ),
+          _buildSettingsTile(
+            icon: Icons.upload_rounded,
+            label: 'Export as CSV',
+            function: () {
+              exportAsCsv(ref.read(wordDataProvider));
             },
           ),
           settingsHeader('Utilities'),
@@ -229,62 +238,147 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
   }
 }
 
-Future<void> processCsvRows(context, List existingWords) async {
-  final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
-  final LoadingOverlay loadingOverlay = LoadingOverlay();
-  loadingOverlay.showLoadingOverlay(context);
-  if (result != null) {
-    final file = File(result.files.single.path!);
-    final content = await file.readAsString();
-    final rows = const CsvToListConverter().convert(content);
-    
-    final allTags = await gatherTags();
-    for (var row in rows) {
-      String word = row[0].toString();
-      // final String definition = row[1].toString();
-      if (existingWords.contains(word.toLowerCase())) {
-        debugPrint('Word already exists, skipping: $word');
-        continue;
-      } // skip iteration if its already in words
-      
-      final Map wordDetails = await getWordDetails(word.toLowerCase());
-      word = wordDetails['word']; // ! not safe
-      if (wordDetails['entries'].isNotEmpty) {
-        debugPrint('Word exists: $word');
-        writeKey(word, wordDetails);
-      } else { // ! needs work
-        loadingOverlay.removeLoadingOverlay();
-        try{
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => WordDetails(
+Future<void> processCsvRows(
+    BuildContext context, 
+    List existingWords, 
+    WidgetRef ref,
+  ) async {
+
+  final result = await FilePicker.platform.pickFiles(
+    type: FileType.custom,
+    allowedExtensions: ['csv'],
+  );
+
+  if (result == null) {
+    debugPrint("No file selected.");
+    return;
+  }
+
+  final file = File(result.files.single.path!);
+  final content = await file.readAsString();
+  final rows = const CsvToListConverter().convert(content);
+
+  // Providers created dynamically
+  final current = StateProvider<String>((ref) => rows[0][0].toString());
+  final currentInt = StateProvider<int>((ref) => 1);
+
+  // Create overlay instance
+  // Create cancellation token and overlay instance
+  final cancelToken = CancelToken();
+  final loadingOverlay = LinearProgressBarLoadingOverlay(
+    varRef: currentInt,
+    current: current,
+    max: rows.length,
+    ref: ref,
+    cancelToken: cancelToken,
+  );
+
+  if (context.mounted) {
+    loadingOverlay.show(context);
+  }
+  final allTags = await gatherTags();
+
+  for (var row in rows) {
+    // If user cancelled via back gesture, stop processing further rows.
+    if (cancelToken.isCancelled) {
+      debugPrint('CSV import cancelled by user.');
+      break;
+    }
+    String word = row[0].toString();
+
+    // Update providers
+    ref.read(current.notifier).state = word;
+    ref.read(currentInt.notifier).state++;
+
+    // Update overlay display
+    loadingOverlay.update();
+
+    if (cancelToken.isCancelled) {
+      debugPrint('CSV import cancelled by user.');
+      break;
+    }
+
+    if (existingWords.contains(word.toLowerCase())) {
+      debugPrint('Word already exists, skipping: $word');
+      continue;
+    }
+
+    final wordDetails = await getWordDetails(word.toLowerCase());
+    word = wordDetails['word'];
+
+    if (wordDetails['entries'].isNotEmpty) {
+      writeKey(word, wordDetails);
+    } else {
+      // temporarily hide overlay while navigating
+      loadingOverlay.hide();
+      try {
+        if (!context.mounted) return;
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => WordDetails(
               word: {
                 "word": word,
                 "dateAdded": DateTime.now().toString(),
-                "entries": {
-                  
-                }
-              }, 
+                "entries": {},
+              },
               editModeState: true,
               allTags: allTags,
               addWordMode: true,
-              inputs: [row[1]]
-            ))
-          );
-          if (context.mounted){
-            loadingOverlay.showLoadingOverlay(context);
-          }
-        } catch (e){
-          debugPrint('Error adding word from CSV: $e');
-          continue;
-        }
+              inputs: row[1] != null ? [row[1]] : null,
+            ),
+          ),
+        );
+      } catch (e) {
+        debugPrint("Error: $e");
       }
+
+      if (context.mounted) loadingOverlay.show(context);
     }
-  } else {
-    debugPrint('No file selected.');
   }
-  loadingOverlay.removeLoadingOverlay();
+
+  loadingOverlay.hide();
 }
+
+
+void exportAsCsv(words) async {
+  String getDefinition(Map details) {
+    try {
+      return details['entries']
+          .values
+          .first['definitions']
+          .first['definition'] ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  List<List<dynamic>> rows = [['Word', 'Definition', 'Type']];
+  words.forEach((word, details) {
+    String definition = getDefinition(details);
+    String type = details['entries'].keys.first;
+    rows.add([capitalise(word), definition, type]);
+  });
+
+  String csv = const ListToCsvConverter().convert(rows);
+
+  final directory = await getTemporaryDirectory();
+  final path = '${directory.path}/mydata.csv';
+
+  final file = File(path);
+  await file.writeAsString(csv);
+
+  if (await file.exists()) {
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(path)],
+        text: 'Exported CSV data from Wordini',
+      ),
+    );
+
+  }
+}
+
 
 class _NotificationSettingsSheet extends ConsumerWidget {
   final Map<String, bool> settings;

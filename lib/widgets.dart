@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wordini/Pages/word_details.dart';
 import 'package:wordini/file_handling.dart';
+import 'dart:async';
+
+// Simple cancellation token that long-running operations can check.
+class CancelToken {
+  bool isCancelled = false;
+  void cancel() => isCancelled = true;
+}
 
 class LoadingOverlay {
   final OverlayEntry _overlayEntry = OverlayEntry(
@@ -32,6 +40,123 @@ class LoadingOverlay {
       overlayOn = false;
     }
     _overlayEntry.dispose();
+  }
+}
+
+class LinearProgressBarLoadingOverlay {
+  final WidgetRef ref;
+  final StateProvider<int> varRef;
+  final StateProvider<String> current;
+  final int max;
+ 
+  final CancelToken? cancelToken;
+  final VoidCallback? onCancel;
+
+  OverlayEntry? _overlayEntry;
+  bool _visible = false;
+
+  int _lastProgress = 0;
+  String _lastCurrent = "";
+
+  LinearProgressBarLoadingOverlay({
+    required this.ref,
+    required this.varRef,
+    required this.current,
+    required this.max,
+    this.cancelToken,
+    this.onCancel,
+  });
+
+  OverlayEntry _buildOverlay() {
+    return OverlayEntry(
+      builder: (context) {
+        return Positioned.fill(
+          child: Material(
+            color: Colors.black.withValues(alpha:0.9),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Loading... $_lastProgress / $max | $_lastCurrent",
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    child: LinearProgressIndicator(
+                      value: _lastProgress / max,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void show(BuildContext context) {
+    if (_visible) return;
+
+    _lastProgress = ref.read(varRef);
+    _lastCurrent = ref.read(current);
+
+    _overlayEntry = _buildOverlay();
+    Overlay.of(context).insert(_overlayEntry!);
+    _visible = true;
+    // Register a LocalHistoryEntry to handle back button presses
+    final route = ModalRoute.of(context);
+    if (route != null) {
+      _localHistoryEntry = LocalHistoryEntry(onRemove: _onLocalHistoryRemoved);
+      route.addLocalHistoryEntry(_localHistoryEntry!);
+    }
+  }
+
+  LocalHistoryEntry? _localHistoryEntry;
+  bool _suppressLocalHistoryCallback = false;
+  void _onLocalHistoryRemoved() {
+    if (_suppressLocalHistoryCallback) return;
+
+    if (onCancel != null) {
+      try {
+        onCancel!();
+      } catch (_) {}
+    } else {
+      cancelToken?.cancel();
+    }
+
+    hide();
+  }
+
+  void update() {
+    if (!_visible) return;
+
+    _lastProgress = ref.read(varRef);
+    _lastCurrent = ref.read(current);
+
+    _overlayEntry?.markNeedsBuild();
+  }
+
+  void hide() {
+    if (!_visible) return;
+
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    _visible = false;
+
+    // Remove the LocalHistoryEntry if one was registered
+    try {
+      _suppressLocalHistoryCallback = true;
+      _localHistoryEntry?.remove();
+    } catch (_) {}
+    _suppressLocalHistoryCallback = false;
+    _localHistoryEntry = null;
+  }
+
+  void dispose() {
+    hide();
   }
 }
 
