@@ -56,7 +56,7 @@ Future<List?> resetData(BuildContext? context, WidgetRef ref, {String? path}) as
   if (path != null){
     choices = [path];
   } else {
-    choices = await getChoices(context);
+    choices = await getChoices(context, 'Data to Reset');
   }
   if (choices == null || choices.isEmpty) return null;
   if (context != null && context.mounted) {
@@ -117,7 +117,7 @@ Future<void> exportJson(BuildContext context) async {
   LoadingOverlay loadingOverlay = LoadingOverlay();
   try {
 
-    List? exportChoices = await getChoices(context);
+    List? exportChoices = await getChoices(context, 'Data to Export');
     if (context.mounted) loadingOverlay.showLoadingOverlay(context);
     Map data = {};
     if (exportChoices == null) return;
@@ -154,7 +154,7 @@ Future<void> exportJson(BuildContext context) async {
   }
   loadingOverlay.removeLoadingOverlay();
 }
-Future<List?> getChoices(context) async{
+Future<List?> getChoices(context, String dialogueTitle) async{
   final List? choices = await showDialog(
     context: context,
     builder: (context) {
@@ -166,7 +166,7 @@ Future<List?> getChoices(context) async{
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: const Text('Data to export:'),
+            title: Text(dialogueTitle),
             content: IntrinsicHeight(
               child: Column(
                 mainAxisSize: MainAxisSize.min,

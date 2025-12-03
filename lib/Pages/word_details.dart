@@ -14,7 +14,7 @@ class WordDetails extends ConsumerStatefulWidget {
   final bool editModeState;
   final List activatedElements;
   final String? initialIndex;
-  final List inputs;
+  final List? inputs;
 
   const WordDetails({
     super.key,
@@ -72,12 +72,13 @@ class WordDetailsState extends ConsumerState<WordDetails> {
           : 0,
     );
     currentPage = _controller.initialPage.toDouble();
-    _controller
-        .addListener(() => setState(() => currentPage = _controller.page ?? 0));
+    _controller.addListener(() => setState(() => currentPage = _controller.page ?? 0));
     if (widget.editModeState) {
       editMode = widget.editModeState;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _addSpeechPart(inputs: widget.inputs);
+        if (widget.inputs != null && widget.inputs!.isNotEmpty){
+          if (mounted) _addSpeechPart(inputs: widget.inputs ?? []);
+        }
       });
     }
   }
@@ -1497,11 +1498,6 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                   onPressed: () {
                     saveWord(save: true);                    
                     Navigator.pop(context, true);
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      '/home',
-                      (Route<dynamic> route) => false,
-                    );
                   },
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),

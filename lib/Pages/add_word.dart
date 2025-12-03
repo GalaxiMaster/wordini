@@ -62,8 +62,16 @@ class AddWordState extends ConsumerState<AddWord> {
                       autocorrect: true,
                       enableSuggestions: true,
                       onSubmitted: (value) async{
-                        addWordToList(value.toLowerCase(), context).then((result) {
-                        });
+                        addWordToList(value.toLowerCase(), context).then((res){
+                            if (!context.mounted) return;
+                            if (res){
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                '/home',
+                                (Route<dynamic> route) => false,
+                              );
+                            }
+                          });
                       },
                       onChanged: (value) => setState(() {}), // TODO optomise
                     ),
@@ -73,7 +81,7 @@ class AddWordState extends ConsumerState<AddWord> {
                         if (_addWordTextBoxController.text.isNotEmpty){
                           final allTags = await gatherTags();
                           if (!context.mounted) return;
-                          await Navigator.push(
+                          Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => WordDetails(
                               word: {
@@ -108,7 +116,17 @@ class AddWordState extends ConsumerState<AddWord> {
                               allTags: allTags,
                               addWordMode: true,
                             ))
-                          );
+                          ).then((res){
+                            if (!context.mounted) return;
+                            if (res ?? false){
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                '/home',
+                                (Route<dynamic> route) => false,
+                              );
+                            }
+                          });
+
                           // if (result ?? false) {
                           //   ref.read(wordsThisWeekDataProvider.notifier).incriment();
                           // }

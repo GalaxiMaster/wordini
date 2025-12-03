@@ -266,7 +266,7 @@ class AccountPageState extends State<AccountPage> {
 
       if (newEmail != null) {
         _encryptionService.writeToSecureStorage(key: 'emailChange', value: newEmail);
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Verification email sent. Please check your email to complete the change.'),
@@ -279,7 +279,7 @@ class AccountPageState extends State<AccountPage> {
         }
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           errorSnackBar(e),
         );
@@ -304,7 +304,7 @@ class AccountPageState extends State<AccountPage> {
           value: encryption.encrypt(newPass)
         );
         
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Password updated successfully'),
@@ -316,7 +316,7 @@ class AccountPageState extends State<AccountPage> {
         }
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           errorSnackBar(e),
         );
@@ -350,7 +350,7 @@ class AccountPageState extends State<AccountPage> {
     if (confirm == true) {
       await FirebaseAuth.instance.signOut();
       _encryptionService.clearAllSecureStorage();
-      if (context.mounted) Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
     }
   }
 
