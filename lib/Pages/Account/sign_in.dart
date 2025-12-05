@@ -28,6 +28,8 @@ class SignInPageState extends State<SignInPage> {
     GoogleSignIn.instance
         .initialize(
       serverClientId: dotenv.get('serverClientId'),
+      clientId: dotenv.get('clientIdGcloud'),
+
     ).then((_) {
       _authSub = GoogleSignIn.instance.authenticationEvents.listen(
         (event) async {
