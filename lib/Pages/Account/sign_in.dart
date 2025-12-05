@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:wordini/file_handling.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:io';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -28,8 +29,7 @@ class SignInPageState extends State<SignInPage> {
     GoogleSignIn.instance
         .initialize(
       serverClientId: dotenv.get('serverClientId'),
-      clientId: dotenv.get('clientIdGcloud'),
-
+      clientId: Platform.isIOS ? dotenv.get('clientIdGcloud') : null, // was specific to ios
     ).then((_) {
       _authSub = GoogleSignIn.instance.authenticationEvents.listen(
         (event) async {

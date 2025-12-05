@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:wordini/Pages/home.dart';
@@ -28,6 +29,7 @@ class SignUpPageState extends State<SignUpPage> {
     GoogleSignIn.instance
         .initialize(
       serverClientId: dotenv.get('serverClientId'),
+      clientId: Platform.isIOS ? dotenv.get('clientIdGcloud') : null, // was specific to ios
     ).then((_) {
       _authSub = GoogleSignIn.instance.authenticationEvents.listen(
         (event) async {
