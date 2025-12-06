@@ -120,7 +120,7 @@ Future<void> exportJson(BuildContext context) async {
     List? exportChoices = await getChoices(context, 'Data to Export');
     if (context.mounted) loadingOverlay.showLoadingOverlay(context);
     Map data = {};
-    if (exportChoices == null) return;
+    if (exportChoices == null) throw 'No choices made for export';
     for (String choice in exportChoices){
       final box = await Hive.openBox(choice);
       final boxData = Map<String, dynamic>.from(box.toMap());
