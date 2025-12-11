@@ -1,7 +1,7 @@
 name: wordini
 description: "Build your personal vocabulary list with Wordini. Collect words, find definitions, do quizzes and monitor your progress with in-built reports."
 publish_to: 'none'
-version: 1.2.2
+version: 1.2.3+3
 
 environment:
   sdk: ^3.6.0

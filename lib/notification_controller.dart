@@ -99,7 +99,6 @@ Future<void> showInstantNotification({
   required AndroidNotificationDetails androidPlatformChannelSpecifics,
   required String payload,
 }) async {
-  await requestNotificationPermission();
 
   NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
 
@@ -122,7 +121,6 @@ Future<void> scheduleNotification({
   required Duration duration,
   required NotificationType notificationType, // <-- Use your NotificationType class
   required String payload,
-  bool exact = false,
 }) async {
   // The Android-specific permission request is not needed here for iOS.
   // The main permission is handled in initializeNotifications.
@@ -134,8 +132,6 @@ Future<void> scheduleNotification({
   );
 
   int id = await NotificationIdManager.getNextId();
-  AndroidScheduleMode scheduleMode =
-      exact ? AndroidScheduleMode.exact : AndroidScheduleMode.inexactAllowWhileIdle;
 
   await flutterLocalNotificationsPlugin.zonedSchedule(
     id,
@@ -143,7 +139,7 @@ Future<void> scheduleNotification({
     description,
     tz.TZDateTime.now(tz.local).add(duration),
     platformChannelSpecifics, // <-- This now contains iOS details!
-    androidScheduleMode: scheduleMode,
+    androidScheduleMode:  AndroidScheduleMode.inexactAllowWhileIdle,
     payload: payload,
   );
 
@@ -172,14 +168,6 @@ void removeNotif(String key) async {
   debugPrint('Notification with ID: $id removed for word: $key');
 }
 
-Future<void> requestNotificationPermission() async {
-  final androidImplementation = flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-  if (androidImplementation != null) {
-    final bool? granted = await androidImplementation.requestExactAlarmsPermission();
-    debugPrint('Notification permission granted: $granted');
-  }
-}
 
 // In notification_controller.dart
 

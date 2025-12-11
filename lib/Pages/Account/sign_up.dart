@@ -38,8 +38,7 @@ class SignUpPageState extends State<SignUpPage> {
             try {
               // The API surface for the plugin exposes a synchronous
               // `authentication` object on the account in this version.
-              final GoogleSignInAuthentication authentication =
-                  user.authentication;
+              final GoogleSignInAuthentication authentication = user.authentication;
 
               final credential = GoogleAuthProvider.credential(
                 idToken: authentication.idToken,

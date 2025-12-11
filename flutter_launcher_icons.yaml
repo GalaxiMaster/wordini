@@ -8,8 +8,8 @@ flutter_launcher_icons:
   adaptive_icon_background: "#6732cf"
   adaptive_icon_foreground: "assets/icons/wordiniForeground.png"
   adaptive_icon_foreground_inset: 23
-  # adaptive_icon_monochrome: "assets/icon/monochrome.png"
-
+  adaptive_icon_monochrome: "assets/icons/wordiniForeground-monochrome.png"
+  
   ios: true
   # image_path_ios: "assets/icon/icon.png"
   remove_alpha_ios: true
