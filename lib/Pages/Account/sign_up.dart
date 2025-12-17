@@ -138,20 +138,14 @@ class SignUpPageState extends State<SignUpPage> {
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: () async {
-                          // Input validation
-                          if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+                          final response = isValid(_emailController.text.trim(), _passwordController.text);
+                          if (response.message != null){
                             ScaffoldMessenger.of(context).showSnackBar(
-                              errorSnackBar('Please fill in all fields'),
+                              errorSnackBar(response.message),
                             );
                             return;
                           }
-                      
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(_emailController.text)) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              errorSnackBar('Invalid email format'),
-                            );
-                            return;
-                          }
+                          if (response.code != true) return;
                           try {
                             await _auth.createUserWithEmailAndPassword(
                               email: _emailController.text.trim(), 
@@ -306,4 +300,31 @@ class SignUpPageState extends State<SignUpPage> {
       ),
     )
   );
+}
+
+class CodedResponse{
+  final bool code;
+  final String? message;
+  CodedResponse({required this.code, this.message});
+}
+
+CodedResponse isValid(String email, String password) {
+  // Input validation
+  try {
+    if (email.isEmpty || password.isEmpty) {
+      throw 'Please fill in all fields';
+    }
+
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      throw 'Invalid email format';
+    }
+
+    if (password.length < 6) {
+      throw 'Password must be at least 6 characters long';
+    }
+    return CodedResponse(code: true);
+  } catch (e) {
+    final response = CodedResponse(code: false, message: e.toString());
+    return response;
+  } 
 }

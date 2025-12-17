@@ -1,0 +1,36 @@
+{
+    "abeyant": {
+        "word": "abeyant",
+        "dateAdded": "2025-09-05 08:37:56.960470",
+        "entries": {
+        "noun": {
+            "synonyms": {},
+            "etymology": "borrowed from Anglo-French {it}abeyaunce{/it} \"absence of a claimant or owner, lapse in succession,\" from {it}abaer, abair{/it} \"to open wide\" (from {it}a-{/it}, prefix in transitive verbs—from Latin {it}ad-{/it} {et_link|ad-|ad-} — + {it}baer, baier{/it} \"to have the mouth wide open, gape, pant,\" from Vulgar Latin {it}*batāre{/it}, perhaps of imitative origin) + {it}-ance{/it} {et_link|-ance|-ance}",
+            "partOfSpeech": "noun",
+            "quotes": [],
+            "firstUsed": "circa 1530",
+            "stems": [
+            "abeyance",
+            "abeyances",
+            "abeyant",
+            "in abeyance"
+            ],
+            "definitions": [
+            {
+                "sn": "1 -1 -1",
+                "definition": "{bc}A state of temporary inactivity {bc}{sx|suspension||}",
+                "example": []
+            },
+            {
+                "sn": "2 -1 -1",
+                "definition": "{bc}A lapse in succession during which there is no person in whom a title is vested",
+                "example": [
+                "an estate in {wi}abeyance{/wi}"
+                ]
+            }
+            ],
+            "selected": true
+        }
+        }
+    }
+}

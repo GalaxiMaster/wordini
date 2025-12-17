@@ -144,20 +144,14 @@ class SignInPageState extends State<SignInPage> {
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: () async {
-                          if (_emailController.text.isEmpty ||
-                              _passwordController.text.isEmpty) {
+                          final response = isValid(_emailController.text.trim(), _passwordController.text);
+                          if (response.message != null){
                             ScaffoldMessenger.of(context).showSnackBar(
-                              errorSnackBar('Please fill in all fields'),
+                              errorSnackBar(response.message),
                             );
                             return;
                           }
-
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(_emailController.text)) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              errorSnackBar('Invalid email format'),
-                            );
-                            return;
-                          }
+                          if (response.code != true) return;
                           try {
                             await _auth.signInWithEmailAndPassword(
                               email: _emailController.text.trim(),
