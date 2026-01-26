@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:wordini/Pages/home.dart';
 import 'package:wordini/Pages/Account/sign_in.dart';
 import 'package:wordini/encryption_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:wordini/env/env.dart';
 import 'package:wordini/file_handling.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -28,8 +28,8 @@ class SignUpPageState extends State<SignUpPage> {
     super.initState();
     GoogleSignIn.instance
         .initialize(
-      serverClientId: dotenv.get('serverClientId'),
-      clientId: Platform.isIOS ? dotenv.get('clientIdGcloud') : null, // was specific to ios
+      serverClientId: Env.serverClientId,
+      clientId: Platform.isIOS ? Env.clientIdGcloud : null, // specific to ios
     ).then((_) {
       _authSub = GoogleSignIn.instance.authenticationEvents.listen(
         (event) async {
@@ -250,7 +250,7 @@ class SignUpPageState extends State<SignUpPage> {
                         onPressed: () async {
                           try {
                             await GoogleSignIn.instance.initialize(
-                              serverClientId: dotenv.get('serverClientId'),
+                              serverClientId: Env.serverClientId,
                             );
                             await GoogleSignIn.instance.authenticate();
                           } on GoogleSignInException catch (e) {

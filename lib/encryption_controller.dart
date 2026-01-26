@@ -1,6 +1,6 @@
 import 'package:encrypt/encrypt.dart' as encrypts;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:wordini/env/env.dart';
 
 class EncryptionService {
   // Private constructor for the singleton pattern
@@ -19,10 +19,7 @@ class EncryptionService {
 
   /// Initializes the encryption service by loading the key from environment variables.
   Future<void> initialize() async {
-    final keyString = dotenv.env['ENCRYPTION_KEY'];
-    if (keyString == null) {
-      throw Exception('ENCRYPTION_KEY not found in .env file');
-    }
+    final keyString = Env.encryptionKey;
     final key = encrypts.Key.fromUtf8(keyString);
     _encrypter = encrypts.Encrypter(encrypts.AES(key));
   }

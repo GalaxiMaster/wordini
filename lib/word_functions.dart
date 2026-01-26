@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
+import 'package:wordini/env/env.dart';
 import 'package:wordini/widgets.dart';
 import 'dart:convert';
 
@@ -29,10 +29,8 @@ Future<Map> getWordDetails(String word) async {
       'dateAdded': DateTime.now().toString(),
       'entries': {} // Now a map keyed by partOfSpeech
     };
-    String? apiKey = dotenv.env['MERRIAM_WEB_API_KEY'];
-    if (apiKey == null) {
-      throw Exception('MERRIAM_WEB_API_KEY not found in .env file');
-    }
+    String? apiKey = Env.merriamWebsterApiKey;
+
     final String url = 'https://www.dictionaryapi.com/api/v3/references/collegiate/json/$word?key=$apiKey';
     final response = await http.get(Uri.parse(url));
 
