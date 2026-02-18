@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
 import 'package:wordini/env/env.dart';
 import 'package:wordini/widgets.dart';
@@ -415,46 +414,27 @@ Map organiseToSpeechPart(List wordDetails) {
 }
 
 Future<bool?> checkDefinition(word, userDef, partOfSpeech, context) async{
-  // the system message that will be sent to the request.
-  final systemMessage = OpenAIChatCompletionChoiceMessageModel(
-    content: [
-      OpenAIChatCompletionChoiceMessageContentItemModel.text(
-        "Answer if the user given definition matches the word with only yes or no as an answer",
-      ),
-    ],
-    role: OpenAIChatMessageRole.assistant,
-  );
-
-    // the user message that will be sent to the request.
-  final userMessage = OpenAIChatCompletionChoiceMessageModel(
-
-    content: [
-      OpenAIChatCompletionChoiceMessageContentItemModel.text(
-        "Does the user's definition '$userDef' correctly define the $partOfSpeech '$word'", // , whose definition is '$actualDef'? // ! TODO this doesnt account for multiple definitions so its out currently
-      ),
-    ],
-    role: OpenAIChatMessageRole.user,
-  );
-
-  // all messages to be sent.
-  final requestMessages = [
-    systemMessage,
-    userMessage,
-  ];
-
   try {
-    OpenAIChatCompletionModel chatCompletion = await OpenAI.instance.chat.create(
-      model: "gpt-4",
-      seed: 6,
-      messages: requestMessages,
-      temperature: 0.2,
-      maxTokens: 500,
+    final response = await http.post(
+      Uri.parse(Env.apiUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "model": "gpt-4o-mini",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Does the definition fit the official word definition? YES or NO only."
+          },
+          {
+            "role": "user",
+            "content": "Word: $word\nDefinition: $userDef"
+          }
+        ]
+      }),
     );
-    String answer = chatCompletion.choices.first.message.content!.first.text.toString();
+    final data = jsonDecode(response.body);
+    final String answer = data['choices'][0]['message']['content'];
     debugPrint(answer);
-    debugPrint(chatCompletion.systemFingerprint.toString());
-    debugPrint(chatCompletion.usage.promptTokens.toString());
-    debugPrint(chatCompletion.id);
     return answer.toLowerCase() == 'yes' ? true : false;
 
   } catch (e) {
@@ -466,6 +446,7 @@ Future<bool?> checkDefinition(word, userDef, partOfSpeech, context) async{
     debugPrint(e.toString());
     // TODO handle more error types
   }
+  debugPrint('DIDNT WORK BRO');
   return null;
 }
 

@@ -7,7 +7,6 @@ environment:
   sdk: ^3.6.0
 
 dependencies:
-  dart_openai: ^5.1.0
   flutter:
     sdk: flutter
   http: ^1.4.0

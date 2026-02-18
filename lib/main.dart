@@ -1,4 +1,3 @@
-import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wordini/Pages/home.dart';
@@ -6,7 +5,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:wordini/Pages/quizzes.dart';
 import 'package:wordini/Providers/otherproviders.dart';
-import 'package:wordini/env/env.dart';
 import 'package:wordini/encryption_controller.dart';
 import 'package:wordini/file_handling.dart';
 import 'package:wordini/notification_controller.dart';
@@ -22,8 +20,6 @@ void main() async{
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   ); 
-  // Load gpt api key from .env file
-  OpenAI.apiKey = Env.openAiKey; 
   // Initialize the encryption service
   await EncryptionService.instance.initialize();
 
