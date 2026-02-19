@@ -131,10 +131,10 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                   child: Padding(
                     padding: const EdgeInsets.all(25),
                     child: Column(
-                      // crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
                           child: Text(
                             'Statistics',
                             style: TextStyle(
@@ -153,7 +153,6 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                             );
                             if (value != null) {
                               ref.read(settingsProvider.notifier).updateValue('wordsThisWeek', value);     
-                              // TODO perminence                     
                             }
                           },
                           child: Container(
@@ -202,7 +201,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          padding: const EdgeInsets.only(top: 8, left: 8),
                           child: Text(
                             'Word Testing',
                             style: TextStyle(
@@ -246,66 +245,69 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                             ),
                           ],
                         ),
-                        Align(
-                          alignment: Alignment.bottomLeft,
-                          child: Text(
-                            'Quizzes',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            spacing: 8,
+                            children: [
+                              Text(
+                                'Start Quiz',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Choose your quiz size',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade400.withAlpha(220)
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            double totalSpacing = 12 * 4; // 4 gaps between 4 chips
-                            double chipWidth = (constraints.maxWidth - totalSpacing) / 4;
-                            
-                            return Align(
-                              alignment: Alignment.centerLeft,
-                              child: Wrap(
-                                runSpacing: 5,
-                                children: List.generate(8, (index) {
-                                  int value = 5 * (index + 1);
-                                  return Container(
-                                    width: chipWidth,
-                                    margin: EdgeInsets.only(
-                                      right: (index + 1) % 4 == 0 ? 0 : 12, // allow perfect margining for 4 chips per row
-                                    ),
-                                    child: RawChip(
-                                      onPressed: (){
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(builder: (context) => Quizzes(questions: value))
-                                        );
-                                      },
-                                      label: SizedBox(
-                                        width: double.infinity,
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 5),
-                                          child: Text(
-                                            value.toString(),
-                                            style: TextStyle(fontSize: 16),
-                                            overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                      ),
-                                      backgroundColor: Color.fromARGB(255, 30, 30, 30),
-                                      elevation: 0,
-                                      shadowColor: Colors.transparent,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16.5),
-                                        side: BorderSide(color: Colors.transparent, width: 0.1),
-                                      ),
-                                      visualDensity: VisualDensity.compact,
-                                      pressElevation: 0,
-                                    ),
-                                  );
-                                }),
+                        Card(
+                          color: Color.fromARGB(255, 30, 30, 30),
+                          child: Padding(
+                            padding: const EdgeInsets.all(15),
+                            child: GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: EdgeInsets.zero,
+                              itemCount: 8,
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 4,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 2.5, 
                               ),
-                            );
-                          },
+                              itemBuilder: (context, index) {
+                                final value = 5 * (index + 1);
+
+                                return ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF2A2A2E),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    minimumSize: const Size(double.infinity, 44),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => Quizzes(questions: value),
+                                    ),
+                                  ),
+                                  child: Text(value.toString()),
+                                );
+                              },
+                            )
+                          ),
                         )
                       ],
                     ),
