@@ -26,7 +26,7 @@ Future<Map> getWordDetails(String word) async {
     Map wordDetails = {
       'word': word,
       'dateAdded': DateTime.now().toString(),
-      'entries': {} // Now a map keyed by partOfSpeech
+      'entries': {}
     };
     String? apiKey = Env.merriamWebsterApiKey;
 
@@ -39,19 +39,22 @@ Future<Map> getWordDetails(String word) async {
         for (Map mainData in data) {
           // var dataWordId = mainData['meta']['id'].split(':')[0].replaceAll(RegExp(r'[\s-]+'), '').toLowerCase();
           final bool inStems = mainData['meta']['stems'].contains(word);
-          debugPrint(inStems.toString());
           if (mainData['meta']['id'].split(':')[0].toLowerCase() != word.toLowerCase()) {
             continue; 
           }
           if (!inStems) continue;
           try {
-            String partOfSpeech = mainData['fl'] ?? '';
+            String? partOfSpeech = mainData['fl'];
+
+            if (partOfSpeech == null || partOfSpeech.isEmpty) {
+              throw Exception('No part of speech found for entry');
+            }
+
             int i = 2;
             while (wordDetails['entries'].containsKey(partOfSpeech)){ // create a unique part of speech key
               partOfSpeech = '$partOfSpeech:$i';
               i++;
             }
-            if (partOfSpeech.isEmpty) continue;
             if (wordDetails['entries'][partOfSpeech] == null) {
               wordDetails['entries'][partOfSpeech] = {
                 'synonyms': {},
@@ -61,8 +64,8 @@ Future<Map> getWordDetails(String word) async {
                 // 'details': []
               };
             }
-             
-            // wordDetails['entries'][partOfSpeech]['shortDefs'] = mainData['shortdef'] ?? [];
+
+            // wordDetails['entries'][partOfSpeech]['shortDefs'] = mainData['shortdef'] ?? []; // Omitted due to not really being needed and the inconsistency of their appearances
             wordDetails['entries'][partOfSpeech]['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
             wordDetails['entries'][partOfSpeech]['stems'] = mainData['meta']?['stems'] ?? [];
 
@@ -70,7 +73,8 @@ Future<Map> getWordDetails(String word) async {
             wordDetails['entries'][partOfSpeech]['etymology'] += mainData['et']?[0]?[1] ?? '';
             wordDetails['entries'][partOfSpeech]['partOfSpeech'] = mainData['fl'] ?? '';
             wordDetails['entries'][partOfSpeech]['quotes'].addAll(mainData['quotes'] ?? []);
-            
+
+
             if (mainData['def'][0].isEmpty) {
               debugPrint('No definitions found for "$word" in part of speech "$partOfSpeech".');
               continue; // Skip if no definitions found
@@ -78,7 +82,14 @@ Future<Map> getWordDetails(String word) async {
             final defs = parseDefinitions(mainData['def'][0]);
 
             wordDetails['entries'][partOfSpeech]['definitions'] = defs;
-            // wordDetails['entries'][partOfSpeech]['details'].add(wordDeets);
+
+            String? audioRef;
+            try {
+              audioRef  = mainData['hwi']?['prs']?[0]?['sound']['audio'];
+            } catch (e) {
+              debugPrint('Sound not found');
+            }
+            wordDetails['entries'][partOfSpeech]['audioRef'] = audioRef;
           } catch (e) {
             debugPrint('Error parsing word details: $e');
             continue;
@@ -379,6 +390,22 @@ int getAlphabetPosition(String letter) {
 
   // indexOf returns -1 if not found, so we add 1 to get the 1-based position.
   return index != -1 ? index + 1 : -1;
+}
+
+String buildAudioUrl(String audio) {
+  String subDir;
+
+  if (audio.startsWith("bix")) {
+    subDir = "bix";
+  } else if (audio.startsWith("gg")) {
+    subDir = "gg";
+  } else if (RegExp(r'^[0-9]').hasMatch(audio)) {
+    subDir = "number";
+  } else {
+    subDir = audio[0];
+  }
+
+  return "https://media.merriam-webster.com/audio/prons/en/us/mp3/$subDir/$audio.mp3";
 }
 
 String cleanText(String input) {
