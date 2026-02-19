@@ -21,115 +21,110 @@ String capitalise(String s) {
   return result;
 }
 
-Future<Map> getWordDetails(String word) async {
+Future<Map<String, dynamic>> getWordDetails(String word) async {
+  final lowerWord = word.toLowerCase();
+  final now = DateTime.now().toIso8601String();
+  final apiKey = Env.merriamWebsterApiKey;
+
+  final Map<String, dynamic> wordDetails = {
+    'word': word,
+    'dateAdded': now,
+    'entries': <String, Map<String, dynamic>>{},
+  };
+
+  final url = 'https://www.dictionaryapi.com/api/v3/references/collegiate/json/$word?key=$apiKey';
+
   try {
-    Map wordDetails = {
-      'word': word,
-      'dateAdded': DateTime.now().toString(),
-      'entries': {}
-    };
-    String? apiKey = Env.merriamWebsterApiKey;
-
-    final String url = 'https://www.dictionaryapi.com/api/v3/references/collegiate/json/$word?key=$apiKey';
     final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data.isNotEmpty && data[0] is Map<String, dynamic>) {
-        for (Map mainData in data) {
-          // var dataWordId = mainData['meta']['id'].split(':')[0].replaceAll(RegExp(r'[\s-]+'), '').toLowerCase();
-          final bool inStems = mainData['meta']['stems'].contains(word);
-          if (mainData['meta']['id'].split(':')[0].toLowerCase() != word.toLowerCase()) {
-            continue; 
-          }
-          if (!inStems) continue;
-          try {
-            String? partOfSpeech = mainData['fl'];
-
-            if (partOfSpeech == null || partOfSpeech.isEmpty) {
-              throw Exception('No part of speech found for entry');
-            }
-
-            int i = 2;
-            while (wordDetails['entries'].containsKey(partOfSpeech)){ // create a unique part of speech key
-              partOfSpeech = '$partOfSpeech:$i';
-              i++;
-            }
-            if (wordDetails['entries'][partOfSpeech] == null) {
-              wordDetails['entries'][partOfSpeech] = {
-                'synonyms': {},
-                'etymology': '',
-                'partOfSpeech': partOfSpeech,
-                'quotes': [],
-                // 'details': []
-              };
-            }
-
-            // wordDetails['entries'][partOfSpeech]['shortDefs'] = mainData['shortdef'] ?? []; // Omitted due to not really being needed and the inconsistency of their appearances
-            wordDetails['entries'][partOfSpeech]['firstUsed'] = mainData['date']?.replaceAll(RegExp(r'\{[^}]*\}'), '') ?? '';
-            wordDetails['entries'][partOfSpeech]['stems'] = mainData['meta']?['stems'] ?? [];
-
-            wordDetails['entries'][partOfSpeech]['synonyms'].addAll(parseSynonyms(mainData));
-            wordDetails['entries'][partOfSpeech]['etymology'] += mainData['et']?[0]?[1] ?? '';
-            wordDetails['entries'][partOfSpeech]['partOfSpeech'] = mainData['fl'] ?? '';
-            wordDetails['entries'][partOfSpeech]['quotes'].addAll(mainData['quotes'] ?? []);
-
-
-            if (mainData['def'][0].isEmpty) {
-              debugPrint('No definitions found for "$word" in part of speech "$partOfSpeech".');
-              continue; // Skip if no definitions found
-            }
-            final defs = parseDefinitions(mainData['def'][0]);
-
-            wordDetails['entries'][partOfSpeech]['definitions'] = defs;
-
-            String? audioRef;
-            try {
-              audioRef  = mainData['hwi']?['prs']?[0]?['sound']['audio'];
-            } catch (e) {
-              debugPrint('Sound not found');
-            }
-            wordDetails['entries'][partOfSpeech]['audioRef'] = audioRef;
-          } catch (e) {
-            debugPrint('Error parsing word details: $e');
-            continue;
-            // throw FormatException('Error parsing word details: $e');
-          }
-        }
-        // gather all stems and intersect them and then choose the smallest one
-        Set<String>? allStems;
-
-        wordDetails['entries'].forEach((key, value) {
-          // value['details'].forEach((detail) {
-            var stems = Set<String>.from(value['stems']);
-
-            if (allStems == null) {
-              allStems = stems;
-            } else {
-              allStems = allStems!.intersection(stems);
-            }
-          // });
-        });
-        word = allStems!.reduce((a, b) => a.length <= b.length ? a : b); // find smallest in list
-        wordDetails['word'] = word;
-      } else {
-        debugPrint('No definitions found for "$word".');
-      }
-    } else {
-      debugPrint('Failed to load definition: \\${response.statusCode}');
+    if (response.statusCode != 200) {
+      debugPrint('Failed to load definition: ${response.statusCode}');
+      return wordDetails;
     }
 
-    debugPrint(response.toString());
-    wordDetails['entries'] = validateWordData(wordDetails['entries']);
+    final List data = json.decode(response.body);
+    if (data.isEmpty || data.first is! Map<String, dynamic>) {
+      debugPrint('No definitions found for "$word".');
+      return wordDetails;
+    }
 
+    final entries = wordDetails['entries'] as Map<String, Map<String, dynamic>>;
+    final dateCleanerExp = RegExp(r'\{[^}]*\}');
+
+    for (final Map<String, dynamic> mainData in data) {
+      final meta = mainData['meta'];
+      if (meta == null) continue;
+
+      final String id = meta['id'] ?? '';
+      final int colonIndex = id.indexOf(':');
+      final String idRoot = (colonIndex == -1 ? id : id.substring(0, colonIndex)).toLowerCase();
+
+      if (idRoot != lowerWord) continue;
+
+      final List stems = meta['stems'] ?? const [];
+      if (!stems.contains(word)) continue;
+
+      final String? fl = mainData['fl'];
+      if (fl == null || fl.isEmpty) continue;
+
+      final List? defList = mainData['def'];
+      if (defList == null || defList.isEmpty) continue;
+
+      final dynamic defBlock = defList[0];
+      if (defBlock == null || defBlock.isEmpty) continue;
+
+      String posKey = fl;
+      int suffix = 2;
+      while (entries.containsKey(posKey)) {
+        posKey = '$fl:$suffix';
+        suffix++;
+      }
+
+      final entry = <String, dynamic>{
+        'synonyms': <String, dynamic>{},
+        'etymology': '',
+        'partOfSpeech': fl,
+        'quotes': <dynamic>[],
+        'stems': stems,
+        'firstUsed': (mainData['date'] ?? '').toString().replaceAll(dateCleanerExp, ''),
+      };
+
+      entry['definitions'] = parseDefinitions(defBlock);
+
+      entry['synonyms'].addAll(parseSynonyms(mainData));
+      entry['etymology'] = mainData['et']?[0]?[1] ?? '';
+      entry['quotes'].addAll(mainData['quotes'] ?? const []);
+
+      // Audio extraction (safe & fast)
+      final prs = mainData['hwi']?['prs'];
+      if (prs != null && prs.isNotEmpty) {
+        entry['audioRef'] = prs[0]?['sound']?['audio'];
+      } else {
+        entry['audioRef'] = null;
+      }
+
+      entries[posKey] = entry;
+    }
+
+    if (entries.isNotEmpty) {
+      Set<String>? allStems;
+      for (final entry in entries.values) {
+        final stems = Set<String>.from(entry['stems'] ?? const []);
+        allStems = allStems == null ? stems : allStems.intersection(stems);
+      }
+
+      if (allStems != null && allStems.isNotEmpty) {
+        wordDetails['word'] = allStems.reduce((a, b) => a.length <= b.length ? a : b);
+      }
+    }
+
+    wordDetails['entries'] = validateWordData(entries);
     return wordDetails;
   } catch (e) {
-    if (e is FormatException) rethrow;
     debugPrint('Error fetching word details: $e');
     return {
       'word': word,
-      'dateAdded': DateTime.now().toString(),
-      'entries': {},
+      'dateAdded': now,
+      'entries': <String, dynamic>{},
     };
   }
 }
