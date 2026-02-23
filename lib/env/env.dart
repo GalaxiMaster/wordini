@@ -1,5 +1,5 @@
 import 'package:envied/envied.dart';
-
+// genorator command: dart run build_runner build
 part 'env.g.dart';
 
 @Envied(path: '.env')
