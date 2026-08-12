@@ -29,26 +29,31 @@ class SignInPageState extends State<SignInPage> {
     GoogleSignIn.instance
         .initialize(
       serverClientId: Env.serverClientId,
-      clientId: Platform.isIOS ? Env.clientIdGcloud : null, // was specific to ios
-    ).then((_) {
+      clientId:
+          Platform.isIOS ? Env.clientIdGcloud : null, // specific to ios
+    )
+        .then((_) {
       _authSub = GoogleSignIn.instance.authenticationEvents.listen(
         (event) async {
           if (event is GoogleSignInAuthenticationEventSignIn) {
             final GoogleSignInAccount user = event.user;
             try {
-              // The API surface for the plugin exposes a synchronous
-              // `authentication` object on the account in this version.
               final GoogleSignInAuthentication authentication = user.authentication;
 
               final credential = GoogleAuthProvider.credential(
                 idToken: authentication.idToken,
               );
 
-              UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+              UserCredential userCredential =
+                  await FirebaseAuth.instance.signInWithCredential(credential);
               debugPrint(authentication.idToken);
               debugPrint('Firebase sign-in complete for ${user.email}');
-              bool isNew = userCredential.additionalUserInfo?.isNewUser ?? false;
-              _encryptionService.writeToSecureStorage(key: 'authIdToken', value: _encryptionService.encrypt(authentication.idToken ?? ''));
+              bool isNew =
+                  userCredential.additionalUserInfo?.isNewUser ?? false;
+              _encryptionService.writeToSecureStorage(
+                  key: 'authIdToken',
+                  value:
+                      _encryptionService.encrypt(authentication.idToken ?? ''));
               if (isNew) {
                 createDefaultPermissions(userCredential);
               }
@@ -135,160 +140,160 @@ class SignInPageState extends State<SignInPage> {
                   ),
                 ),
               ),
-                            
+
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () async {
-                          final response = isValid(_emailController.text.trim(), _passwordController.text);
-                          if (response.message != null){
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              errorSnackBar(response.message),
-                            );
-                            return;
-                          }
-                          if (response.code != true) return;
-                          try {
-                            await _auth.signInWithEmailAndPassword(
-                              email: _emailController.text.trim(),
-                              password: _passwordController.text,
-                            );
-                            getUserPermissions();
-                            if (!context.mounted) return;
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const HomePage()),
-                            );
-                            _encryptionService.writeToSecureStorage(
-                                key: 'password',
-                                value: _encryptionService
-                                    .encrypt(_passwordController.text));
-                          } on FirebaseAuthException catch (e) {
-                            String message;
-                            switch (e.code) {
-                              case 'invalid-credential':
-                                message = 'Invalid Email or Password';
-                                break;
-                              case 'user-not-found':
-                                message = 'Invalid Email or Password';
-                                break;
-                              case 'invalid-email':
-                                message = 'Invalid email format';
-                                break;
-                              case 'user-disabled':
-                                message = 'This account has been disabled';
-                                break;
-                              default:
-                                message = 'An error occurred: ${e.message}';
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: () async {
+                            final response = isValid(
+                                _emailController.text.trim(),
+                                _passwordController.text);
+                            if (response.message != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                errorSnackBar(response.message),
+                              );
+                              return;
                             }
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              errorSnackBar(message),
-                            );
-                          } catch (e) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              errorSnackBar('An unexpected error occurred: $e'),
-                            );
-                          }
-                        },
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'Sign In',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => SignUpPage()),
-                        );
-                      },
-                      child: Text(
-                        'Don\'t have an account? Sign up',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    Row(
-                      children: [
-                        Expanded(child: Divider(color: Colors.white24)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'OR',
-                            style: TextStyle(
-                              color: Colors.white60,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                            if (response.code != true) return;
+                            try {
+                              await _auth.signInWithEmailAndPassword(
+                                email: _emailController.text.trim(),
+                                password: _passwordController.text,
+                              );
+                              getUserPermissions();
+                              if (!context.mounted) return;
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const HomePage()),
+                              );
+                              _encryptionService.writeToSecureStorage(
+                                  key: 'password',
+                                  value: _encryptionService
+                                      .encrypt(_passwordController.text));
+                            } on FirebaseAuthException catch (e) {
+                              String message;
+                              switch (e.code) {
+                                case 'invalid-credential':
+                                  message = 'Invalid Email or Password';
+                                  break;
+                                case 'user-not-found':
+                                  message = 'Invalid Email or Password';
+                                  break;
+                                case 'invalid-email':
+                                  message = 'Invalid email format';
+                                  break;
+                                case 'user-disabled':
+                                  message = 'This account has been disabled';
+                                  break;
+                                default:
+                                  message = 'An error occurred: ${e.message}';
+                              }
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                errorSnackBar(message),
+                              );
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                errorSnackBar(
+                                    'An unexpected error occurred: $e'),
+                              );
+                            }
+                          },
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                        ),
-                        Expanded(child: Divider(color: Colors.white24)),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          try {
-                            await GoogleSignIn.instance.initialize(
-                              serverClientId: Env.serverClientId,
-                            );
-                            await GoogleSignIn.instance.authenticate();
-                          } on GoogleSignInException catch (e) {
-                            debugPrint(
-                                'Error signing in with Google: ${e.code} ${e.description}');
-                          } catch (e, st) {
-                            debugPrint('Unexpected error signing in with Google: $e');
-                            debugPrint('$st');
-                          }
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: BorderSide(color: Colors.white38, width: 1.5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                          child: const Text(
+                            'Sign In',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                         ),
-                        icon: Image.asset(
-                          'assets/google_logo.png',
-                          height: 20,
-                          width: 20,
-                        ),
-                        label: const Text(
-                          'Sign in with Google',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SignUpPage()),
+                          );
+                        },
+                        child: Text(
+                          'Don\'t have an account? Sign up',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                )
-              ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.white24)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'OR',
+                              style: TextStyle(
+                                color: Colors.white60,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: Colors.white24)),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            try {
+                              await GoogleSignIn.instance.initialize(
+                                serverClientId: Env.serverClientId,
+                              );
+                              await GoogleSignIn.instance.authenticate();
+                            } on GoogleSignInException catch (e) {
+                              debugPrint(
+                                  'Error signing in with Google: ${e.code} ${e.description}');
+                            } catch (e, st) {
+                              debugPrint(
+                                  'Unexpected error signing in with Google: $e');
+                              debugPrint('$st');
+                            }
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            side: BorderSide(color: Colors.white38, width: 1.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          icon: Image.asset(
+                            'assets/google_logo.png',
+                            height: 20,
+                            width: 20,
+                          ),
+                          label: const Text(
+                            'Sign in with Google',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )),
             ],
           ),
         ),

@@ -5,12 +5,13 @@ import 'package:wordini/Providers/otherproviders.dart';
 import 'package:wordini/widgets.dart';
 import 'package:wordini/word_functions.dart';
 
-enum TagPopupType{
+enum TagPopupType {
   type,
   tag,
   sortBy,
   sortOrder,
 }
+
 class BoxDetails {
   final String text;
   final LayerLink layerLink;
@@ -49,7 +50,7 @@ class WordListState extends ConsumerState<WordList> {
   final LayerLink _sortOrderLayerLink = LayerLink();
 
   final FocusNode _tagFocusNode = FocusNode();
-  
+
   late Set allTags;
   late Set allTypes;
   @override
@@ -97,39 +98,42 @@ class WordListState extends ConsumerState<WordList> {
               builder: (context, setPopupState) {
                 final children = switch (tagMode) {
                   TagPopupType.tag || TagPopupType.type => [
-                    _buildSearchBar(setPopupState, isTag),
-                    _buildToggleSwitch(setPopupState, isTag),
-                    const Divider(color: Colors.white),
-                    _buildListItems(setPopupState, isTag),
-                  ],
+                      _buildSearchBar(setPopupState, isTag),
+                      _buildToggleSwitch(setPopupState, isTag),
+                      const Divider(color: Colors.white),
+                      _buildListItems(setPopupState, isTag),
+                    ],
                   TagPopupType.sortBy => [
-                    _buildTwoOptionSelector(
-                      options: const ['Alphabetical', 'Date Added'],
-                      selected: filters['sortBy'],
-                      onSelected: (value) {
-                        filters['sortBy'] = value;
-                        filters['sortOrder'] = sortOrderOptions[value]?.first ?? 'Ascending';
-                        _hideTagPopup();
-                      },
-                    )
-                  ],
+                      _buildTwoOptionSelector(
+                        options: const ['Alphabetical', 'Date Added'],
+                        selected: filters['sortBy'],
+                        onSelected: (value) {
+                          filters['sortBy'] = value;
+                          filters['sortOrder'] =
+                              sortOrderOptions[value]?.first ?? 'Ascending';
+                          _hideTagPopup();
+                        },
+                      )
+                    ],
                   TagPopupType.sortOrder => [
-                    _buildTwoOptionSelector(
-                      options: sortOrderOptions[filters['sortBy']] ?? ['Ascending', 'Descending'],
-                      selected: filters['sortOrder'],
-                      onSelected: (value) {
-                        filters['sortOrder'] = value;
-                        _hideTagPopup();
-                      },
-                    )
-                  ],
+                      _buildTwoOptionSelector(
+                        options: sortOrderOptions[filters['sortBy']] ??
+                            ['Ascending', 'Descending'],
+                        selected: filters['sortOrder'],
+                        onSelected: (value) {
+                          filters['sortOrder'] = value;
+                          _hideTagPopup();
+                        },
+                      )
+                    ],
                 };
 
                 return Material(
                   elevation: 4,
                   borderRadius: BorderRadius.circular(10),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     child: SizedBox(
                       width: 220,
                       child: Column(
@@ -155,7 +159,8 @@ class WordListState extends ConsumerState<WordList> {
     });
   }
 
-  Widget _buildListItems(void Function(void Function()) setPopupState, bool isTag) {
+  Widget _buildListItems(
+      void Function(void Function()) setPopupState, bool isTag) {
     final Set items = isTag ? allTags : allTypes;
     final filterKey = isTag ? 'selectedTags' : 'wordTypes';
     final selected = ref.read(filtersProvider)[filterKey];
@@ -184,13 +189,13 @@ class WordListState extends ConsumerState<WordList> {
             }
             final newFilters = {...filters, filterKey: newSelected};
             ref.read(filtersProvider.notifier).state = newFilters;
-            setPopupState((){});
+            setPopupState(() {});
           },
         );
       }).toList(),
     );
   }
-  
+
   Widget _buildTwoOptionSelector({
     required List<String> options,
     required String selected,
@@ -207,8 +212,9 @@ class WordListState extends ConsumerState<WordList> {
       }).toList(),
     );
   }
-  
-  Widget _buildSearchBar(void Function(void Function()) setPopupState, bool isTag) {
+
+  Widget _buildSearchBar(
+      void Function(void Function()) setPopupState, bool isTag) {
     return SizedBox(
       height: 44,
       child: Row(
@@ -234,7 +240,8 @@ class WordListState extends ConsumerState<WordList> {
     );
   }
 
-  Widget _buildToggleSwitch(void Function(void Function()) setPopupState, bool isTag) {
+  Widget _buildToggleSwitch(
+      void Function(void Function()) setPopupState, bool isTag) {
     final key = isTag ? 'selectedTagsMode' : 'wordTypeMode';
     return AnimatedToggleSwitch(
       options: const ['Any', 'All'],
@@ -251,14 +258,14 @@ class WordListState extends ConsumerState<WordList> {
     _tagOverlayEntry = null;
     setState(() {});
   }
-  
+
   @override
   void dispose() {
     _tagController.dispose();
     _tagFocusNode.dispose();
     super.dispose();
   }
- 
+
   @override
   Widget build(BuildContext context) {
     final asyncData = ref.watch(wordDataFutureProvider);
@@ -271,17 +278,26 @@ class WordListState extends ConsumerState<WordList> {
         _searchController.text = searchTerm;
         Map words = ref.watch(wordDataProvider);
 
-        List filteredWords = words.entries.where((word) { // all word filtering logic here
+        List filteredWords = words.entries.where((word) {
+          // all word filtering logic here
           final lowerWord = word.key.toLowerCase();
           final searchLower = searchTerm.toLowerCase();
 
           // Search filter
-          final String firstDef = ((getFirstData(words, word.key)['definitions'] as List?)?.elementAtOrNull(0)?['definition'] ?? '').toLowerCase();
-          if (!lowerWord.contains(searchLower) && !firstDef.contains(searchLower)) return false;
+          final String firstDef =
+              ((getFirstData(words, word.key)['definitions'] as List?)
+                          ?.elementAtOrNull(0)?['definition'] ??
+                      '')
+                  .toLowerCase();
+          if (!lowerWord.contains(searchLower) &&
+              !firstDef.contains(searchLower)) return false;
 
           // Type filter
-          final selectedTypes = (filters['wordTypes'] as Set).map((e) => e.toLowerCase()).toList();
-          final wordTypes = getWordType(word.value).map((e) => e.toLowerCase()).toList();
+          final selectedTypes = (filters['wordTypes'] as Set)
+              .map((e) => e.toLowerCase())
+              .toList();
+          final wordTypes =
+              getWordType(word.value).map((e) => e.toLowerCase()).toList();
           final typeModeAll = filters['wordTypeMode'] == 'all';
 
           final matchesType = selectedTypes.isEmpty ||
@@ -293,7 +309,8 @@ class WordListState extends ConsumerState<WordList> {
 
           // Tag filter
           final selectedTags = filters['selectedTags'];
-          final wordTags = (word.value['tags'] ?? <String>[]).cast<String>().toSet();
+          final wordTags =
+              (word.value['tags'] ?? <String>[]).cast<String>().toSet();
           final tagModeAny = filters['selectedTagsMode'] == 'any';
 
           final matchesTags = selectedTags.isEmpty ||
@@ -303,27 +320,27 @@ class WordListState extends ConsumerState<WordList> {
 
           return matchesTags;
         }).toList();
-        
+
         // Sorting the list
-        switch (filters['sortBy']){
+        switch (filters['sortBy']) {
           case 'Alphabetical':
-            filteredWords.sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
-            if (filters['sortOrder'] == 'Descending'){
+            filteredWords.sort(
+                (a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
+            if (filters['sortOrder'] == 'Descending') {
               filteredWords = filteredWords.reversed.toList();
             }
           case 'Date Added':
-            filteredWords.sort((a, b) => DateTime.parse(a.value['dateAdded']).compareTo(DateTime.parse(b.value['dateAdded'])));
-            if (filters['sortOrder'] == 'Newest'){
+            filteredWords.sort((a, b) => DateTime.parse(a.value['dateAdded'])
+                .compareTo(DateTime.parse(b.value['dateAdded'])));
+            if (filters['sortOrder'] == 'Newest') {
               filteredWords = filteredWords.reversed.toList();
             }
         }
 
-        allTags = words.values
-          .expand((w) => w['tags'] ?? [])
-          .toSet();
+        allTags = words.values.expand((w) => w['tags'] ?? []).toSet();
         allTypes = words.values
-          .expand((w) => w['entries'].keys.toList() ?? [])
-          .toSet();
+            .expand((w) => w['entries'].keys.toList() ?? [])
+            .toSet();
         return Column(
           // mainAxisSize: MainAxisSize.min,
           children: [
@@ -355,9 +372,8 @@ class WordListState extends ConsumerState<WordList> {
                     top: 2.5,
                     child: IconButton(
                       icon: const Icon(Icons.filter_list),
-                      onPressed: () async{
+                      onPressed: () async {
                         ref.read(showBarProvider.notifier).state = !_showBar;
-
                       },
                     ),
                   ),
@@ -380,49 +396,51 @@ class WordListState extends ConsumerState<WordList> {
                 maxHeight: _showBar ? 150 : 10, // Animate between 10 and 200
               ),
               child: _showBar
-              ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  boxesWithHeading(
-                    'Filtering',
-                    [
-                      BoxDetails(
-                        text: 'Types', 
-                        layerLink: _typeLayerLink, 
-                        onClick: () => _showTagPopup(context, TagPopupType.type), 
-                        type: TagPopupType.type
-                      ),
-                      BoxDetails(
-                        text: 'Tags', 
-                        layerLink: _tagLayerLink, 
-                        onClick: () => _showTagPopup(context, TagPopupType.tag), 
-                        type: TagPopupType.tag
-                      ),
-                    ],
-                    context,
-                  ),
-                  boxesWithHeading(
-                    'Sorting',
-                    [
-                      BoxDetails(
-                        text: 'Sort By', 
-                        layerLink: _sortByLayerLink, 
-                        onClick: () => _showTagPopup(context, TagPopupType.sortBy), 
-                        type: TagPopupType.sortBy
-                      ),
-                      BoxDetails(
-                        text: 'Sort Order', 
-                        layerLink: _sortOrderLayerLink, 
-                        onClick: () => _showTagPopup(context, TagPopupType.sortOrder), 
-                        type: TagPopupType.sortOrder
-                      ),
-                    ],
-                    context,
-                  ),
-                  SizedBox(height: 10,)
-                ],
-              )
-              : null,
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        boxesWithHeading(
+                          'Filtering',
+                          [
+                            BoxDetails(
+                                text: 'Types',
+                                layerLink: _typeLayerLink,
+                                onClick: () =>
+                                    _showTagPopup(context, TagPopupType.type),
+                                type: TagPopupType.type),
+                            BoxDetails(
+                                text: 'Tags',
+                                layerLink: _tagLayerLink,
+                                onClick: () =>
+                                    _showTagPopup(context, TagPopupType.tag),
+                                type: TagPopupType.tag),
+                          ],
+                          context,
+                        ),
+                        boxesWithHeading(
+                          'Sorting',
+                          [
+                            BoxDetails(
+                                text: 'Sort By',
+                                layerLink: _sortByLayerLink,
+                                onClick: () =>
+                                    _showTagPopup(context, TagPopupType.sortBy),
+                                type: TagPopupType.sortBy),
+                            BoxDetails(
+                                text: 'Sort Order',
+                                layerLink: _sortOrderLayerLink,
+                                onClick: () => _showTagPopup(
+                                    context, TagPopupType.sortOrder),
+                                type: TagPopupType.sortOrder),
+                          ],
+                          context,
+                        ),
+                        SizedBox(
+                          height: 10,
+                        )
+                      ],
+                    )
+                  : null,
             ),
             Expanded(
               child: Container(
@@ -437,34 +455,41 @@ class WordListState extends ConsumerState<WordList> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => WordDetails(word: words[word], allTags: allTags),
+                          builder: (context) =>
+                              WordDetails(word: words[word], allTags: allTags),
                         ),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: Dismissible(
                           key: ValueKey(word),
-                          direction: DismissDirection.endToStart, // only right-to-left
+                          direction:
+                              DismissDirection.endToStart, // only right-to-left
                           dismissThresholds: const {
                             DismissDirection.endToStart: 0.5,
                           },
                           background: Container(
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              color: Colors.teal.shade400
-                            ),
+                                borderRadius: BorderRadius.circular(16),
+                                color: Colors.teal.shade400),
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: const Icon(Icons.archive, color: Colors.white),
+                            child:
+                                const Icon(Icons.archive, color: Colors.white),
                           ),
                           confirmDismiss: (direction) async {
                             // Only archive if threshold reached
                             return true;
                           },
                           onDismissed: (direction) {
-                            ref.read(archivedWordsProvider.notifier).updateValue(word, words[word]);
+                            ref
+                                .read(archivedWordsProvider.notifier)
+                                .updateValue(word, words[word]);
                             ref.read(wordDataProvider.notifier).removeKey(word);
-                            debugPrint(ref.read(archivedWordsProvider).keys.toString());
+                            debugPrint(ref
+                                .read(archivedWordsProvider)
+                                .keys
+                                .toString());
                             // remove input data as well
                           },
                           child: ListTile(
@@ -475,10 +500,9 @@ class WordListState extends ConsumerState<WordList> {
                                   child: Text(
                                     capitalise(word),
                                     style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      overflow: TextOverflow.ellipsis
-                                    ),
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        overflow: TextOverflow.ellipsis),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
@@ -494,17 +518,20 @@ class WordListState extends ConsumerState<WordList> {
                               ],
                             ),
                             subtitle: MWTaggedText(
-                              firstWordDetails['definitions'] is  List 
-                                ? ((firstWordDetails['definitions'] as List).elementAtOrNull(0) ?? {})['definition'] ?? ''
-                                : '',
-                            ), 
+                              firstWordDetails['definitions'] is List
+                                  ? ((firstWordDetails['definitions'] as List)
+                                              .elementAtOrNull(0) ??
+                                          {})['definition'] ??
+                                      ''
+                                  : '',
+                            ),
                           ),
                         ),
                       ),
                     );
                   },
                 ),
-              ),  
+              ),
             ),
           ],
         );
@@ -518,7 +545,8 @@ class WordListState extends ConsumerState<WordList> {
     );
   }
 
-  Widget boxesWithHeading(String heading, List<BoxDetails> boxes, BuildContext context) {
+  Widget boxesWithHeading(
+      String heading, List<BoxDetails> boxes, BuildContext context) {
     return Column(
       children: [
         Center(
@@ -534,25 +562,26 @@ class WordListState extends ConsumerState<WordList> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             for (BoxDetails box in boxes)
-            CompositedTransformTarget(
-              link: box.layerLink,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[900],
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              CompositedTransformTarget(
+                link: box.layerLink,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[900],
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 50),
+                    elevation: 0,
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 50),
-                  elevation: 0,
+                  onPressed: () => box.onClick(),
+                  child: Text(box.text),
                 ),
-                onPressed: ()=> box.onClick(),
-                child: Text(box.text),
               ),
-            ),
           ],
         ),
       ],
     );
   }
-}  
+}

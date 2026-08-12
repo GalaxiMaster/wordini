@@ -31,133 +31,144 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
     loadingOverlay.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
-    final Map<String, bool>? notificationSettings = ref.watch(notificationSettingsProvider).value;
+    final Map<String, bool>? notificationSettings =
+        ref.watch(notificationSettingsProvider).value;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        centerTitle: true,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          settingsHeader('Account'),
-          const SizedBox(height: 8),
-          _buildSettingsTile(
-            icon: Icons.person,
-            label: 'Account',
-            function: () async {
-              loadingOverlay.showLoadingOverlay(context);
-              User? user = FirebaseAuth.instance.currentUser;
-              if (user != null){
-                // await reAuthUser(user, context);
-                user = FirebaseAuth.instance.currentUser;
-                if (context.mounted){
+        appBar: AppBar(
+          title: const Text('Settings'),
+          centerTitle: true,
+        ),
+        body: ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            settingsHeader('Account'),
+            const SizedBox(height: 8),
+            _buildSettingsTile(
+              icon: Icons.person,
+              label: 'Account',
+              function: () async {
+                loadingOverlay.showLoadingOverlay(context);
+                User? user = FirebaseAuth.instance.currentUser;
+                if (user != null) {
+                  // await reAuthUser(user, context);
+                  user = FirebaseAuth.instance.currentUser;
+                  if (context.mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AccountPage(accountDetails: user!),
+                      ),
+                    );
+                  }
+                  loadingOverlay.removeLoadingOverlay();
+                } else {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AccountPage(accountDetails: user!),
+                      builder: (context) => SignInPage(),
                     ),
                   );
+                  loadingOverlay.removeLoadingOverlay();
                 }
-                loadingOverlay.removeLoadingOverlay();
-              }else{
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SignInPage(),
+              },
+            ),
+            settingsHeader('Functions'),
+            const SizedBox(height: 8),
+            _buildSettingsTile(
+              icon: Icons.upload_rounded,
+              label: 'Export Data',
+              function: () async {
+                await exportJson(context);
+              },
+            ),
+            _buildSettingsTile(
+              icon: Icons.download_rounded,
+              label: 'Import Data',
+              function: () async {
+                final container = ProviderScope.containerOf(context);
+                await importData(context);
+                container.invalidate(wordDataFutureProvider);
+              },
+            ),
+            _buildSettingsTile(
+              icon: Icons.restart_alt,
+              label: 'Reset Data',
+              function: () async {
+                await resetData(context, ref);
+              },
+            ),
+            _buildSettingsTile(
+              icon: Icons.download_rounded,
+              label: 'Import CSV',
+              function: () async {
+                final container = ProviderScope.containerOf(context);
+                await processCsvRows(
+                    context,
+                    ref
+                        .read(wordDataProvider)
+                        .keys
+                        .map((w) => w.toLowerCase())
+                        .toList(),
+                    ref);
+                container.invalidate(wordDataFutureProvider);
+              },
+            ),
+            _buildSettingsTile(
+              icon: Icons.upload_rounded,
+              label: 'Export as CSV',
+              function: () {
+                exportAsCsv(ref.read(wordDataProvider));
+              },
+            ),
+            settingsHeader('Utilities'),
+            const SizedBox(height: 8),
+            _buildSettingsTile(
+                icon: Icons.local_library,
+                label: 'Archived Words',
+                function: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ArchivedWordsScreen(),
+                      ),
+                    )),
+            settingsHeader('Accessability'),
+            const SizedBox(height: 8),
+            _buildSettingsTile(
+              icon: Icons.notifications,
+              label: 'Notification Permissions',
+              function: () async {
+                showModalBottomSheet(
+                  context: context,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
                   ),
+                  builder: (context) {
+                    return _NotificationSettingsSheet(
+                      settings: notificationSettings ?? {},
+                    );
+                  },
                 );
-                loadingOverlay.removeLoadingOverlay();
-              }
-            },
-          ),
-          settingsHeader('Functions'),
-          const SizedBox(height: 8),
-          _buildSettingsTile(
-            icon: Icons.upload_rounded,
-            label: 'Export Data',
-            function: () async {
-              await exportJson(context);
-            },
-          ),
-          _buildSettingsTile(
-            icon: Icons.download_rounded,
-            label: 'Import Data',
-            function: () async {
-              final container = ProviderScope.containerOf(context);
-              await importData(context);
-              container.invalidate(wordDataFutureProvider);
-            },
-          ),
-          _buildSettingsTile(
-            icon: Icons.restart_alt,
-            label: 'Reset Data',
-            function: () async {
-              await resetData(context, ref);
-            },
-          ),
-          _buildSettingsTile(
-            icon: Icons.download_rounded,
-            label: 'Import CSV',
-            function: () async {
-              final container = ProviderScope.containerOf(context);
-              await processCsvRows(context, ref.read(wordDataProvider).keys.map((w) => w.toLowerCase()).toList(), ref);
-              container.invalidate(wordDataFutureProvider);
-            },
-          ),
-          _buildSettingsTile(
-            icon: Icons.upload_rounded,
-            label: 'Export as CSV',
-            function: () {
-              exportAsCsv(ref.read(wordDataProvider));
-            },
-          ),
-          settingsHeader('Utilities'),
-          const SizedBox(height: 8), 
-          _buildSettingsTile(
-            icon: Icons.local_library,
-            label: 'Archived Words',
-            function: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ArchivedWordsScreen(),
-              ),
-            )
-          ),
-          settingsHeader('Accessability'),
-          const SizedBox(height: 8),
-          _buildSettingsTile(
-            icon: Icons.notifications,
-            label: 'Notification Permissions',
-            function: () async{
-              showModalBottomSheet(
-                context: context,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (context) {
-                  return _NotificationSettingsSheet(settings: notificationSettings ?? {},);
-                },
-              );
-            },
-          ),
-          _buildSettingsTile(
-            icon: Icons.color_lens,
-            label: 'Main Theme Color',
-            function: () async {
-              final Color? newColor = await _pickColor(context);
-              if (newColor != null){
-                ref.read(themeProvider.notifier).setTheme(newColor);
-              }
-            }
-          ),
-        ],
-      )
-    );
+              },
+            ),
+            _buildSettingsTile(
+                icon: Icons.color_lens,
+                label: 'Main Theme Color',
+                function: () async {
+                  final Color? newColor = await _pickColor(context);
+                  if (newColor != null) {
+                    ref.read(themeProvider.notifier).setTheme(newColor);
+                  }
+                }),
+          ],
+        ));
   }
+
   Future<Color?> _pickColor(BuildContext context) async {
     final selectedColor = await showDialog<Color>(
       context: context,
@@ -207,10 +218,10 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
       child: Text(
         header.toUpperCase(),
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Colors.grey,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.0,
-        ),
+              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.0,
+            ),
       ),
     );
   }
@@ -232,18 +243,18 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
           label,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
-        trailing: rightside ?? const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+        trailing:
+            rightside ?? const Icon(Icons.arrow_forward_ios_rounded, size: 16),
       ),
     );
   }
 }
 
 Future<void> processCsvRows(
-    BuildContext context, 
-    List existingWords, 
-    WidgetRef ref,
-  ) async {
-
+  BuildContext context,
+  List existingWords,
+  WidgetRef ref,
+) async {
   final result = await FilePicker.platform.pickFiles(
     type: FileType.custom,
     allowedExtensions: ['csv'],
@@ -309,7 +320,6 @@ Future<void> processCsvRows(
     if (wordDetails['entries'].isNotEmpty) {
       writeKey(word, wordDetails);
     } else {
-      // temporarily hide overlay while navigating
       loadingOverlay.hide();
       try {
         if (!context.mounted) return;
@@ -340,20 +350,22 @@ Future<void> processCsvRows(
   loadingOverlay.hide();
 }
 
-
 void exportAsCsv(words) async {
   String getDefinition(Map details) {
     try {
       return details['entries']
-          .values
-          .first['definitions']
-          .first['definition'] ?? '';
+              .values
+              .first['definitions']
+              .first['definition'] ??
+          '';
     } catch (_) {
       return '';
     }
   }
 
-  List<List<dynamic>> rows = [['Word', 'Definition', 'Type']];
+  List<List<dynamic>> rows = [
+    ['Word', 'Definition', 'Type']
+  ];
   words.forEach((word, details) {
     String definition = getDefinition(details);
     String type = details['entries'].keys.first;
@@ -375,10 +387,8 @@ void exportAsCsv(words) async {
         text: 'Exported CSV data from Wordini',
       ),
     );
-
   }
 }
-
 
 class _NotificationSettingsSheet extends ConsumerWidget {
   final Map<String, bool> settings;
@@ -387,7 +397,8 @@ class _NotificationSettingsSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notificationSettings = ref.watch(notificationSettingsProvider).value ?? settings;
+    final notificationSettings =
+        ref.watch(notificationSettingsProvider).value ?? settings;
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -404,8 +415,10 @@ class _NotificationSettingsSheet extends ConsumerWidget {
               title: Text(type),
               value: notificationSettings[type]!,
               onChanged: (bool value) {
-                ref.read(notificationSettingsProvider.notifier).updateValue(type, value);
-                
+                ref
+                    .read(notificationSettingsProvider.notifier)
+                    .updateValue(type, value);
+
                 if (value) {
                   initializeNotifications(askPermission: true);
                 } else {

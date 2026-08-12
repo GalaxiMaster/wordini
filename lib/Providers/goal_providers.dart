@@ -18,14 +18,16 @@ class InputDataNotifier extends Notifier<Map> {
       error: (_, __) => {},
     );
   }
-  void removeEntry(word, speechPart, index){
+
+  void removeEntry(word, speechPart, index) {
     Map data = state[word];
     data[speechPart].removeAt(index);
     state = {...state, word: data};
     file.writeKey(word, data, path: 'inputs');
   }
-  
-  Future<void> addInputEntry(String word, String partOfSpeech, Map entry) async{
+
+  Future<void> addInputEntry(
+      String word, String partOfSpeech, Map entry) async {
     Map data = state[word] ?? {};
     data[partOfSpeech] ??= [];
     data[partOfSpeech].insert(0, entry);
@@ -33,7 +35,9 @@ class InputDataNotifier extends Notifier<Map> {
     file.writeKey(word, data, path: 'inputs');
   }
 }
-final inputDataProvider = NotifierProvider<InputDataNotifier, Map>(InputDataNotifier.new);
+
+final inputDataProvider =
+    NotifierProvider<InputDataNotifier, Map>(InputDataNotifier.new);
 
 class StatisticsDataNotifier extends Notifier<Map> {
   @override
@@ -61,18 +65,20 @@ class StatisticsDataNotifier extends Notifier<Map> {
             final Map speechTypes = word.value;
             for (final MapEntry speechType in speechTypes.entries) {
               speechTypesGuessed++;
-              for (Map guess in speechType.value){
-                if (guess['correct'] != null){
-                  final int guessWeek = getWeekNumber(DateTime.parse(guess['date']));
-                  if (guessWeek == week){
+              for (Map guess in speechType.value) {
+                if (guess['correct'] != null) {
+                  final int guessWeek =
+                      getWeekNumber(DateTime.parse(guess['date']));
+                  if (guessWeek == week) {
                     guessesThisWeek += 1;
                   }
-                  if (isSameDay(DateTime.parse(guess['date']), DateTime.now())){
+                  if (isSameDay(
+                      DateTime.parse(guess['date']), DateTime.now())) {
                     guessesToday += 1;
                   }
                   correctGuesses++;
                 }
-                if (guess['skipped'] ?? false){
+                if (guess['skipped'] ?? false) {
                   totalSkips++;
                 } else {
                   totalGuesses++;
@@ -102,7 +108,8 @@ class StatisticsDataNotifier extends Notifier<Map> {
   }
 }
 
-final statisticsDataProvider = NotifierProvider<StatisticsDataNotifier, Map>(StatisticsDataNotifier.new);
+final statisticsDataProvider =
+    NotifierProvider<StatisticsDataNotifier, Map>(StatisticsDataNotifier.new);
 
 class WordsThisWeekDataNotifier extends Notifier<int> {
   @override
@@ -112,10 +119,11 @@ class WordsThisWeekDataNotifier extends Notifier<int> {
     final int week = getWeekNumber(DateTime.now());
 
     int wordsThisWeek = 0;
-    
-    for (MapEntry word in data.entries){
-      final int wordWeek = getWeekNumber(DateTime.parse(word.value['dateAdded']));
-      if (wordWeek == week){
+
+    for (MapEntry word in data.entries) {
+      final int wordWeek =
+          getWeekNumber(DateTime.parse(word.value['dateAdded']));
+      if (wordWeek == week) {
         wordsThisWeek += 1;
       }
     }
@@ -123,7 +131,7 @@ class WordsThisWeekDataNotifier extends Notifier<int> {
   }
 
   void incriment() {
-    state = state+=1;
+    state = state += 1;
   }
 }
 

@@ -19,7 +19,7 @@ class QuizzesState extends ConsumerState<Quizzes> {
   Future<List>? words; // Make nullable to avoid LateInitializationError
   int _currentIndex = 0;
   Map currentWord = {};
-  
+
   // session stats
   int questionsDone = 0;
   int questionsRight = 0;
@@ -40,18 +40,23 @@ class QuizzesState extends ConsumerState<Quizzes> {
     Map data = ref.read(wordDataProvider);
     _gatherSelectedDefinitions(data).then((selectedDefs) {
       setState(() {
-        if (widget.questions != null ){
+        if (widget.questions != null) {
           maxQuestions = widget.questions!.clamp(0, selectedDefs.length);
           selectedDefs.shuffle();
-          words = Future.value(selectedDefs.sublist(0, selectedDefs.length > (maxQuestions ?? 0) ? maxQuestions : selectedDefs.length));
-        } else{
+          words = Future.value(selectedDefs.sublist(
+              0,
+              selectedDefs.length > (maxQuestions ?? 0)
+                  ? maxQuestions
+                  : selectedDefs.length));
+        } else {
           maxQuestions = null;
           words = Future.value(randomise(selectedDefs));
         }
       });
     });
   }
-    @override
+
+  @override
   void dispose() {
     entryController.dispose();
     _entryFocusNode.dispose();
@@ -59,7 +64,7 @@ class QuizzesState extends ConsumerState<Quizzes> {
   }
 
   // Gather selected definitions from the data (returns a List)
-  Future<List<Map>> _gatherSelectedDefinitions(Map words) async{
+  Future<List<Map>> _gatherSelectedDefinitions(Map words) async {
     Map inputs = ref.read(inputDataProvider);
     List<Map> selectedWords = [];
     for (var word in words.entries) {
@@ -69,7 +74,8 @@ class QuizzesState extends ConsumerState<Quizzes> {
         if (speechType.value['selected'] == true) {
           Map<String, dynamic> merged = Map<String, dynamic>.from(wordData);
           merged['attributes'] = Map<String, dynamic>.from(speechType.value);
-          merged['attributes']['inputs'] = inputs[word.key]?[speechType.key] ?? [];
+          merged['attributes']['inputs'] =
+              inputs[word.key]?[speechType.key] ?? [];
           selectedWords.add(merged);
         }
       }
@@ -80,8 +86,9 @@ class QuizzesState extends ConsumerState<Quizzes> {
   @override
   Widget build(BuildContext context) {
     if (!canQuiz) {
-      return const Scaffold(body: Center(child: Text('User doesn\'t have permission to quiz')));
-    } else{
+      return const Scaffold(
+          body: Center(child: Text('User doesn\'t have permission to quiz')));
+    } else {
       return Scaffold(
         body: FutureBuilder<List>(
           future: words,
@@ -93,14 +100,16 @@ class QuizzesState extends ConsumerState<Quizzes> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
-              return Center(child: Text('Error loading data ${snapshot.error}'));
+              return Center(
+                  child: Text('Error loading data ${snapshot.error}'));
             } else if (snapshot.hasData) {
               List words = snapshot.data!;
               if (words.isEmpty) {
                 return const Center(child: Text('No words added'));
               }
               currentWord = words.elementAt(_currentIndex);
-              String partOfSpeech = currentWord['attributes']['partOfSpeech'] ?? 'unknown';
+              String partOfSpeech =
+                  currentWord['attributes']['partOfSpeech'] ?? 'unknown';
               return Stack(
                 children: [
                   Positioned(
@@ -111,124 +120,157 @@ class QuizzesState extends ConsumerState<Quizzes> {
                       child: Row(
                         children: [
                           if (maxQuestions != null)
-                          GestureDetector(
-                            onTap: () => Navigator.of(context).pop(),
-                            child: const Padding(
-                              padding: EdgeInsets.only(right: 8),
-                              child: Icon(
-                                Icons.arrow_back,
-                                color: Colors.white,
-                                size: 25,
+                            GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
+                              child: const Padding(
+                                padding: EdgeInsets.only(right: 8),
+                                child: Icon(
+                                  Icons.arrow_back,
+                                  color: Colors.white,
+                                  size: 25,
+                                ),
                               ),
                             ),
-                          ),
                           IconButton(
                             icon: const Icon(Icons.lightbulb),
                             onPressed: () {
                               String message;
                               try {
                                 List examples = [];
-                                final details = currentWord['attributes']['definitions'] ?? {};
+                                final details = currentWord['attributes']
+                                        ['definitions'] ??
+                                    {};
                                 details.forEach((value) {
                                   examples += value['example'];
                                 });
-                                message = 'Example: ${examples[0]}'; // ADD index's later
-                              } on RangeError { // ! No example available
-                                final String? firstDef = currentWord['attributes']['definitions'].first['definition'];
+                                message =
+                                    'Example: ${examples[0]}'; // ADD index's later
+                              } on RangeError {
+                                // ! No example available
+                                final String? firstDef =
+                                    currentWord['attributes']['definitions']
+                                        .first['definition'];
                                 if (firstDef == null) {
                                   message = 'No hint available';
                                 } else {
                                   message = 'Def: $firstDef';
                                 }
                               }
-                              messageOverlay(
-                                context, 
-                                message, 
-                                duration: Duration(seconds: 5), 
-                                color: Color.fromARGB(255, 30, 30, 30),
-                                content: Column(
-                                  children: [
-                                    MWTaggedText(capitalise(message), style: TextStyle(fontWeight: FontWeight.w400, fontSize: 16),),
-                                    Wrap(
-                                      spacing: 8,
-                                      children: (currentWord['attributes']['synonyms'] ?? {}).entries
-                                        .where((synonym) => synonym.key.toLowerCase() != currentWord['word'].toLowerCase())
-                                        .map<Widget>(
-                                          (synonym) => Chip(
-                                            label: MWTaggedText(
-                                              capitalise(synonym.key),
-                                              style: const TextStyle(fontSize: 16),
-                                            ),
-                                            backgroundColor: const Color.fromARGB(255, 19, 54, 79),
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                            side: BorderSide.none,
-                                          ),
-                                        ).toList(),
-                                    ),
-                                  ],
-                                )
-                              );
+                              messageOverlay(context, message,
+                                  duration: Duration(seconds: 5),
+                                  color: Color.fromARGB(255, 30, 30, 30),
+                                  content: Column(
+                                    children: [
+                                      MWTaggedText(
+                                        capitalise(message),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 16),
+                                      ),
+                                      Wrap(
+                                        spacing: 8,
+                                        children: (currentWord['attributes']
+                                                    ['synonyms'] ??
+                                                {})
+                                            .entries
+                                            .where((synonym) =>
+                                                synonym.key.toLowerCase() !=
+                                                currentWord['word']
+                                                    .toLowerCase())
+                                            .map<Widget>(
+                                              (synonym) => Chip(
+                                                label: MWTaggedText(
+                                                  capitalise(synonym.key),
+                                                  style: const TextStyle(
+                                                      fontSize: 16),
+                                                ),
+                                                backgroundColor:
+                                                    const Color.fromARGB(
+                                                        255, 19, 54, 79),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 6),
+                                                side: BorderSide.none,
+                                              ),
+                                            )
+                                            .toList(),
+                                      ),
+                                    ],
+                                  ));
                             },
                           ),
                           const Spacer(),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
-                              '${maxQuestions == null ? questionsRight : _currentIndex+1} / ${maxQuestions ?? questionsDone}',
+                              '${maxQuestions == null ? questionsRight : _currentIndex + 1} / ${maxQuestions ?? questionsDone}',
                               style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.white,
                               ),
                             ),
                           ),
-                          if (_currentIndex < words.length - 1 || maxQuestions != null)
+                          if (_currentIndex < words.length - 1 ||
+                              maxQuestions != null)
                             IconButton(
                               icon: const Icon(Icons.arrow_forward),
                               onPressed: () {
-                                if (_currentIndex == words.length-1) {
+                                if (_currentIndex == words.length - 1) {
                                   Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => QuizCompletionPage(
-                                          score: questionsRight,
-                                          totalQuestions: maxQuestions ?? questionsDone,
-                                          onRetry: (context) {
-                                            Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => QuizCompletionPage(
+                                        score: questionsRight,
+                                        totalQuestions:
+                                            maxQuestions ?? questionsDone,
+                                        onRetry: (context) {
+                                          Navigator.push(
                                               context,
-                                              MaterialPageRoute(builder: (context) => Quizzes(questions: maxQuestions,))
-                                            );
-                                          },
-                                          onHome: (context) {
-                                            Navigator.pushNamedAndRemoveUntil(
-                                              context,
-                                              '/home',
-                                              (Route<dynamic> route) => false,
-                                            );
-                                          },
-                                        ),
+                                              MaterialPageRoute(
+                                                  builder: (context) => Quizzes(
+                                                        questions: maxQuestions,
+                                                      )));
+                                        },
+                                        onHome: (context) {
+                                          Navigator.pushNamedAndRemoveUntil(
+                                            context,
+                                            '/home',
+                                            (Route<dynamic> route) => false,
+                                          );
+                                        },
                                       ),
-                                    );
-                                } else{
+                                    ),
+                                  );
+                                } else {
                                   setState(() {
                                     _currentIndex++;
                                   });
                                   entryController.clear();
                                   questionsDone++; // up counter in the top right
                                   if (context.mounted) {
-                                    showWordDetailsOverlay(currentWord['word'], currentWord['attributes']['partOfSpeech'], context).then((_){
-                                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    showWordDetailsOverlay(
+                                            currentWord['word'],
+                                            currentWord['attributes']
+                                                ['partOfSpeech'],
+                                            context)
+                                        .then((_) {
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) {
                                         _entryFocusNode.requestFocus();
                                       });
                                     });
                                   }
-                                  ref.read(inputDataProvider.notifier).addInputEntry(
-                                    currentWord['word'], 
-                                    currentWord['attributes']['partOfSpeech'], 
-                                    {
-                                      'skipped': true,
-                                      'date': DateTime.now().toString(),
-                                    }
-                                  );
+                                  ref
+                                      .read(inputDataProvider.notifier)
+                                      .addInputEntry(
+                                          currentWord['word'],
+                                          currentWord['attributes']
+                                              ['partOfSpeech'],
+                                          {
+                                        'skipped': true,
+                                        'date': DateTime.now().toString(),
+                                      });
                                   ref.invalidate(futureInputDataProvider);
                                 }
                               },
@@ -243,7 +285,12 @@ class QuizzesState extends ConsumerState<Quizzes> {
                   ),
                   Center(
                     heightFactor: .4,
-                    child: Center(child: AnimatedTick(key: crossKey, color: Colors.red, icon: Icons.close,)),
+                    child: Center(
+                        child: AnimatedTick(
+                      key: crossKey,
+                      color: Colors.red,
+                      icon: Icons.close,
+                    )),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -279,10 +326,17 @@ class QuizzesState extends ConsumerState<Quizzes> {
                             ),
                             onSubmitted: (value) async {
                               value = value.trim();
-                              if (value.toLowerCase() == currentWord['word'].toLowerCase()) return; // ADD error message for this
+                              if (value.toLowerCase() ==
+                                  currentWord['word'].toLowerCase()) {
+                                return; // ADD error message for this
+                              }
 
-                              bool? correct = await checkDefinition(currentWord['word'], value, currentWord['attributes']['partOfSpeech'], context); 
-                              // bool correct = true;                     
+                              bool? correct = await checkDefinition(
+                                  currentWord['word'],
+                                  value,
+                                  currentWord['attributes']['partOfSpeech'],
+                                  context);
+                              // bool correct = true;
                               if (correct == null) return;
 
                               if (correct) {
@@ -292,8 +346,14 @@ class QuizzesState extends ConsumerState<Quizzes> {
                               } else {
                                 crossKey.currentState?.showTick();
                                 if (context.mounted) {
-                                  showWordDetailsOverlay(currentWord['word'],  currentWord['attributes']['partOfSpeech'], context).then((_){
-                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  showWordDetailsOverlay(
+                                          currentWord['word'],
+                                          currentWord['attributes']
+                                              ['partOfSpeech'],
+                                          context)
+                                      .then((_) {
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
                                       _entryFocusNode.requestFocus();
                                     });
                                   });
@@ -303,9 +363,11 @@ class QuizzesState extends ConsumerState<Quizzes> {
                               removeNotif('wordReminder');
                               scheduleQuizNotification(ref);
                               questionsDone++;
-                              ref.read(inputDataProvider.notifier).addInputEntry(
+                              ref
+                                  .read(inputDataProvider.notifier)
+                                  .addInputEntry(
                                 currentWord['word'],
-                                currentWord['attributes']['partOfSpeech'], 
+                                currentWord['attributes']['partOfSpeech'],
                                 {
                                   'guess': value,
                                   'correct': correct,
@@ -313,24 +375,30 @@ class QuizzesState extends ConsumerState<Quizzes> {
                                 },
                               );
                               ref.invalidate(futureInputDataProvider);
-                              if (_currentIndex < words.length - 1 || (maxQuestions != null &&  _currentIndex < ((maxQuestions as int) - 1))) {
+                              if (_currentIndex < words.length - 1 ||
+                                  (maxQuestions != null &&
+                                      _currentIndex <
+                                          ((maxQuestions as int) - 1))) {
                                 setState(() {
                                   _currentIndex++;
                                 });
                                 entryController.clear();
-                              }else{
-                                if (context.mounted){
+                              } else {
+                                if (context.mounted) {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) => QuizCompletionPage(
                                         score: questionsRight,
-                                        totalQuestions: maxQuestions ?? questionsDone,
+                                        totalQuestions:
+                                            maxQuestions ?? questionsDone,
                                         onRetry: (context) {
                                           Navigator.push(
-                                            context,
-                                            MaterialPageRoute(builder: (context) => Quizzes(questions: maxQuestions,))
-                                          );
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) => Quizzes(
+                                                        questions: maxQuestions,
+                                                      )));
                                         },
                                         onHome: (context) {
                                           Navigator.pushNamedAndRemoveUntil(
@@ -364,8 +432,14 @@ class QuizzesState extends ConsumerState<Quizzes> {
   List randomise(List<Map> data) {
     Map weightings = generateWeightings(data);
     data.sort((a, b) {
-      final aWeight = weightings['${a['word']} (${a['attributes']['partOfSpeech']})']?['weight'] ?? 1.0;
-      final bWeight = weightings['${b['word']} (${b['attributes']['partOfSpeech']})']?['weight'] ?? 1.0;
+      final aWeight =
+          weightings['${a['word']} (${a['attributes']['partOfSpeech']})']
+                  ?['weight'] ??
+              1.0;
+      final bWeight =
+          weightings['${b['word']} (${b['attributes']['partOfSpeech']})']
+                  ?['weight'] ??
+              1.0;
       return bWeight.compareTo(aWeight);
     });
     return data;
@@ -376,15 +450,18 @@ class QuizzesState extends ConsumerState<Quizzes> {
     Map<String, dynamic> weightings = {};
     final now = DateTime.now();
 
-    data.sort((a, b) => DateTime.parse(a['dateAdded']).compareTo(DateTime.parse(b['dateAdded'])));
+    data.sort((a, b) => DateTime.parse(a['dateAdded'])
+        .compareTo(DateTime.parse(b['dateAdded'])));
 
     for (var wordData in data) {
-      final key = '${wordData['word']} (${wordData['attributes']['partOfSpeech']})';
+      final key =
+          '${wordData['word']} (${wordData['attributes']['partOfSpeech']})';
       final inputs = wordData['attributes']['inputs'] ?? [];
 
       int checked = inputs.length;
       int right = inputs.where((e) => e['correct'] == true).length;
-      DateTime? lastChecked = checked > 0 ? DateTime.tryParse(inputs.last['date'] ?? '') : null;
+      DateTime? lastChecked =
+          checked > 0 ? DateTime.tryParse(inputs.last['date'] ?? '') : null;
       bool lastWasSkip = inputs.isNotEmpty && (inputs.last['skip'] == true);
       double pct = checked > 0 ? (right / checked) : 0.0;
 
@@ -413,20 +490,21 @@ class QuizzesState extends ConsumerState<Quizzes> {
       // Most important: new words
       if (checked == 0) {
         weight = 1.0;
-      } 
+      }
       // Treat skipped words as newly added if last skip was ≥ 12 hours ago
-      else if (lastWasSkip && lastChecked != null && now.difference(lastChecked).inHours >= 12) {
+      else if (lastWasSkip &&
+          lastChecked != null &&
+          now.difference(lastChecked).inHours >= 12) {
         weight = 1.0;
-      } 
-      else {
+      } else {
         // Scaled inverses for fewer checks and lower accuracy
         double invCheck = 1 - (checked / (maxChecked == 0 ? 1 : maxChecked));
         double invPct = 1 - (pct / (maxPct == 0 ? 1 : maxPct));
 
         // Recency factor (0.0–0.3 range): more recent → lower weight
-        double timeDecay = lastChecked != null ? 
-            (now.difference(lastChecked).inDays.clamp(0, 30) / 30) * 0.3 : 
-            0.3;
+        double timeDecay = lastChecked != null
+            ? (now.difference(lastChecked).inDays.clamp(0, 30) / 30) * 0.3
+            : 0.3;
 
         weight = (invCheck * 0.4) + (invPct * 0.3) + timeDecay;
         weight = weight.clamp(0.0, 1.0);

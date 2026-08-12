@@ -40,27 +40,32 @@ Future<void> deleteKey(String word, {String path = 'words'}) async {
   debugPrint('Deleted word "$word" from box "$path"');
 }
 
-Future<void> writeKey(String key, dynamic data, {String path = 'words',}) async {
+Future<void> writeKey(
+  String key,
+  dynamic data, {
+  String path = 'words',
+}) async {
   final box = await Hive.openBox(path);
   box.put(key, data);
   debugPrint('Writing Key "$key" from box "$path"');
 }
 
-Future<dynamic> readKey(String key, {String path = 'words', dynamic defaultValue}) async {
+Future<dynamic> readKey(String key,
+    {String path = 'words', dynamic defaultValue}) async {
   final box = await Hive.openBox(path);
   return box.get(key, defaultValue: defaultValue);
 }
 
-Future<List?> resetData(BuildContext? context, WidgetRef ref, {String? path}) async {
+Future<List?> resetData(BuildContext? context, WidgetRef ref,
+    {String? path}) async {
   List? choices;
-  if (path != null){
+  if (path != null) {
     choices = [path];
   } else {
     choices = await getChoices(context, 'Data to Reset');
   }
   if (choices == null || choices.isEmpty) return null;
   if (context != null && context.mounted) {
-    // Add confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -88,45 +93,42 @@ Future<List?> resetData(BuildContext? context, WidgetRef ref, {String? path}) as
     'settings': futureSettingsDataProvider,
     'archivedWords': archivedWordsDataProvider,
   };
-  for (String choice in choices){
+  for (String choice in choices) {
     final box = await Hive.openBox(choice);
     await box.clear();
-    if (refKeys.containsKey(choice)){
+    if (refKeys.containsKey(choice)) {
       try {
         final provider = refKeys[choice];
         ref.invalidate(provider);
-      } catch (e){
+      } catch (e) {
         debugPrint(e.toString());
       }
-      
     }
   }
   return choices;
 }
 
-Future<Set> gatherTags() async{
+Future<Set> gatherTags() async {
   final box = await readData();
 
   Set allTags = box.values
-    .expand((w) => w['tags'] ?? [])
-    .toSet(); // Collect all unique tags from all words
+      .expand((w) => w['tags'] ?? [])
+      .toSet(); // Collect all unique tags from all words
   return allTags;
 }
 
 Future<void> exportJson(BuildContext context) async {
   LoadingOverlay loadingOverlay = LoadingOverlay();
   try {
-
     List? exportChoices = await getChoices(context, 'Data to Export');
     if (context.mounted) loadingOverlay.showLoadingOverlay(context);
     Map data = {};
     if (exportChoices == null) throw 'No choices made for export';
-    for (String choice in exportChoices){
+    for (String choice in exportChoices) {
       final box = await Hive.openBox(choice);
       final boxData = Map<String, dynamic>.from(box.toMap());
       data[choice] = boxData;
     }
-
 
     final directory = await getApplicationDocumentsDirectory();
     final path = '${directory.path}/export.json';
@@ -145,7 +147,6 @@ Future<void> exportJson(BuildContext context) async {
           text: 'Exported data from Wordini',
         ),
       );
-
     } else {
       debugPrint('Error: Exported JSON file does not exist');
     }
@@ -154,7 +155,8 @@ Future<void> exportJson(BuildContext context) async {
   }
   loadingOverlay.removeLoadingOverlay();
 }
-Future<List?> getChoices(context, String dialogueTitle) async{
+
+Future<List?> getChoices(context, String dialogueTitle) async {
   final List? choices = await showDialog(
     context: context,
     builder: (context) {
@@ -192,7 +194,10 @@ Future<List?> getChoices(context, String dialogueTitle) async{
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(options.entries.where((entry) => entry.value).map((entry)=> entry.key).toList()),
+                onPressed: () => Navigator.of(context).pop(options.entries
+                    .where((entry) => entry.value)
+                    .map((entry) => entry.key)
+                    .toList()),
                 child: const Text('OK!'),
               ),
             ],
@@ -203,6 +208,7 @@ Future<List?> getChoices(context, String dialogueTitle) async{
   );
   return choices;
 }
+
 Future<void> importData(BuildContext context) async {
   try {
     final result = await _pickJsonFile();
@@ -216,11 +222,12 @@ Future<void> importData(BuildContext context) async {
       if (context.mounted) _showErrorDialog(context, "Invalid JSON file.");
       return;
     }
-    for (String key in jsonData.keys){
+    for (String key in jsonData.keys) {
       await writeData(jsonData[key], append: true, path: key);
     }
 
-    if (!context.mounted) return; // resolves build_context_synchronously warning
+    if (!context.mounted)
+      return; // resolves build_context_synchronously warning
     _showSuccessDialog(context);
 
     debugPrint("Parsed JSON data: $jsonData");
@@ -304,8 +311,9 @@ Future<void> getUserPermissions() async {
           .collection('User-Permissions')
           .doc(user.uid)
           .get();
-      
-      permissions = doc.exists ? doc.data() as Map<String, dynamic> : defaultPermissions;
+
+      permissions =
+          doc.exists ? doc.data() as Map<String, dynamic> : defaultPermissions;
     } else {
       permissions = defaultPermissions;
     }

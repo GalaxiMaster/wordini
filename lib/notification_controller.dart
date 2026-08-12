@@ -12,15 +12,15 @@ Future<void> initializeNotifications({bool? askPermission}) async {
   bool allowNotifications = await Permission.notification.isGranted;
   if (await Permission.notification.isDenied) {
     final prefs = await SharedPreferences.getInstance();
-    if (askPermission == null){
+    if (askPermission == null) {
       final bool? askedNotifsBefore = prefs.getBool('askedNotifsBefore');
-      if (!(askedNotifsBefore ?? false)){
+      if (!(askedNotifsBefore ?? false)) {
         askPermission = true;
         prefs.setBool('askedNotifsBefore', true);
       }
     }
   }
-  if ((askPermission ?? false)){
+  if ((askPermission ?? false)) {
     allowNotifications = (await Permission.notification.request()).isGranted;
   }
   if (!allowNotifications) return;
@@ -42,11 +42,10 @@ Future<void> initializeNotifications({bool? askPermission}) async {
     iOS: initializationSettingsIOS,
   );
 
-  // Initialize the plugin
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
     onDidReceiveNotificationResponse: (NotificationResponse response) {
-      // Handle notification tap
+      // Handle tap
       debugPrint('Notification clicked: ${response.payload}');
       if ((response.payload?.split('-') ?? []).length == 2) {
         if (response.payload!.split('-')[0] == 'wordReminder') {
@@ -56,7 +55,7 @@ Future<void> initializeNotifications({bool? askPermission}) async {
         }
       } else if (response.payload == 'wordReminder') {
         navigatorKey.currentState?.pushNamed(
-          '/testing', // Your route name
+          '/testing', // route name
           // arguments: word,
         );
       }
@@ -64,28 +63,31 @@ Future<void> initializeNotifications({bool? askPermission}) async {
   );
 }
 
-void turnNotificaitonsOff() async{
+void turnNotificaitonsOff() async {
   final currentNotifs = await Hive.openBox<int>('active-notifications');
-  for (String notif in currentNotifs.keys){
+  for (String notif in currentNotifs.keys) {
     removeNotif(notif);
   }
 }
 
-// In notification_controller.dart
 
 void scheduleQuizNotification(WidgetRef ref, {String? word}) async {
-  bool notifsOn = ref.read(notificationSettingsProvider.notifier).getValue('Quiz Reminders');
+  bool notifsOn = ref
+      .read(notificationSettingsProvider.notifier)
+      .getValue('Quiz Reminders');
   if (!notifsOn) return;
 
   final currentNotifs = await Hive.openBox<int>('active-notifications');
   if (currentNotifs.containsKey('wordReminder')) {
     removeNotif('wordReminder');
-    debugPrint('Notification already scheduled for word reminder...rescheduling notif');
+    debugPrint(
+        'Notification already scheduled for word reminder...rescheduling notif');
   }
 
-  // Call the updated function
   scheduleNotification(
-    title: word == null ? 'Time for your quiz!' : 'Do you remember what "$word" means?',
+    title: word == null
+        ? 'Time for your quiz!'
+        : 'Do you remember what "$word" means?',
     description: 'Your words are waiting for you.',
     duration: const Duration(days: 2),
     notificationType: NotificationType.wordReminder,
@@ -99,27 +101,28 @@ Future<void> showInstantNotification({
   required AndroidNotificationDetails androidPlatformChannelSpecifics,
   required String payload,
 }) async {
-
-  NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+  NotificationDetails platformChannelSpecifics =
+      NotificationDetails(android: androidPlatformChannelSpecifics);
 
   int id = await NotificationIdManager.getNextId();
 
-  await flutterLocalNotificationsPlugin.show( // !here
-    id, // Notification ID
-    title, // Notification title
-    description, // Notification body
+  await flutterLocalNotificationsPlugin.show(
+    // !here
+    id,
+    title,
+    description,
     platformChannelSpecifics,
-    payload: payload, // Data payload
+    payload: payload,
   );
 }
 
-// In notification_controller.dart
 
 Future<void> scheduleNotification({
   required String title,
   required String description,
   required Duration duration,
-  required NotificationType notificationType, // <-- Use your NotificationType class
+  required NotificationType
+  notificationType,
   required String payload,
 }) async {
   // The Android-specific permission request is not needed here for iOS.
@@ -138,8 +141,8 @@ Future<void> scheduleNotification({
     title,
     description,
     tz.TZDateTime.now(tz.local).add(duration),
-    platformChannelSpecifics, // <-- This now contains iOS details!
-    androidScheduleMode:  AndroidScheduleMode.inexactAllowWhileIdle,
+    platformChannelSpecifics, 
+    androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     payload: payload,
   );
 
@@ -169,12 +172,10 @@ void removeNotif(String key) async {
 }
 
 
-// In notification_controller.dart
-
 class NotificationType {
   final String id;
   final AndroidNotificationDetails android;
-  final DarwinNotificationDetails iOS; // <-- Add this for iOS
+  final DarwinNotificationDetails iOS;
 
   const NotificationType._(this.id, this.android, this.iOS);
 
@@ -200,7 +201,6 @@ class NotificationType {
 class NotificationIdManager {
   static const String _key = 'notification_id_counter';
 
-  /// Get the next available notification ID
   static Future<int> getNextId() async {
     final prefs = await SharedPreferences.getInstance();
     int currentId = prefs.getInt(_key) ?? 0;
@@ -209,7 +209,6 @@ class NotificationIdManager {
     return nextId;
   }
 
-  /// Optionally reset the counter
   static Future<void> resetCounter() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_key, 0);

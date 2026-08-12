@@ -38,7 +38,8 @@ class EncryptionService {
   }
 
   /// Writes a key-value pair to secure storage.
-  Future<void> writeToSecureStorage({required String key, required String value}) async {
+  Future<void> writeToSecureStorage(
+      {required String key, required String value}) async {
     await _storage.write(key: key, value: value);
   }
 

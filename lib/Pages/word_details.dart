@@ -58,8 +58,9 @@ class WordDetailsState extends ConsumerState<WordDetails> {
       for (var speechPartKey in entries.keys) {
         final speechPartData = entries[speechPartKey] as Map;
         if (speechPartData.containsKey('definitions')) {
-          if (speechPartData['definitions'] is List){
-            speechPartData['definitions'] = organizeDefinitions(speechPartData['definitions']);
+          if (speechPartData['definitions'] is List) {
+            speechPartData['definitions'] =
+                organizeDefinitions(speechPartData['definitions']);
           }
         }
       }
@@ -72,11 +73,12 @@ class WordDetailsState extends ConsumerState<WordDetails> {
           : 0,
     );
     currentPage = _controller.initialPage.toDouble();
-    _controller.addListener(() => setState(() => currentPage = _controller.page ?? 0));
+    _controller
+        .addListener(() => setState(() => currentPage = _controller.page ?? 0));
     if (widget.editModeState) {
       editMode = widget.editModeState;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (widget.inputs != null && widget.inputs!.isNotEmpty){
+        if (widget.inputs != null && widget.inputs!.isNotEmpty) {
           if (mounted) _addSpeechPart(inputs: widget.inputs ?? []);
         }
       });
@@ -206,12 +208,16 @@ class WordDetailsState extends ConsumerState<WordDetails> {
             ),
             ElevatedButton(
               onPressed: () {
-                final speechPart = speechPartController.text.trim().toLowerCase();
-                if (speechPart.isNotEmpty && !wordState['entries'].containsKey(speechPart)) {
+                final speechPart =
+                    speechPartController.text.trim().toLowerCase();
+                if (speechPart.isNotEmpty &&
+                    !wordState['entries'].containsKey(speechPart)) {
                   setState(() {
                     wordState['entries'][speechPart] = {
                       'partOfSpeech': speechPart,
-                      'selected': (wordState['entries']?.length ?? 0) > 0 ? false : true,
+                      'selected': (wordState['entries']?.length ?? 0) > 0
+                          ? false
+                          : true,
                       'definitions': definitions,
                       'synonyms': {},
                       'etymology': '',
@@ -247,7 +253,8 @@ class WordDetailsState extends ConsumerState<WordDetails> {
     List<TextEditingController> exampleControllers = [
       for (var ex in initialExamples) TextEditingController(text: ex)
     ];
-    if (exampleControllers.isEmpty) exampleControllers.add(TextEditingController());
+    if (exampleControllers.isEmpty)
+      exampleControllers.add(TextEditingController());
 
     showDialog(
       context: context,
@@ -271,33 +278,36 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ...List.generate(exampleControllers.length, (i) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: exampleControllers[i],
-                            maxLines: 2,
-                            decoration: InputDecoration(
-                              labelText: 'Example ${i + 1}',
-                              border: const OutlineInputBorder(),
+                  ...List.generate(
+                      exampleControllers.length,
+                      (i) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: exampleControllers[i],
+                                    maxLines: 2,
+                                    decoration: InputDecoration(
+                                      labelText: 'Example ${i + 1}',
+                                      border: const OutlineInputBorder(),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.remove_circle,
+                                      color: Colors.red),
+                                  onPressed: exampleControllers.length > 1
+                                      ? () {
+                                          setState(() {
+                                            exampleControllers.removeAt(i);
+                                          });
+                                        }
+                                      : null,
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle, color: Colors.red),
-                          onPressed: exampleControllers.length > 1
-                              ? () {
-                                  setState(() {
-                                    exampleControllers.removeAt(i);
-                                  });
-                                }
-                              : null,
-                        ),
-                      ],
-                    ),
-                  )),
+                          )),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
@@ -339,7 +349,8 @@ class WordDetailsState extends ConsumerState<WordDetails> {
     );
   }
 
-  void _addDefinition(String speechPartKey, {Map? existingData, List<dynamic>? path}) {
+  void _addDefinition(String speechPartKey,
+      {Map? existingData, List<dynamic>? path}) {
     _showDefinitionDialog(
       speechPartKey: speechPartKey,
       existingData: existingData,
@@ -361,7 +372,9 @@ class WordDetailsState extends ConsumerState<WordDetails> {
             final Map organisedDefinitions = speechPartData['definitions'];
             final int newKey = organisedDefinitions.isEmpty
                 ? 1
-                : (organisedDefinitions.keys.cast<int>().toList()..sort()).last + 1;
+                : (organisedDefinitions.keys.cast<int>().toList()..sort())
+                        .last +
+                    1;
             final List<String> sn;
             if (organisedDefinitions.isNotEmpty) {
               List keys = organisedDefinitions.keys.toList();
@@ -417,7 +430,8 @@ class WordDetailsState extends ConsumerState<WordDetails> {
           }
           List sn = path.sublist(3, path.length);
           try {
-            sn[1] = letterToIndex(sn[1]) + 1; // convert letter in path to sn index
+            sn[1] =
+                letterToIndex(sn[1]) + 1; // convert letter in path to sn index
           } catch (e) {
             debugPrint('Second index not available...');
           }
@@ -744,12 +758,16 @@ class WordDetailsState extends ConsumerState<WordDetails> {
       for (var speechPartKey in entries.keys) {
         final speechPartData = entries[speechPartKey];
         if (speechPartData.containsKey('definitions')) {
-          speechPartData['definitions'] = _deconstructAndRenumber(speechPartData['definitions']);
-          debugPrint('Writing definitions format: ${speechPartData['definitions'].runtimeType}');
+          speechPartData['definitions'] =
+              _deconstructAndRenumber(speechPartData['definitions']);
+          debugPrint(
+              'Writing definitions format: ${speechPartData['definitions'].runtimeType}');
         }
       }
-      
-      ref.read(wordDataProvider.notifier).updateValue(wordState['word'], wordToSave);
+
+      ref
+          .read(wordDataProvider.notifier)
+          .updateValue(wordState['word'], wordToSave);
     }
   }
 
@@ -763,7 +781,8 @@ class WordDetailsState extends ConsumerState<WordDetails> {
 
   @override
   Widget build(BuildContext context) {
-    inputs = ref.watch(inputDataProvider)[widget.word['word']] ?? {}; // TODO improve this
+    inputs = ref.watch(inputDataProvider)[widget.word['word']] ??
+        {}; // TODO improve this
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -833,7 +852,8 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                       tag,
                                       style: const TextStyle(fontSize: 16),
                                     ),
-                                    backgroundColor: const Color.fromARGB(255, 19, 54, 79),
+                                    backgroundColor:
+                                        const Color.fromARGB(255, 19, 54, 79),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 12,
                                       vertical: 6,
@@ -848,10 +868,12 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                               if (editMode)
                                 IconButton(
                                   style: ButtonStyle(
-                                    backgroundColor: WidgetStateProperty.all<Color>(
+                                    backgroundColor:
+                                        WidgetStateProperty.all<Color>(
                                       const Color.fromARGB(255, 19, 54, 79),
                                     ),
-                                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                                    shape: WidgetStateProperty.all<
+                                        RoundedRectangleBorder>(
                                       RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
@@ -957,7 +979,10 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                             speechType.value['selected']),
                                         onPressed: () {
                                           setState(() {
-                                            if (speechType.value['selected'] == null) speechType.value['selected'] = false;
+                                            if (speechType.value['selected'] ==
+                                                null)
+                                              speechType.value['selected'] =
+                                                  false;
                                             speechType.value['selected'] =
                                                 !speechType.value['selected'];
                                             saveWord();
@@ -967,9 +992,11 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                           speechType.value?['selected'] ?? false
                                               ? Icons.check
                                               : Icons.close,
-                                          color: speechType.value?['selected']?? false
-                                              ? Colors.green
-                                              : Colors.red,
+                                          color:
+                                              speechType.value?['selected'] ??
+                                                      false
+                                                  ? Colors.green
+                                                  : Colors.red,
                                         ),
                                       ),
                                     ),
@@ -1000,13 +1027,18 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                     });
                                   },
                                   children: [
-                                    for (int i = 0;i < organisedDefinitionEntries.length; i++)
+                                    for (int i = 0;
+                                        i < organisedDefinitionEntries.length;
+                                        i++)
                                       Column(
-                                        key: ValueKey("definition_${organisedDefinitionEntries[i].key}"),
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        key: ValueKey(
+                                            "definition_${organisedDefinitionEntries[i].key}"),
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
-                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
                                             children: [
                                               ReorderableDragStartListener(
                                                 index: i,
@@ -1016,7 +1048,8 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                                     top: 2.0,
                                                     bottom: 2.0,
                                                   ),
-                                                  child: Icon(Icons.drag_indicator),
+                                                  child: Icon(
+                                                      Icons.drag_indicator),
                                                 ),
                                               ),
                                               MWTaggedText(
@@ -1026,50 +1059,68 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                                   fontSize: 16,
                                                 ),
                                               ),
-                                              if (organisedDefinitionEntries[i].value.containsKey('definition'))
-                                              Expanded(
-                                                child: _buildDefinitionLayer(
-                                                  organisedDefinitionEntries[i].value,
-                                                  [
-                                                    'entries',
-                                                    speechType.key,
-                                                    'definitions',
-                                                    organisedDefinitionEntries[i].key,
-                                                  ],
-                                                  isEditMode: true,
+                                              if (organisedDefinitionEntries[i]
+                                                  .value
+                                                  .containsKey('definition'))
+                                                Expanded(
+                                                  child: _buildDefinitionLayer(
+                                                    organisedDefinitionEntries[
+                                                            i]
+                                                        .value,
+                                                    [
+                                                      'entries',
+                                                      speechType.key,
+                                                      'definitions',
+                                                      organisedDefinitionEntries[
+                                                              i]
+                                                          .key,
+                                                    ],
+                                                    isEditMode: true,
+                                                  ),
                                                 ),
-                                              ),
-                                              if (!organisedDefinitionEntries[i].value.containsKey('definition'))...[
+                                              if (!organisedDefinitionEntries[i]
+                                                  .value
+                                                  .containsKey(
+                                                      'definition')) ...[
                                                 const Spacer(),
                                                 IconButton(
-                                                  onPressed: () => _addSubDefinition([
+                                                  onPressed: () =>
+                                                      _addSubDefinition([
                                                     'entries',
                                                     speechType.key,
                                                     'definitions',
-                                                    organisedDefinitionEntries[i].key,
+                                                    organisedDefinitionEntries[
+                                                            i]
+                                                        .key,
                                                   ]),
                                                   icon: const Icon(Icons.add),
                                                   tooltip: "Add Sub-definition",
                                                   padding: EdgeInsets.zero,
-                                                  constraints: const BoxConstraints(),
+                                                  constraints:
+                                                      const BoxConstraints(),
                                                 ),
                                               ]
                                             ],
                                           ),
-                                          if (!organisedDefinitionEntries[i].value.containsKey('definition'))
-                                          Padding(
-                                            padding: const EdgeInsets.only(left: 16.0),
-                                            child: _buildDefinitionLayer(
-                                              organisedDefinitionEntries[i].value,
-                                              [
-                                                'entries',
-                                                speechType.key,
-                                                'definitions',
-                                                organisedDefinitionEntries[i].key,
-                                              ],
-                                              isEditMode: true,
+                                          if (!organisedDefinitionEntries[i]
+                                              .value
+                                              .containsKey('definition'))
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 16.0),
+                                              child: _buildDefinitionLayer(
+                                                organisedDefinitionEntries[i]
+                                                    .value,
+                                                [
+                                                  'entries',
+                                                  speechType.key,
+                                                  'definitions',
+                                                  organisedDefinitionEntries[i]
+                                                      .key,
+                                                ],
+                                                isEditMode: true,
+                                              ),
                                             ),
-                                          ),
                                         ],
                                       ),
                                   ],
@@ -1079,8 +1130,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                   children: organisedDefinitions.entries
                                       .map<Widget>((entry) {
                                     return Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 6),
+                                      padding: const EdgeInsets.only(bottom: 6),
                                       child: Row(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
@@ -1148,8 +1198,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                 const SizedBox(height: 8),
                                 Wrap(
                                   spacing: 8,
-                                  children: (speechType.value['synonyms'] ??
-                                          {})
+                                  children: (speechType.value['synonyms'] ?? {})
                                       .entries
                                       .where((synonym) =>
                                           synonym.key.toLowerCase() !=
@@ -1208,8 +1257,11 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                       .toList(),
                                 ),
                               ],
-                              if (((speechType.value['etymology']?.isNotEmpty ?? false) || editMode) &&
-                                  widget.activatedElements.contains('etymology')) ...[
+                              if (((speechType.value['etymology']?.isNotEmpty ??
+                                          false) ||
+                                      editMode) &&
+                                  widget.activatedElements
+                                      .contains('etymology')) ...[
                                 const Divider(),
                                 Row(
                                   children: [
@@ -1229,7 +1281,8 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                     if (editMode) ...[
                                       const Spacer(),
                                       IconButton(
-                                        onPressed: () => _editEtymology(speechType.value),
+                                        onPressed: () =>
+                                            _editEtymology(speechType.value),
                                         icon: const Icon(
                                           Icons.edit,
                                           color: Colors.amber,
@@ -1239,7 +1292,8 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                     ],
                                   ],
                                 ),
-                                if (speechType.value['etymology'] ?.isNotEmpty == true)
+                                if (speechType.value['etymology']?.isNotEmpty ==
+                                    true)
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 17,
@@ -1255,8 +1309,11 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                   ),
                                 const SizedBox(height: 10),
                               ],
-                              if (((speechType.value['quotes']?.isNotEmpty ?? false) ||editMode) &&
-                                  widget.activatedElements.contains('quotes')) ...[
+                              if (((speechType.value['quotes']?.isNotEmpty ??
+                                          false) ||
+                                      editMode) &&
+                                  widget.activatedElements
+                                      .contains('quotes')) ...[
                                 const Divider(),
                                 Row(
                                   children: [
@@ -1288,7 +1345,11 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                for (int i = 0; i < (speechType.value['quotes'] ?? []).length; i++) ...[
+                                for (int i = 0;
+                                    i <
+                                        (speechType.value['quotes'] ?? [])
+                                            .length;
+                                    i++) ...[
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 8.0,
@@ -1335,8 +1396,12 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                   ),
                                 ],
                               ],
-                              if (((inputs[speechType.value['partOfSpeech']]?.isNotEmpty ?? false) || editMode) &&
-                                  widget.activatedElements.contains('quizHistory')) ...[
+                              if (((inputs[speechType.value['partOfSpeech']]
+                                              ?.isNotEmpty ??
+                                          false) ||
+                                      editMode) &&
+                                  widget.activatedElements
+                                      .contains('quizHistory')) ...[
                                 const Divider(),
                                 Row(
                                   children: const [
@@ -1362,10 +1427,14 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                     horizontal: 10,
                                     vertical: 8,
                                   ),
-                                  itemCount: inputs[speechType.value['partOfSpeech']]?.length ?? 0,
+                                  itemCount:
+                                      inputs[speechType.value['partOfSpeech']]
+                                              ?.length ??
+                                          0,
                                   itemBuilder: (context, index) {
-                                    final Map entry = inputs[speechType
-                                        .value['partOfSpeech']][index];
+                                    final Map entry =
+                                        inputs[speechType.value['partOfSpeech']]
+                                            [index];
                                     if (!entry.containsKey('guess') ||
                                         entry['guess'] == null) {
                                       return Padding(
@@ -1374,14 +1443,18 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                         ),
                                         child: Container(
                                           decoration: BoxDecoration(
-                                            color: const Color.fromARGB(255, 156, 2, 2),
-                                            borderRadius: BorderRadius.circular(10),
+                                            color: const Color.fromARGB(
+                                                255, 156, 2, 2),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
                                           ),
                                           child: Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceEvenly,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
                                               children: [
                                                 const Text(
                                                   'SKIPPED',
@@ -1399,7 +1472,14 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                                 ),
                                                 if (editMode)
                                                   IconButton(
-                                                    onPressed: () =>  ref.read(inputDataProvider.notifier).removeEntry(widget.word['word'], speechType.value['partOfSpeech'], index),
+                                                    onPressed: () => ref
+                                                        .read(inputDataProvider
+                                                            .notifier)
+                                                        .removeEntry(
+                                                            widget.word['word'],
+                                                            speechType.value[
+                                                                'partOfSpeech'],
+                                                            index),
                                                     icon: const Icon(
                                                       Icons.close,
                                                       size: 20,
@@ -1417,8 +1497,10 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                       ),
                                       child: Container(
                                         decoration: BoxDecoration(
-                                          color: const Color.fromARGB(255, 19, 54, 79),
-                                          borderRadius:BorderRadius.circular(10),
+                                          color: const Color.fromARGB(
+                                              255, 19, 54, 79),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
                                         ),
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 12,
@@ -1451,7 +1533,14 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                                 ),
                                                 if (editMode)
                                                   IconButton(
-                                                    onPressed: () =>  ref.read(inputDataProvider.notifier).removeEntry(widget.word['word'], speechType.value['partOfSpeech'], index),
+                                                    onPressed: () => ref
+                                                        .read(inputDataProvider
+                                                            .notifier)
+                                                        .removeEntry(
+                                                            widget.word['word'],
+                                                            speechType.value[
+                                                                'partOfSpeech'],
+                                                            index),
                                                     icon: const Icon(
                                                       Icons.close,
                                                       size: 20,
@@ -1496,7 +1585,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                     ),
                   ),
                   onPressed: () {
-                    saveWord(save: true);                    
+                    saveWord(save: true);
                     Navigator.pop(context, true);
                   },
                   child: const Padding(
@@ -1518,147 +1607,166 @@ class WordDetailsState extends ConsumerState<WordDetails> {
   }
 
   Widget _buildDefinitionLayer(Map layer, List<dynamic> path,
-      {required bool isEditMode}) 
-    {
-    final parentLayer = path.sublist(0, path.length-1).fold(wordState, (current, key) => current[key]);
+      {required bool isEditMode}) {
+    final parentLayer = path
+        .sublist(0, path.length - 1)
+        .fold(wordState, (current, key) => current[key]);
 
     if (layer.containsKey('definition')) {
       Widget definitionTile = ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            MWTaggedText(
-              "${(layer['definition'] ?? '').replaceAll('\n', ' ')}",
-              style: const TextStyle(fontSize: 16),
-            ),
-            if (layer['example'] != null)
-              ...List<String>.from(layer['example']).map(
-                (example) => Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 8.0,
-                    horizontal: 8, // Only indent if nested
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(
-                          color: Colors.blue.shade300,
-                          width: 4,
+          contentPadding: EdgeInsets.zero,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              MWTaggedText(
+                "${(layer['definition'] ?? '').replaceAll('\n', ' ')}",
+                style: const TextStyle(fontSize: 16),
+              ),
+              if (layer['example'] != null)
+                ...List<String>.from(layer['example']).map(
+                  (example) => Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 8.0,
+                      horizontal: 8, // Only indent if nested
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          left: BorderSide(
+                            color: Colors.blue.shade300,
+                            width: 4,
+                          ),
                         ),
                       ),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 6,
+                        horizontal: 10,
+                      ),
+                      child: MWTaggedText(capitalise(example)),
                     ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: 6,
-                      horizontal: 10,
-                    ),
-                    child: MWTaggedText(capitalise(example)),
                   ),
                 ),
-              ),
-          ],
-        ),
-        trailing: editMode ? PopupMenuButton<String>(
-          icon: const Icon(
-            Icons.more_vert,
-            size: 18,
+            ],
           ),
-          tooltip: "More actions",
-          onSelected: (value) {
-            if (value == 'delete') { // TODO figure out method of deletion and rearrangement for types
-              setState(() {
-                if (parentLayer.length == 1){
-                  parentLayer.remove(path.last);
-                  if (parentLayer.isEmpty && path.length > 4){
-                    Map nextLayer = {};
-                    int i = 1;
-                    while (nextLayer.isEmpty){
-                      i++;
-                      if (nextLayer.containsKey('definitions')) break;
-                      nextLayer = path.sublist(0, path.length-i).fold(wordState, (current, key) => current[key]);
-                      int index = nextLayer.keys.toList().indexOf(path[path.length-i]);
-                      
-                      if (index != nextLayer.length-1){
-                        for (int j = index + 1; j < nextLayer.length; j++) {
-                          final key = nextLayer.keys.elementAt(j);
-                          final newKey = key is int ? key - 1 : String.fromCharCode(key.codeUnitAt(0) - 1);
-                          int keyIndex = nextLayer.keys.toList().indexOf(key);
-                          nextLayer[newKey] = nextLayer[key];
-                          if (keyIndex == nextLayer.keys.length-1){
-                            nextLayer.remove(key);
+          trailing: editMode
+              ? PopupMenuButton<String>(
+                  icon: const Icon(
+                    Icons.more_vert,
+                    size: 18,
+                  ),
+                  tooltip: "More actions",
+                  onSelected: (value) {
+                    if (value == 'delete') {
+                      // TODO figure out method of deletion and rearrangement for types
+                      setState(() {
+                        if (parentLayer.length == 1) {
+                          parentLayer.remove(path.last);
+                          if (parentLayer.isEmpty && path.length > 4) {
+                            Map nextLayer = {};
+                            int i = 1;
+                            while (nextLayer.isEmpty) {
+                              i++;
+                              if (nextLayer.containsKey('definitions')) break;
+                              nextLayer = path.sublist(0, path.length - i).fold(
+                                  wordState, (current, key) => current[key]);
+                              int index = nextLayer.keys
+                                  .toList()
+                                  .indexOf(path[path.length - i]);
+
+                              if (index != nextLayer.length - 1) {
+                                for (int j = index + 1;
+                                    j < nextLayer.length;
+                                    j++) {
+                                  final key = nextLayer.keys.elementAt(j);
+                                  final newKey = key is int
+                                      ? key - 1
+                                      : String.fromCharCode(
+                                          key.codeUnitAt(0) - 1);
+                                  int keyIndex =
+                                      nextLayer.keys.toList().indexOf(key);
+                                  nextLayer[newKey] = nextLayer[key];
+                                  if (keyIndex == nextLayer.keys.length - 1) {
+                                    nextLayer.remove(key);
+                                  }
+                                }
+                              } else {
+                                nextLayer.remove(path[path.length - i]);
+                              }
+                            }
                           }
+                        } else {
+                          int index =
+                              parentLayer.keys.toList().indexOf(path.last);
+                          if (index != parentLayer.length - 1) {
+                            for (int i = index + 1;
+                                i < parentLayer.length;
+                                i++) {
+                              final key = parentLayer.keys.elementAt(i);
+                              final newKey = key is int
+                                  ? key - 1
+                                  : String.fromCharCode(key.codeUnitAt(0) - 1);
+
+                              int keyIndex =
+                                  parentLayer.keys.toList().indexOf(key);
+                              parentLayer[newKey] = parentLayer[key];
+
+                              if (keyIndex == parentLayer.keys.length - 1) {
+                                parentLayer.remove(key);
+                              }
+                            }
+                          } else {
+                            parentLayer.remove(path.last);
+                            debugPrint('removed');
+                          }
+                          // cascading deletions
                         }
-                      } else{
-                        nextLayer.remove(path[path.length-i]);
-                      }
+                        saveWord();
+                      });
+                    } else if (value == 'edit') {
+                      _addDefinition(
+                        path[1], // speechPartKey
+                        existingData: layer,
+                        path: path,
+                      );
                     }
-                  }
-                } else{
-                  int index = parentLayer.keys.toList().indexOf(path.last);
-                  if (index != parentLayer.length-1){
-                    for (int i = index + 1; i < parentLayer.length; i++) {
-                      final key = parentLayer.keys.elementAt(i);
-                      final newKey = key is int ? key - 1 : String.fromCharCode(key.codeUnitAt(0) - 1);
-      
-                      int keyIndex = parentLayer.keys.toList().indexOf(key);                        
-                      parentLayer[newKey] = parentLayer[key];
-      
-                      if (keyIndex == parentLayer.keys.length-1){
-                        parentLayer.remove(key);
-                      }                      }
-                  } else{
-                    parentLayer.remove(path.last);
-                    debugPrint('removed');
-                  }
-                  // cascading deletions
-                }
-                saveWord();
-              });
-            }
-            else if (value == 'edit') {
-              _addDefinition(
-                path[1], // speechPartKey
-                existingData: layer,
-                path: path,
-              );
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.edit,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                  SizedBox(width: 8),
-                  Text('Edit'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.delete,
-                    size: 18,
-                    color: Colors.red,
-                  ),
-                  SizedBox(width: 8),
-                  Text('Delete'),
-                ],
-              ),
-            ),
-          ],
-        ) : null
-      );
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.edit,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 8),
+                          Text('Edit'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.delete,
+                            size: 18,
+                            color: Colors.red,
+                          ),
+                          SizedBox(width: 8),
+                          Text('Delete'),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : null);
       if (editMode) {
         return GestureDetector(
           onHorizontalDragEnd: (details) {
-            bool nesting = details.velocity.pixelsPerSecond.dx < 0 ? false : true;
+            bool nesting =
+                details.velocity.pixelsPerSecond.dx < 0 ? false : true;
             if (parentLayer.length > 1 && !nesting) return;
             setState(() {
               adjustNesting(
@@ -1685,7 +1793,8 @@ class WordDetailsState extends ConsumerState<WordDetails> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: entries.map<Widget>((entry) {
           final isNumeric = entry.key is int;
-          final String prefix = isNumeric ? "${entry.key}. " : "{b}${entry.key}){/b} ";
+          final String prefix =
+              isNumeric ? "${entry.key}. " : "{b}${entry.key}){/b} ";
           return Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 0, 4),
             child: Row(
@@ -1710,7 +1819,8 @@ class WordDetailsState extends ConsumerState<WordDetails> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       buildDefaultDragHandles: false,
-      onReorder: (oldIndex, newIndex) => _reorderSubDefinitions(path, oldIndex, newIndex),
+      onReorder: (oldIndex, newIndex) =>
+          _reorderSubDefinitions(path, oldIndex, newIndex),
       children: [
         for (int i = 0; i < entries.length; i++)
           Row(
@@ -1743,10 +1853,11 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                               : "{b}${entries[i].key}){/b} ",
                           style: const TextStyle(fontSize: 16),
                         ),
-                        if (!entries[i].value.containsKey('definition'))...[
+                        if (!entries[i].value.containsKey('definition')) ...[
                           const Spacer(),
                           IconButton(
-                            onPressed: () => _addSubDefinition([...path, entries[i].key]),
+                            onPressed: () =>
+                                _addSubDefinition([...path, entries[i].key]),
                             icon: const Icon(Icons.add),
                             tooltip: "Add Sub-definition",
                             padding: EdgeInsets.zero,
@@ -1769,21 +1880,20 @@ class WordDetailsState extends ConsumerState<WordDetails> {
     );
   }
 
-  bool adjustNesting({
-    required Map data,  // <int, dynamic>
-    required List fullPath,
-    required Map definition,
-    required bool nest
-    }) {
-
+  bool adjustNesting(
+      {required Map data, // <int, dynamic>
+      required List fullPath,
+      required Map definition,
+      required bool nest}) {
     List path = fullPath.sublist(3, fullPath.length);
-    if (nest){ // ! case for nesting a definition
-      if (path.length == 3){
+    if (nest) {
+      // ! case for nesting a definition
+      if (path.length == 3) {
         return false;
-      }else {
+      } else {
         int index = path.length;
-        
-        switch (index){
+
+        switch (index) {
           case 1:
             // from 1 -> a
             data[path[0]] = {
@@ -1791,18 +1901,18 @@ class WordDetailsState extends ConsumerState<WordDetails> {
             };
           case 2:
             // from a -> 1
-            data[path[0]][path[1]] = {
-              1: definition
-            };
-          default: return false;
+            data[path[0]][path[1]] = {1: definition};
+          default:
+            return false;
         }
       }
-    }else{ // ! case for de-nesting a definition
-      if (path.length <= 1){
+    } else {
+      // ! case for de-nesting a definition
+      if (path.length <= 1) {
         return false;
-      } else{
+      } else {
         int index = path.length;
-        if (index == 3){
+        if (index == 3) {
           // from 1 -> a
           data[path[0]][path[1]] = definition;
         } else {

@@ -9,7 +9,6 @@ final wordDataFutureProvider = FutureProvider<Map>((ref) async {
 });
 
 class WordDataWriteableNotifier extends Notifier<Map> {
-
   @override
   Map build() {
     final asyncData = ref.watch(wordDataFutureProvider);
@@ -25,6 +24,7 @@ class WordDataWriteableNotifier extends Notifier<Map> {
     state = {...state, word: value};
     file.writeKey(word, value);
   }
+
   void removeKey(String word) {
     state = {...state}..remove(word);
     file.deleteKey(word);
@@ -36,23 +36,21 @@ final wordDataProvider = NotifierProvider<WordDataWriteableNotifier, Map>(WordDa
 final searchTermProvider = StateProvider<String>((ref) => '');
 
 final filtersProvider = StateProvider<Map>((ref) => {
-  'wordTypes': <String>{},
-  'wordTypeMode': 'any',
-  'selectedTags': <String>{},
-  'selectedTagsMode': 'any',
-  'sortBy': 'Alphabetical',
-  'sortOrder': 'Ascending'
-});
+      'wordTypes': <String>{},
+      'wordTypeMode': 'any',
+      'selectedTags': <String>{},
+      'selectedTagsMode': 'any',
+      'sortBy': 'Alphabetical',
+      'sortOrder': 'Ascending'
+    });
 
 final showBarProvider = StateProvider<bool>((ref) => false);
-
 
 final futureSettingsDataProvider = FutureProvider<Map>((ref) async {
   return file.readData(path: 'settings');
 });
 
 class SettingsDataNotifier extends Notifier<Map> {
-
   @override
   Map build() {
     final asyncData = ref.watch(futureSettingsDataProvider);
@@ -91,7 +89,7 @@ class ArchivedWordsNotifier extends Notifier<Map> {
     state = {...state, key: value};
     file.writeKey(key, value, path: 'archivedWords');
   }
-  
+
   void removeKey(String key) {
     state = {...state}..remove(key);
     file.deleteKey(key, path: 'archivedWords');
@@ -99,7 +97,6 @@ class ArchivedWordsNotifier extends Notifier<Map> {
 }
 
 final archivedWordsProvider = NotifierProvider<ArchivedWordsNotifier, Map>(ArchivedWordsNotifier.new);
-
 
 class ThemeNotifier extends Notifier<Color> {
   @override
@@ -149,14 +146,15 @@ class NotificationSettings extends AsyncNotifier<Map<String, bool>> {
     final oldState = await future;
     final newState = {...oldState, key: value};
     state = AsyncData(newState);
-    
+
     try {
       await file.writeKey(key, value, path: 'notificationSettings');
     } catch (e, st) {
       state = AsyncError(e, st);
     }
   }
-  bool getValue(key){
+
+  bool getValue(key) {
     return state.value?[key] ?? false;
   }
 }

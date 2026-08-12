@@ -14,7 +14,7 @@ class LoadingOverlay {
   final OverlayEntry _overlayEntry = OverlayEntry(
     builder: (context) => Positioned.fill(
       child: Material(
-        color: Colors.black.withValues(alpha: 255/2),
+        color: Colors.black.withValues(alpha: 255 / 2),
         child: Center(
           child: CircularProgressIndicator(),
         ),
@@ -34,6 +34,7 @@ class LoadingOverlay {
     _overlayEntry.remove();
     overlayOn = false;
   }
+
   void dispose() {
     if (overlayOn) {
       _overlayEntry.remove();
@@ -48,7 +49,7 @@ class LinearProgressBarLoadingOverlay {
   final StateProvider<int> varRef;
   final StateProvider<String> current;
   final int max;
- 
+
   final CancelToken? cancelToken;
   final VoidCallback? onCancel;
 
@@ -72,7 +73,7 @@ class LinearProgressBarLoadingOverlay {
       builder: (context) {
         return Positioned.fill(
           child: Material(
-            color: Colors.black.withValues(alpha:0.9),
+            color: Colors.black.withValues(alpha: 0.9),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -160,7 +161,10 @@ class LinearProgressBarLoadingOverlay {
   }
 }
 
-void messageOverlay(BuildContext context, String message, {Duration duration = const Duration(seconds: 2), Color color = Colors.red, Widget? content}) {
+void messageOverlay(BuildContext context, String message,
+    {Duration duration = const Duration(seconds: 2),
+    Color color = Colors.red,
+    Widget? content}) {
   var overlay = Overlay.of(context);
   late OverlayEntry overlayEntry;
   overlayEntry = OverlayEntry(
@@ -190,7 +194,7 @@ class _AnimatedErrorOverlay extends StatefulWidget {
     required this.duration,
     required this.color,
     this.content,
-    });
+  });
 
   @override
   State<_AnimatedErrorOverlay> createState() => _AnimatedErrorOverlayState();
@@ -199,7 +203,7 @@ class _AnimatedErrorOverlay extends StatefulWidget {
 class _AnimatedErrorOverlayState extends State<_AnimatedErrorOverlay>
     with SingleTickerProviderStateMixin {
   double _opacity = 0.0;
-  
+
   @override
   void initState() {
     super.initState();
@@ -262,7 +266,7 @@ class MWTaggedText extends StatelessWidget {
 
     void flushBuffer() {
       if (buffer.isNotEmpty) {
-        spans.add(TextSpan(text:buffer.toString(), style: currentStyle));
+        spans.add(TextSpan(text: buffer.toString(), style: currentStyle));
         buffer.clear();
       }
     }
@@ -313,7 +317,8 @@ class MWTaggedText extends StatelessWidget {
       case 'sc':
         return base.merge(const TextStyle(letterSpacing: 1.5));
       case 'sup':
-        return base.merge(const TextStyle(fontFeatures: [FontFeature.superscripts()]));
+        return base
+            .merge(const TextStyle(fontFeatures: [FontFeature.superscripts()]));
       case 'inf':
         return base.merge(const TextStyle(fontSize: 10));
       case 'bc':
@@ -322,10 +327,10 @@ class MWTaggedText extends StatelessWidget {
         return base;
     }
   }
+
   String parseMerriamWebsterTags(String input) {
-    final tagPattern = RegExp(
-      r'\{([^|{}]+)\|([^|{}]*)(?:\|([^|{}]*))?(?:\|([^|{}]*))?\}'
-    );
+    final tagPattern =
+        RegExp(r'\{([^|{}]+)\|([^|{}]*)(?:\|([^|{}]*))?(?:\|([^|{}]*))?\}');
     return input.replaceAllMapped(tagPattern, (match) {
       final type = match[1];
       final part1 = match[2];
@@ -442,12 +447,12 @@ class _AnimatedToggleSwitchState extends State<AnimatedToggleSwitch>
   void initState() {
     super.initState();
     selectedIndex = widget.initialIndex;
-    
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 250),
       vsync: this,
     );
-    
+
     _slideAnimation = Tween<double>(
       begin: selectedIndex.toDouble(),
       end: selectedIndex.toDouble(),
@@ -465,11 +470,11 @@ class _AnimatedToggleSwitchState extends State<AnimatedToggleSwitch>
 
   void _toggle() {
     final newIndex = (selectedIndex + 1) % widget.options.length;
-    
+
     setState(() {
       selectedIndex = newIndex;
     });
-    
+
     // Update animation target
     _slideAnimation = Tween<double>(
       begin: _slideAnimation.value,
@@ -478,7 +483,7 @@ class _AnimatedToggleSwitchState extends State<AnimatedToggleSwitch>
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
-    
+
     _animationController.forward(from: 0);
     widget.onToggle(newIndex);
   }
@@ -495,8 +500,9 @@ class _AnimatedToggleSwitchState extends State<AnimatedToggleSwitch>
         padding: const EdgeInsets.all(4),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final itemWidth = (constraints.maxWidth - 8) / widget.options.length;
-            
+            final itemWidth =
+                (constraints.maxWidth - 8) / widget.options.length;
+
             return Stack(
               children: [
                 // Sliding background
@@ -535,14 +541,19 @@ class _AnimatedToggleSwitchState extends State<AnimatedToggleSwitch>
                           animation: _slideAnimation,
                           builder: (context, child) {
                             // Calculate how close this option is to being selected
-                            final distance = (index - _slideAnimation.value).abs();
+                            final distance =
+                                (index - _slideAnimation.value).abs();
                             final isSelected = distance < 0.5;
-                            
+
                             return AnimatedDefaultTextStyle(
                               duration: const Duration(milliseconds: 150),
                               style: TextStyle(
-                                color: isSelected ? Colors.white : Colors.grey[400],
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.grey[400],
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
                                 fontSize: 14,
                               ),
                               child: Text(
@@ -573,8 +584,8 @@ class AnimatedTick extends StatefulWidget {
   const AnimatedTick({
     super.key,
     this.duration = const Duration(milliseconds: 750),
-    this.size = 64, 
-    this.icon = Icons.check_circle, 
+    this.size = 64,
+    this.icon = Icons.check_circle,
     this.color = Colors.green,
   });
 
@@ -582,7 +593,8 @@ class AnimatedTick extends StatefulWidget {
   State<AnimatedTick> createState() => AnimatedTickState();
 }
 
-class AnimatedTickState extends State<AnimatedTick> with SingleTickerProviderStateMixin {
+class AnimatedTickState extends State<AnimatedTick>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
   bool _visible = false;
@@ -644,11 +656,12 @@ class AnimatedTickState extends State<AnimatedTick> with SingleTickerProviderSta
   }
 }
 
-dynamic showWordDetailsOverlay(String word, String partOfSpeech, BuildContext context) async{
+dynamic showWordDetailsOverlay(
+    String word, String partOfSpeech, BuildContext context) async {
   Map data = await readKey(word);
   Set allTags = await gatherTags();
   final bool? output;
-  if (context.mounted){
+  if (context.mounted) {
     output = await showDialog(
       context: context,
       barrierDismissible: true,
@@ -680,7 +693,7 @@ dynamic showWordDetailsOverlay(String word, String partOfSpeech, BuildContext co
                   ],
                 ),
                 child: WordDetails(
-                  word: data, 
+                  word: data,
                   allTags: allTags,
                   activatedElements: ['synonyms'],
                   initialIndex: partOfSpeech,
@@ -691,11 +704,12 @@ dynamic showWordDetailsOverlay(String word, String partOfSpeech, BuildContext co
         );
       },
     );
-  }else {
+  } else {
     return false;
   }
   return output;
 }
+
 class GoalOptions extends StatefulWidget {
   final String goal;
   const GoalOptions({super.key, required this.goal});
@@ -732,22 +746,22 @@ class GoalOptionsState extends State<GoalOptions> {
     try {
       String startingPoint = await getStartingPoint();
       int value = int.tryParse(startingPoint) ?? 20;
-      
+
       // Split the number into digits
       int tensDigit = (value ~/ 10) % 10; // Get tens digit (0-9)
       int onesDigit = value % 10; // Get ones digit (0-9)
-      
+
       // Ensure indices are within bounds
       tensDigit = tensDigit.clamp(0, 9);
       onesDigit = onesDigit.clamp(0, 9);
-      
+
       if (mounted) {
         setState(() {
           _selectedIndex1 = tensDigit;
           _selectedIndex2 = onesDigit;
           _isLoading = false;
         });
-        
+
         // Jump to the correct positions after the widget is built
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scrollController1.hasClients) {
@@ -773,7 +787,9 @@ class GoalOptionsState extends State<GoalOptions> {
 
   Future<String> getStartingPoint() async {
     try {
-      String value = (await readKey(widget.goal, path: 'settings', defaultValue: 20)).toString();
+      String value =
+          (await readKey(widget.goal, path: 'settings', defaultValue: 20))
+              .toString();
       return value;
     } catch (e) {
       debugPrint('Error reading key: $e');
@@ -796,7 +812,7 @@ class GoalOptionsState extends State<GoalOptions> {
           ),
           // const Text('Goal'),
           const SizedBox(height: 10),
-          
+
           // // Display current value
           // Container(
           //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -813,9 +829,9 @@ class GoalOptionsState extends State<GoalOptions> {
           //     ),
           //   ),
           // ),
-          
+
           const SizedBox(height: 20),
-          
+
           if (_isLoading)
             const Center(child: CircularProgressIndicator())
           else
@@ -841,7 +857,7 @@ class GoalOptionsState extends State<GoalOptions> {
                           _selectedIndex1,
                         ),
                       ),
-                      
+
                       // Ones digit wheel - right next to tens wheel
                       SizedBox(
                         width: 30,
@@ -862,9 +878,9 @@ class GoalOptionsState extends State<GoalOptions> {
                 ),
               ),
             ),
-          
+
           const SizedBox(height: 20),
-          
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -878,24 +894,28 @@ class GoalOptionsState extends State<GoalOptions> {
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
-                onPressed: _isLoading ? null : () async {
-                  if (_combinedValue > 0){
-                    try {
-                      await writeKey(widget.goal, path: 'settings', _combinedValue);
-                      if (context.mounted) {
-                        Navigator.pop(context, _combinedValue);
-                      }
-                    } catch (e) {
-                      debugPrint('Error saving goal: $e');
-                      // Optionally show a snackbar or dialog with error message
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error saving goal: $e')),
-                        );
-                      }
-                    }
-                  }
-                },
+                onPressed: _isLoading
+                    ? null
+                    : () async {
+                        if (_combinedValue > 0) {
+                          try {
+                            await writeKey(
+                                widget.goal, path: 'settings', _combinedValue);
+                            if (context.mounted) {
+                              Navigator.pop(context, _combinedValue);
+                            }
+                          } catch (e) {
+                            debugPrint('Error saving goal: $e');
+                            // Optionally show a snackbar or dialog with error message
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text('Error saving goal: $e')),
+                              );
+                            }
+                          }
+                        }
+                      },
                 child: const Text('Done'),
               ),
             ],
@@ -931,11 +951,11 @@ class GoalOptionsState extends State<GoalOptions> {
                 _options[index],
                 style: TextStyle(
                   fontSize: 24,
-                  color: selectedIndex == index 
-                      ? Theme.of(context).colorScheme.primary 
+                  color: selectedIndex == index
+                      ? Theme.of(context).colorScheme.primary
                       : Colors.grey,
-                  fontWeight: selectedIndex == index 
-                      ? FontWeight.bold 
+                  fontWeight: selectedIndex == index
+                      ? FontWeight.bold
                       : FontWeight.normal,
                 ),
               ),

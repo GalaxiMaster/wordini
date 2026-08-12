@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-void main() async{
+void main() async {
   final response = await http.post(
     Uri.parse('https://openai-proxy.dmj08bot.workers.dev/openaiproxy'),
     headers: {'Content-Type': 'application/json'},
@@ -10,11 +10,13 @@ void main() async{
       "messages": [
         {
           "role": "system",
-          "content": "Does the definition fit the official word definition? YES or NO only."
+          "content":
+              "Does the definition fit the official word definition? YES or NO only."
         },
         {
           "role": "user",
-          "content": "Word: ball\nDefinition: a solid or hollow spherical or egg-shaped object"
+          "content":
+              "Word: ball\nDefinition: a solid or hollow spherical or egg-shaped object"
         }
       ]
     }),

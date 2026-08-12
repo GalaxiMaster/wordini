@@ -170,33 +170,34 @@ Map<int, dynamic> organizeDefinitions(List definitionsList) {
           // Ensure we have a valid map to hold sub-definitions.
           // If something is already here that isn't a container, it's a conflict.
           if (container != null && container is! Map) {
-             debugPrint("Warning: Conflict at sn '$sn'. Cannot add nested definition where a simple definition already exists. Skipping.");
-             continue;
+            debugPrint("Warning: Conflict at sn '$sn'. Cannot add nested definition where a simple definition already exists. Skipping.");
+            continue;
           }
-          
+
           if (container == null) {
-              container = <int, dynamic>{};
-              mainEntry[letterKey] = container;
+            container = <int, dynamic>{};
+            mainEntry[letterKey] = container;
           }
-          
+
           // Add the full definition map to the sub-definition container.
           (container as Map)[p3] = definition;
-
         } else {
           // This is a definition at the letter level, e.g., 2 a
-           var existingEntry = mainEntry[letterKey];
-    
+          var existingEntry = mainEntry[letterKey];
+
           // Check if a container for nested definitions already exists, which is a conflict.
-          if (existingEntry != null && existingEntry is Map && existingEntry.keys.every((k) => k is int)) {
-              debugPrint("Warning: Conflict at sn '$sn'. Cannot add simple definition where a nested container already exists. Skipping.");
-              continue;
+          if (existingEntry != null &&
+              existingEntry is Map &&
+              existingEntry.keys.every((k) => k is int)) {
+            debugPrint("Warning: Conflict at sn '$sn'. Cannot add simple definition where a nested container already exists. Skipping.");
+            continue;
           }
           mainEntry[letterKey] = definition;
         }
       } else {
         // This case handles a definition that only has a primary number, e.g., '1 -1 -1'
         // Note: This would overwrite any lettered sub-definitions under the same number.
-        organizedDefs[p1] = definition; 
+        organizedDefs[p1] = definition;
         // handled differently as the others rely on it being a reference
         debugPrint('checkmate');
       }
@@ -209,8 +210,8 @@ Map<int, dynamic> organizeDefinitions(List definitionsList) {
   return organizedDefs;
 }
 
-Map validateWordData(Map data){
-  for (MapEntry speechType in data.entries){
+Map validateWordData(Map data) {
+  for (MapEntry speechType in data.entries) {
     speechType.value['selected'] = data.keys.toList().indexOf(speechType.key) == 0 ? true : false;
     // speechType.value['synonyms'] ??= {};
     // speechType.value['etymology'] ??= '';
@@ -278,34 +279,32 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
 
   String getSN(sense) {
     String sn = sense['sn'] ?? '';
-    try{
+    try {
       if (sn.isNotEmpty) {
         final nums = sn.split(' ');
-        if (sn.startsWith(RegExp('[0-9]'))){
+        if (sn.startsWith(RegExp('[0-9]'))) {
           // start afresh || new entry
           defSNnum = int.parse(nums[0]);
           defSNsub = -1;
           defSNsub2 = -1;
-          if (nums.length > 1){
+          if (nums.length > 1) {
             defSNsub = getAlphabetPosition(nums[1]);
-            if (nums.length > 2){
+            if (nums.length > 2) {
               defSNsub2 = int.tryParse(nums[2].replaceAll(RegExp(r'[^0-9]'), '')) ?? -1;
             }
           }
-        }
-        else if (sn.startsWith(RegExp('[a-z]'))){
+        } else if (sn.startsWith(RegExp('[a-z]'))) {
           defSNsub = getAlphabetPosition(nums[0]);
-          if (nums.length > 1){
+          if (nums.length > 1) {
             defSNsub2 = int.tryParse(nums[1].replaceAll(RegExp(r'[^0-9]'), '')) ?? -1;
           }
           // continue from previous entry but new sub
-        }
-        else if (sn.startsWith('(')){
+        } else if (sn.startsWith('(')) {
           // second version of the previous
           defSNsub2 = int.tryParse(nums[0].replaceAll(RegExp(r'[^0-9]'), '')) ?? -1;
         }
         sn = [defSNnum, defSNsub, defSNsub2].join(' ');
-      } else{
+      } else {
         sn = '$defSNnum -1 -1'; // Default to current number if no sn
         defSNnum++;
       }
@@ -314,7 +313,7 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
     }
     return sn;
   }
-  
+
   List<Map<String, dynamic>> extractSenses(List group) {
     final List<Map<String, dynamic>> senses = [];
 
@@ -324,20 +323,18 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
         final dt = List.from(sense['dt']);
         String defText = '';
         List<String> examples = [];
-      
+
         for (var entry in dt) {
           if (entry[0] == 'text') {
             defText += entry[1].trim() + ' ';
-          } 
-          else if (entry[0] == 'vis') {
+          } else if (entry[0] == 'vis') {
             for (var vis in entry[1]) {
               examples.add(vis['t']);
-            } 
-          }
-          else if (entry[0] == 'uns'){
-            for (List i in entry[1]){
-              for (List j in i){
-                if (j[0] == 'text'){
+            }
+          } else if (entry[0] == 'uns') {
+            for (List i in entry[1]) {
+              for (List j in i) {
+                if (j[0] == 'text') {
                   defText += j[1].trim() + ' ';
                 } else if (j[0] == 'vis') {
                   for (var vis in j[1]) {
@@ -361,7 +358,7 @@ List<Map<String, dynamic>> parseDefinitions(Map data) {
         senses.addAll(extractSenses(item[1]));
       } else if (item[0] == 'sen') {
         getSN(item[1]);
-      }else if (item[0] == 'bs'){
+      } else if (item[0] == 'bs') {
         getSN(item[1]['sense']);
       }
     }
@@ -422,20 +419,20 @@ Map organiseToSpeechPart(List wordDetails) {
   }
   for (var entry in organised.entries) {
     debugPrint('Speech Part: ${entry.key}  -----------------------------------------------------------------');
-    for (var definition in entry.value){
+    for (var definition in entry.value) {
       for (var def in definition['definitions']) {
         debugPrint('**** newform ****');
-        for (var definit in def){
+        for (var definit in def) {
           debugPrint('definition: ${definit['definition']}');
         }
       }
     }
   }
-  
+
   return organised;
 }
 
-Future<bool?> checkDefinition(word, userDef, partOfSpeech, context) async{
+Future<bool?> checkDefinition(word, userDef, partOfSpeech, context) async {
   try {
     final response = await http.post(
       Uri.parse(Env.apiUrl),
@@ -447,10 +444,7 @@ Future<bool?> checkDefinition(word, userDef, partOfSpeech, context) async{
             "role": "system",
             "content": "Does the definition fit the official word definition? YES or NO only."
           },
-          {
-            "role": "user",
-            "content": "Word: $word\nDefinition: $userDef"
-          }
+          {"role": "user", "content": "Word: $word\nDefinition: $userDef"}
         ]
       }),
     );
@@ -458,11 +452,8 @@ Future<bool?> checkDefinition(word, userDef, partOfSpeech, context) async{
     final String answer = data['choices'][0]['message']['content'];
     debugPrint(answer);
     return answer.toLowerCase() == 'yes' ? true : false;
-
   } catch (e) {
-    if (e is HandshakeException ||
-        e is SocketException ||
-        e is HttpException) {
+    if (e is HandshakeException || e is SocketException || e is HttpException) {
       messageOverlay(context, 'Failed to connect to server, please check your internet connection');
     }
     debugPrint(e.toString());
@@ -475,14 +466,15 @@ Future<bool?> checkDefinition(word, userDef, partOfSpeech, context) async{
 String indexToLetter(int index) {
   return String.fromCharCode('a'.codeUnitAt(0) + index);
 }
+
 int letterToIndex(String letter) {
   return letter.codeUnitAt(0) - 'a'.codeUnitAt(0);
 }
 
 Map getFirstData(Map words, String word) {
   Map entries = words[word]['entries']; // ?.first?.value['details']?.first
-  for (MapEntry entry in entries.entries){
-      return entry.value;
+  for (MapEntry entry in entries.entries) {
+    return entry.value;
   }
   return {};
 }

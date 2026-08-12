@@ -10,7 +10,7 @@ final EncryptionService _encryptionService = EncryptionService.instance;
 class AccountPage extends StatefulWidget {
   final User accountDetails;
   const AccountPage({super.key, required this.accountDetails});
-  
+
   @override
   AccountPageState createState() => AccountPageState();
 }
@@ -18,7 +18,7 @@ class AccountPage extends StatefulWidget {
 class AccountPageState extends State<AccountPage> {
   late User account;
   final EncryptionService encryption = EncryptionService.instance;
-  
+
   @override
   void initState() {
     account = widget.accountDetails;
@@ -26,9 +26,10 @@ class AccountPageState extends State<AccountPage> {
   }
 
   @override
-  Widget build(BuildContext context) { 
-    final isGoogleAccount = account.providerData.first.providerId == 'google.com';
-    
+  Widget build(BuildContext context) {
+    final isGoogleAccount =
+        account.providerData.first.providerId == 'google.com';
+
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 14, 14, 14),
       appBar: AppBar(
@@ -40,12 +41,10 @@ class AccountPageState extends State<AccountPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Profile Header
             _buildProfileHeader(),
-            
+
             const SizedBox(height: 20),
-            
-            // Account Information Section
+
             _buildSection(
               title: 'Account Information',
               children: [
@@ -53,12 +52,12 @@ class AccountPageState extends State<AccountPage> {
                   icon: Icons.email_outlined,
                   label: 'Email',
                   value: account.email ?? 'No email',
-                  trailing: !isGoogleAccount 
-                    ? IconButton(
-                        icon: const Icon(Icons.edit, size: 20),
-                        onPressed: _handleEmailChange,
-                      )
-                    : null,
+                  trailing: !isGoogleAccount
+                      ? IconButton(
+                          icon: const Icon(Icons.edit, size: 20),
+                          onPressed: _handleEmailChange,
+                        )
+                      : null,
                 ),
                 if (!isGoogleAccount)
                   _buildInfoTile(
@@ -77,10 +76,9 @@ class AccountPageState extends State<AccountPage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 20),
-            
-            // Actions Section
+
             _buildSection(
               title: 'Actions',
               children: [
@@ -92,9 +90,9 @@ class AccountPageState extends State<AccountPage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // Danger Zone
             _buildSection(
               title: 'Danger Zone',
@@ -107,7 +105,7 @@ class AccountPageState extends State<AccountPage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 40),
           ],
         ),
@@ -130,9 +128,9 @@ class AccountPageState extends State<AccountPage> {
         children: [
           CircleAvatar(
             radius: 50,
-            foregroundImage: account.photoURL != null 
-              ? NetworkImage(account.photoURL!) 
-              : null,
+            foregroundImage: account.photoURL != null
+                ? NetworkImage(account.photoURL!)
+                : null,
             backgroundColor: Colors.blue[700],
             child: Text(
               (account.email?.substring(0, 1).toUpperCase() ?? 'U'),
@@ -168,7 +166,8 @@ class AccountPageState extends State<AccountPage> {
     );
   }
 
-  Widget _buildSection({required String title, required List<Widget> children}) {
+  Widget _buildSection(
+      {required String title, required List<Widget> children}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -262,17 +261,20 @@ class AccountPageState extends State<AccountPage> {
       String? newEmail = await showDialog(
         context: context,
         builder: (BuildContext context) => const ChangeEmailDialog(),
-      );  
+      );
 
       if (newEmail != null) {
-        _encryptionService.writeToSecureStorage(key: 'emailChange', value: newEmail);
+        _encryptionService.writeToSecureStorage(
+            key: 'emailChange', value: newEmail);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Verification email sent. Please check your email to complete the change.'),
+              content: const Text(
+                  'Verification email sent. Please check your email to complete the change.'),
               backgroundColor: Colors.green[700],
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
               duration: const Duration(seconds: 5),
             ),
           );
@@ -300,17 +302,16 @@ class AccountPageState extends State<AccountPage> {
         await reAuthUser(account);
         await account.updatePassword(newPass);
         _encryptionService.writeToSecureStorage(
-          key: 'password', 
-          value: encryption.encrypt(newPass)
-        );
-        
+            key: 'password', value: encryption.encrypt(newPass));
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Password updated successfully'),
               backgroundColor: Colors.green[700],
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           );
         }
@@ -356,97 +357,100 @@ class AccountPageState extends State<AccountPage> {
 
   Future<void> _handleDeleteAccount() async {
     final bool res = await showDialog(
-      context: context, 
-      builder: (BuildContext context) {
-        String email = account.email ?? 'Error getting email';
-        int lenEmail = email.length;
-        email = email.substring(0, (lenEmail/3-(lenEmail/12).round()).round()) + 
-                ('*' * (lenEmail - (lenEmail/3*2).round())) + 
-                email.substring((lenEmail/3*2-(lenEmail/12)).round(), lenEmail);
-        TextEditingController controller = TextEditingController();
-        
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.red[700]),
-              const SizedBox(width: 8),
-              const Text('Delete Account'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'This action cannot be undone. All your data will be permanently deleted.',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Please type your email to confirm:',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                email,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                decoration: InputDecoration(
-                  labelText: 'Enter your email',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+        context: context,
+        builder: (BuildContext context) {
+          String email = account.email ?? 'Error getting email';
+          int lenEmail = email.length;
+          email = email.substring(
+                  0, (lenEmail / 3 - (lenEmail / 12).round()).round()) +
+              ('*' * (lenEmail - (lenEmail / 3 * 2).round())) +
+              email.substring(
+                  (lenEmail / 3 * 2 - (lenEmail / 12)).round(), lenEmail);
+          TextEditingController controller = TextEditingController();
+
+          return AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.red[700]),
+                const SizedBox(width: 8),
+                const Text('Delete Account'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'This action cannot be undone. All your data will be permanently deleted.',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Please type your email to confirm:',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  email,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    labelText: 'Enter your email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (controller.text == account.email) {
+                    Navigator.of(context).pop(true);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Email does not match'),
+                        backgroundColor: Colors.red[700],
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    );
+                  }
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.red[700],
+                ),
+                child: const Text('Delete Account'),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (controller.text == account.email) {
-                  Navigator.of(context).pop(true);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Email does not match'),
-                      backgroundColor: Colors.red[700],
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  );
-                }
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.red[700],
-              ),
-              child: const Text('Delete Account'),
-            ),
-          ],
-        );
-      }
-    );
-    
+          );
+        });
+
     if (res) {
       LoadingOverlay loadingOverlay = LoadingOverlay();
-      if (context.mounted) loadingOverlay.showLoadingOverlay(context);
+      if (mounted) loadingOverlay.showLoadingOverlay(context);
       try {
         await reAuthUser(account);
         await FirebaseAuth.instance.currentUser?.delete();
         await FirebaseAuth.instance.signOut();
         _encryptionService.clearAllSecureStorage();
         loadingOverlay.removeLoadingOverlay();
-        if (context.mounted) Navigator.pop(context);
+        if (mounted) Navigator.pop(context);
       } catch (e) {
         loadingOverlay.removeLoadingOverlay();
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             errorSnackBar(e),
           );
@@ -458,27 +462,33 @@ class AccountPageState extends State<AccountPage> {
 
 // Keep your existing reAuthUser and changeEmail functions...
 Future<void> reAuthUser(User account, {String? email}) async {
-  String? emailChange = await _encryptionService.readFromSecureStorage(key: 'emailChange');
+  String? emailChange =
+      await _encryptionService.readFromSecureStorage(key: 'emailChange');
   try {
     switch (account.providerData.first.providerId) {
       case 'google.com':
-        String? storedToken = await _encryptionService.readFromSecureStorage(key: 'authIdToken');
-        if (account.email == null) throw 'Somehow your account doesnt have an email';
+        String? storedToken =
+            await _encryptionService.readFromSecureStorage(key: 'authIdToken');
+        if (account.email == null) {
+          throw 'Somehow your account doesnt have an email';
+        }
         if (storedToken == null) throw 'Failed to fetch auth details';
 
         String authIdToken = _encryptionService.decrypt(storedToken);
-        AuthCredential credential = GoogleAuthProvider.credential(idToken: authIdToken);
+        AuthCredential credential =
+            GoogleAuthProvider.credential(idToken: authIdToken);
         await account.reauthenticateWithCredential(credential);
       case 'password':
-        String? oldPass = await _encryptionService.readFromSecureStorage(key: 'password');
-        if (account.email == null) throw 'Somehow your account doesnt have an email';
+        String? oldPass =
+            await _encryptionService.readFromSecureStorage(key: 'password');
+        if (account.email == null) {
+          throw 'Somehow your account doesnt have an email';
+        }
         if (oldPass == null) throw 'Failed to fetch auth details';
 
         String decryptedPass = _encryptionService.decrypt(oldPass);
         AuthCredential credential = EmailAuthProvider.credential(
-          email: email ?? account.email ?? '', 
-          password: decryptedPass
-        );
+            email: email ?? account.email ?? '', password: decryptedPass);
         await account.reauthenticateWithCredential(credential);
       default:
         throw 'Unsupported provider for re-authentication.';
@@ -498,15 +508,19 @@ Future<void> reAuthUser(User account, {String? email}) async {
 
 Future<bool> changeEmail(User account, String newEmail) async {
   try {
-    String? pass = await _encryptionService.readFromSecureStorage(key: 'password');
-    if (account.email == null) throw 'Somehow your account doesnt have an email';
+    String? pass =
+        await _encryptionService.readFromSecureStorage(key: 'password');
+    if (account.email == null) {
+      throw 'Somehow your account doesnt have an email';
+    }
     if (pass == null) throw 'Failed to fetch auth details';
 
     String decryptedPass = _encryptionService.decrypt(pass);
     if (FirebaseAuth.instance.currentUser != null) {
       FirebaseAuth.instance.signOut();
     }
-    FirebaseAuth.instance.signInWithEmailAndPassword(email: newEmail, password: decryptedPass);
+    FirebaseAuth.instance
+        .signInWithEmailAndPassword(email: newEmail, password: decryptedPass);
     _encryptionService.deleteFromSecureStorage(key: 'emailChange');
     return true;
   } catch (e) {
@@ -515,7 +529,6 @@ Future<bool> changeEmail(User account, String newEmail) async {
   }
 }
 
-// Your existing dialog classes remain the same...
 class ChangeEmailDialog extends StatefulWidget {
   const ChangeEmailDialog({super.key});
 
@@ -527,7 +540,7 @@ class ChangeEmailDialogState extends State<ChangeEmailDialog> {
   final TextEditingController newEmail = TextEditingController();
   String? error;
   bool isLoading = false;
-  
+
   @override
   void dispose() {
     newEmail.dispose();
@@ -602,16 +615,16 @@ class ChangeEmailDialogState extends State<ChangeEmailDialog> {
             labelText: 'New Email',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             errorText: error,
-            suffixIcon: isLoading 
-              ? const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                )
-              : null,
+            suffixIcon: isLoading
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : null,
           ),
         ),
       ),
@@ -622,16 +635,16 @@ class ChangeEmailDialogState extends State<ChangeEmailDialog> {
         ),
         FilledButton(
           onPressed: isLoading ? null : updateEmail,
-          child: isLoading 
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : const Text('Change'),
+          child: isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Change'),
         ),
       ],
     );
@@ -675,7 +688,8 @@ class ChangePasswordDialogState extends State<ChangePasswordDialog> {
               obscureText: true,
               decoration: InputDecoration(
                 labelText: 'New Password',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 errorText: error1,
               ),
               onChanged: (value) => setState(() {
@@ -698,7 +712,8 @@ class ChangePasswordDialogState extends State<ChangePasswordDialog> {
               obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 errorText: error2,
               ),
               onChanged: (value) => setState(() {

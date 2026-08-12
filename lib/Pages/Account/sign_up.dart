@@ -30,24 +30,27 @@ class SignUpPageState extends State<SignUpPage> {
         .initialize(
       serverClientId: Env.serverClientId,
       clientId: Platform.isIOS ? Env.clientIdGcloud : null, // specific to ios
-    ).then((_) {
+    )
+        .then((_) {
       _authSub = GoogleSignIn.instance.authenticationEvents.listen(
         (event) async {
           if (event is GoogleSignInAuthenticationEventSignIn) {
             final GoogleSignInAccount user = event.user;
             try {
-              // The API surface for the plugin exposes a synchronous
-              // `authentication` object on the account in this version.
-              final GoogleSignInAuthentication authentication = user.authentication;
+              final GoogleSignInAuthentication authentication =
+                  user.authentication;
 
               final credential = GoogleAuthProvider.credential(
                 idToken: authentication.idToken,
               );
 
-              UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+              UserCredential userCredential =
+                  await FirebaseAuth.instance.signInWithCredential(credential);
               debugPrint('Firebase sign-in complete for ${user.email}');
-              bool isNew = userCredential.additionalUserInfo?.isNewUser ?? false;
-              _encryptionService.writeToSecureStorage(key: 'authIdToken', value: authentication.idToken ?? '');
+              bool isNew =
+                  userCredential.additionalUserInfo?.isNewUser ?? false;
+              _encryptionService.writeToSecureStorage(
+                  key: 'authIdToken', value: authentication.idToken ?? '');
 
               if (isNew) {
                 createDefaultPermissions(userCredential);
@@ -73,6 +76,7 @@ class SignUpPageState extends State<SignUpPage> {
     _passwordController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,193 +99,198 @@ class SignUpPageState extends State<SignUpPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               AutofillGroup(
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: _emailController,
-                      autofillHints: const [AutofillHints.email],
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                            color: Colors.white38,
-                            width: 2,
-                          ),
+                child: Column(children: [
+                  TextField(
+                    controller: _emailController,
+                    autofillHints: const [AutofillHints.email],
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                          color: Colors.white38,
+                          width: 2,
                         ),
                       ),
                     ),
-                    SizedBox(height: 25),
-                    TextField(
-                      controller: _passwordController,
-                      autofillHints: const [AutofillHints.password],
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                            color: Colors.white38,
-                            width: 2,
-                          ),
+                  ),
+                  SizedBox(height: 25),
+                  TextField(
+                    controller: _passwordController,
+                    autofillHints: const [AutofillHints.password],
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                          color: Colors.white38,
+                          width: 2,
                         ),
                       ),
-                      obscureText: true,
                     ),
-                  ]
-                ),
+                    obscureText: true,
+                  ),
+                ]),
               ),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () async {
-                          final response = isValid(_emailController.text.trim(), _passwordController.text);
-                          if (response.message != null){
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              errorSnackBar(response.message),
-                            );
-                            return;
-                          }
-                          if (response.code != true) return;
-                          try {
-                            await _auth.createUserWithEmailAndPassword(
-                              email: _emailController.text.trim(), 
-                              password: _passwordController.text
-                            ).then((userCredential) {
-                              debugPrint('User created: ${userCredential.user?.email}');
-                              createDefaultPermissions(userCredential);
-                            });
-                            // createUserPermissions(_auth.currentUser!);
-                            if (!context.mounted) return;
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => const HomePage()),
-                            );
-                            _encryptionService.writeToSecureStorage(key: 'password', value: _encryptionService.encrypt(_passwordController.text));
-                          } on FirebaseAuthException catch (e) {
-                            String message;
-                            switch (e.code) { // "[Password must contain at least 6 characters, Password must contain a numeric character]"
-                              case 'invalid-credential':
-                                message = 'Invalid Email or Password';
-                                break;
-                              case 'invalid-email':
-                                message = 'Invalid email format';
-                                break;
-                              case 'user-disabled':
-                                message = 'This account has been disabled';
-                                break;
-                              case 'email-already-in-use':
-                                message = 'Email already in use';
-                                break;
-                              default:
-                                message = 'An error occurred: ${e.message}';
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: () async {
+                            final response = isValid(
+                                _emailController.text.trim(),
+                                _passwordController.text);
+                            if (response.message != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                errorSnackBar(response.message),
+                              );
+                              return;
                             }
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              errorSnackBar(message),
-                            );
-                          } catch (e) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              errorSnackBar('An unexpected error occurred: $e'),
-                            );
-                          }                
-                        },
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'Sign Up',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => SignInPage()),
-                        );
-                      },
-                      child: Text(
-                        'Already have an account? Sign In',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    Row(
-                      children: [
-                        Expanded(child: Divider(color: Colors.white24)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'OR',
-                            style: TextStyle(
-                              color: Colors.white60,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                            if (response.code != true) return;
+                            try {
+                              await _auth
+                                  .createUserWithEmailAndPassword(
+                                      email: _emailController.text.trim(),
+                                      password: _passwordController.text)
+                                  .then((userCredential) {
+                                debugPrint(
+                                    'User created: ${userCredential.user?.email}');
+                                createDefaultPermissions(userCredential);
+                              });
+                              // createUserPermissions(_auth.currentUser!);
+                              if (!context.mounted) return;
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const HomePage()),
+                              );
+                              _encryptionService.writeToSecureStorage(
+                                  key: 'password',
+                                  value: _encryptionService
+                                      .encrypt(_passwordController.text));
+                            } on FirebaseAuthException catch (e) {
+                              String message;
+                              switch (e.code) {
+                                // "[Password must contain at least 6 characters, Password must contain a numeric character]"
+                                case 'invalid-credential':
+                                  message = 'Invalid Email or Password';
+                                  break;
+                                case 'invalid-email':
+                                  message = 'Invalid email format';
+                                  break;
+                                case 'user-disabled':
+                                  message = 'This account has been disabled';
+                                  break;
+                                case 'email-already-in-use':
+                                  message = 'Email already in use';
+                                  break;
+                                default:
+                                  message = 'An error occurred: ${e.message}';
+                              }
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                errorSnackBar(message),
+                              );
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                errorSnackBar(
+                                    'An unexpected error occurred: $e'),
+                              );
+                            }
+                          },
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                        ),
-                        Expanded(child: Divider(color: Colors.white24)),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          try {
-                            await GoogleSignIn.instance.initialize(
-                              serverClientId: Env.serverClientId,
-                            );
-                            await GoogleSignIn.instance.authenticate();
-                          } on GoogleSignInException catch (e) {
-                            debugPrint(
-                                'Error signing in with Google: ${e.code} ${e.description}');
-                          } catch (e, st) {
-                            debugPrint('Unexpected error signing in with Google: $e');
-                            debugPrint('$st');
-                          }
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: BorderSide(color: Colors.white38, width: 1.5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                          child: const Text(
+                            'Sign Up',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                         ),
-                        icon: Image.asset(
-                          'assets/google_logo.png',
-                          height: 20,
-                          width: 20,
-                        ),
-                        label: const Text(
-                          'Sign Up with Google',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SignInPage()),
+                          );
+                        },
+                        child: Text(
+                          'Already have an account? Sign In',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                )
-              ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.white24)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'OR',
+                              style: TextStyle(
+                                color: Colors.white60,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: Colors.white24)),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            try {
+                              await GoogleSignIn.instance.initialize(
+                                serverClientId: Env.serverClientId,
+                              );
+                              await GoogleSignIn.instance.authenticate();
+                            } on GoogleSignInException catch (e) {
+                              debugPrint(
+                                  'Error signing in with Google: ${e.code} ${e.description}');
+                            } catch (e, st) {
+                              debugPrint(
+                                  'Unexpected error signing in with Google: $e');
+                              debugPrint('$st');
+                            }
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            side: BorderSide(color: Colors.white38, width: 1.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          icon: Image.asset(
+                            'assets/google_logo.png',
+                            height: 20,
+                            width: 20,
+                          ),
+                          label: const Text(
+                            'Sign Up with Google',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )),
             ],
           ),
         ),
@@ -289,20 +298,19 @@ class SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  SnackBar errorSnackBar(text) =>  SnackBar(
-    backgroundColor: const Color.fromRGBO(21, 21, 21, 1),
-    content: Text(
-      text,
-      style: const TextStyle(
-        color: Colors.red,
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-      ),
-    )
-  );
+  SnackBar errorSnackBar(text) => SnackBar(
+      backgroundColor: const Color.fromRGBO(21, 21, 21, 1),
+      content: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.red,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ));
 }
 
-class CodedResponse{
+class CodedResponse {
   final bool code;
   final String? message;
   CodedResponse({required this.code, this.message});
@@ -326,5 +334,5 @@ CodedResponse isValid(String email, String password) {
   } catch (e) {
     final response = CodedResponse(code: false, message: e.toString());
     return response;
-  } 
+  }
 }

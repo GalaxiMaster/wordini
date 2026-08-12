@@ -39,7 +39,10 @@ class ArchivedWordsScreenState extends ConsumerState<ArchivedWordsScreen> {
                         resetData(null, ref, path: 'archivedWords');
                         Navigator.of(context).pop();
                       },
-                      child: const Text('Delete All', style: TextStyle(color: Colors.red)),
+                      child: const Text(
+                        'Delete All',
+                        style: TextStyle(color: Colors.red)
+                      ),
                     ),
                   ],
                 ),
@@ -81,26 +84,27 @@ class ArchivedWordsScreenState extends ConsumerState<ArchivedWordsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: const Icon(Icons.delete, color: Colors.white),
               ),
-
-
-
               confirmDismiss: (direction) async {
                 // if (direction == DismissDirection.startToEnd) {
                 // }
                 return true;
               },
-
               onDismissed: (direction) {
                 if (direction == DismissDirection.endToStart) {
                   debugPrint('Deleting word: ${word.key}');
-                  ref.read(archivedWordsProvider.notifier).removeKey(word.key);
+                  ref
+                      .read(archivedWordsProvider.notifier)
+                      .removeKey(word.key);
                 } else if (direction == DismissDirection.startToEnd) {
                   debugPrint('Restoring word: ${word.key}');
-                  ref.read(wordDataProvider.notifier).updateValue(word.key, word.value);
-                  ref.read(archivedWordsProvider.notifier).removeKey(word.key);
+                  ref
+                      .read(wordDataProvider.notifier)
+                      .updateValue(word.key, word.value);
+                  ref
+                      .read(archivedWordsProvider.notifier)
+                      .removeKey(word.key);
                 }
               },
-
               child: ListTile(
                 title: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -127,7 +131,8 @@ class ArchivedWordsScreenState extends ConsumerState<ArchivedWordsScreen> {
                   ],
                 ),
                 subtitle: MWTaggedText(
-                  (firstWordDetails['definitions']?.first?['definition']) ?? '',
+                  (firstWordDetails['definitions']?.first?['definition']) ??
+                      '',
                 ),
               ),
             ),

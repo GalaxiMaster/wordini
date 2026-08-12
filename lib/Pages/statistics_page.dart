@@ -9,7 +9,8 @@ class WordGameStatsScreen extends StatefulWidget {
   WordGameStatsScreenState createState() => WordGameStatsScreenState();
 }
 
-class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTickerProviderStateMixin {
+class WordGameStatsScreenState extends State<WordGameStatsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late GameStats gameStats;
 
@@ -27,25 +28,28 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
   }
 
   DerivedStats get derivedStats {
-    final totalWordGuesses = gameStats.wordGuesses.values.fold(0, (sum, count) => sum + count);
+    final totalWordGuesses =
+        gameStats.wordGuesses.values.fold(0, (sum, count) => sum + count);
     final averageGuesses = gameStats.wordGuesses.isNotEmpty
         ? totalWordGuesses / gameStats.wordGuesses.length
         : 0.0;
     final MapEntry? mostGuessedEntry;
-    if (gameStats.wordGuesses.isNotEmpty){
+    if (gameStats.wordGuesses.isNotEmpty) {
       mostGuessedEntry = gameStats.wordGuesses.entries
           .reduce((a, b) => a.value > b.value ? a : b);
-    } else{
+    } else {
       mostGuessedEntry = null;
     }
 
     final successRate = gameStats.totalGuesses > 0
-      ? (gameStats.correctGuesses / gameStats.totalGuesses) * 100
-      : 0.0;
+        ? (gameStats.correctGuesses / gameStats.totalGuesses) * 100
+        : 0.0;
 
     final skipRate = (gameStats.totalGuesses + gameStats.totalSkips) > 0
-      ? (gameStats.totalSkips / (gameStats.totalGuesses + gameStats.totalSkips)) * 100
-      : 0.0;
+        ? (gameStats.totalSkips /
+                (gameStats.totalGuesses + gameStats.totalSkips)) *
+            100
+        : 0.0;
     return DerivedStats(
       totalWordGuesses: totalWordGuesses,
       averageGuesses: averageGuesses,
@@ -61,7 +65,6 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
     return Scaffold(
       body: Column(
         children: [
-          // Tab Bar
           Container(
             width: double.infinity,
             color: Color.fromARGB(255, 30, 30, 30),
@@ -69,7 +72,8 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
             child: Padding(
               padding: const EdgeInsets.only(top: 30),
               child: Stack(
-                children: [      // Full-width TabBar
+                children: [
+                  // Full-width TabBar
                   Positioned.fill(
                     child: Align(
                       alignment: Alignment.center,
@@ -100,7 +104,7 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
               ),
             ),
           ),
-          
+
           // Tab Content
           Expanded(
             child: TabBarView(
@@ -118,7 +122,7 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
 
   Widget _buildOverviewTab() {
     final stats = derivedStats;
-    
+
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -132,15 +136,19 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
             crossAxisSpacing: 12,
             childAspectRatio: 1.5,
             children: [
-              _buildStatCard('${gameStats.wordsGuessed}', 'Words Guessed', Colors.blue, '📝'),
-              _buildStatCard('${gameStats.correctGuesses}', 'Correct', Colors.green, '✅'),
-              _buildStatCard('${gameStats.wordsAdded}', 'Words Added', Colors.purple, '+'),
-              _buildStatCard(stats.averageGuesses.toStringAsFixed(1), 'Avg. Guesses', Colors.orange, '📊'),
+              _buildStatCard('${gameStats.wordsGuessed}', 'Words Guessed',
+                  Colors.blue, '📝'),
+              _buildStatCard(
+                  '${gameStats.correctGuesses}', 'Correct', Colors.green, '✅'),
+              _buildStatCard(
+                  '${gameStats.wordsAdded}', 'Words Added', Colors.purple, '+'),
+              _buildStatCard(stats.averageGuesses.toStringAsFixed(1),
+                  'Avg. Guesses', Colors.orange, '📊'),
             ],
           ),
-          
+
           SizedBox(height: 16),
-          
+
           // Most Challenging Word Card
           // Container(
           //   width: double.infinity,
@@ -190,23 +198,25 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
           //     ],
           //   ),
           // ),
-          
+
           // SizedBox(height: 16),
-          
+
           // Progress Bars
           _buildProgressCard(stats),
-          
+
           SizedBox(height: 16),
-          
+
           // Quick Stats
           Row(
             children: [
               Expanded(
-                child: _buildQuickStatCard('${gameStats.speechTypesGuessed}', 'Speech Types', const Color.fromARGB(255, 198, 50, 224)),
+                child: _buildQuickStatCard('${gameStats.speechTypesGuessed}',
+                    'Speech Types', const Color.fromARGB(255, 198, 50, 224)),
               ),
               SizedBox(width: 12),
               Expanded(
-                child: _buildQuickStatCard('${gameStats.wordGuesses.length}', 'Unique Words', const Color.fromARGB(255, 76, 98, 219)),
+                child: _buildQuickStatCard('${gameStats.wordGuesses.length}',
+                    'Unique Words', const Color.fromARGB(255, 76, 98, 219)),
               ),
             ],
           ),
@@ -228,9 +238,9 @@ class WordGameStatsScreenState extends State<WordGameStatsScreen> with SingleTic
           //     child: _buildPieChart(),
           //   ),
           // ),
-          
+
           SizedBox(height: 16),
-          
+
           // Quick Stats
           _buildChartCard(
             'Quick Stats',
@@ -543,7 +553,7 @@ class GameStats {
     required this.totalSkips,
     required this.correctGuesses,
     required this.wordGuesses,
-    required this.wordsAdded, 
+    required this.wordsAdded,
   });
 }
 

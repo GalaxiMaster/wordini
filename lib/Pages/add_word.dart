@@ -22,12 +22,14 @@ class AddWordState extends ConsumerState<AddWord> {
       _addWordTextBoxFN.requestFocus();
     });
   }
-    @override
+
+  @override
   void dispose() {
     _addWordTextBoxFN.dispose();
     _addWordTextBoxController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,7 +47,7 @@ class AddWordState extends ConsumerState<AddWord> {
               const Text(
                 'Add Words',
                 style: TextStyle(
-                  fontSize: 24, 
+                  fontSize: 24,
                 ),
               ),
               Padding(
@@ -58,67 +60,69 @@ class AddWordState extends ConsumerState<AddWord> {
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 20,
-                      ), 
+                      ),
                       autocorrect: true,
                       enableSuggestions: true,
-                      onSubmitted: (value) async{
-                        addWordToList(value.toLowerCase(), context).then((res){
-                            if (!context.mounted) return;
-                            if (res){
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                '/home',
-                                (Route<dynamic> route) => false,
-                              );
-                            }
-                          });
+                      onSubmitted: (value) async {
+                        addWordToList(value.toLowerCase(), context).then((res) {
+                          if (!context.mounted) return;
+                          if (res) {
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/home',
+                              (Route<dynamic> route) => false,
+                            );
+                          }
+                        });
                       },
                       onChanged: (value) => setState(() {}), // TODO optomise
                     ),
                     SizedBox(height: 8),
                     GestureDetector(
-                      onTap: () async{
-                        if (_addWordTextBoxController.text.isNotEmpty){
+                      onTap: () async {
+                        if (_addWordTextBoxController.text.isNotEmpty) {
                           final allTags = await gatherTags();
                           if (!context.mounted) return;
                           Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => WordDetails(
-                              word: {
-                                "word": _addWordTextBoxController.text,
-                                "dateAdded": DateTime.now().toString(), // TODO could add default 'custom' tag
-                                "entries": {
-                                  // "": {
-                                  //   "synonyms": {},
-                                  //   "etymology": "",
-                                  //   "partOfSpeech": "",
-                                  //   "quotes": [],
-                                  //   "details": [
-                                  //     {
-                                  //       // "definitions": [
-                                  //       //   // [
-                                  //       //   //   {
-                                  //       //   //     "definition": "",
-                                  //       //   //     "example": []
-                                  //       //   //   }
-                                  //       //   // ],
-                                  //       // ],
-                                  //       // "firstUsed": "",
-                                  //       // "stems": [],
-                                  //       // "homograph": 1
-                                  //     },
-                                  //   ],
-                                  //   "selected": true
-                                  // },
-                                }
-                              }, 
-                              editModeState: true,
-                              allTags: allTags,
-                              addWordMode: true,
-                            ))
-                          ).then((res){
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => WordDetails(
+                                        word: {
+                                          "word":
+                                              _addWordTextBoxController.text,
+                                          "dateAdded": DateTime.now()
+                                              .toString(), // TODO could add default 'custom' tag
+                                          "entries": {
+                                            // "": {
+                                            //   "synonyms": {},
+                                            //   "etymology": "",
+                                            //   "partOfSpeech": "",
+                                            //   "quotes": [],
+                                            //   "details": [
+                                            //     {
+                                            //       // "definitions": [
+                                            //       //   // [
+                                            //       //   //   {
+                                            //       //   //     "definition": "",
+                                            //       //   //     "example": []
+                                            //       //   //   }
+                                            //       //   // ],
+                                            //       // ],
+                                            //       // "firstUsed": "",
+                                            //       // "stems": [],
+                                            //       // "homograph": 1
+                                            //     },
+                                            //   ],
+                                            //   "selected": true
+                                            // },
+                                          }
+                                        },
+                                        editModeState: true,
+                                        allTags: allTags,
+                                        addWordMode: true,
+                                      ))).then((res) {
                             if (!context.mounted) return;
-                            if (res ?? false){
+                            if (res ?? false) {
                               Navigator.pushNamedAndRemoveUntil(
                                 context,
                                 '/home',
@@ -135,7 +139,9 @@ class AddWordState extends ConsumerState<AddWord> {
                       child: Text(
                         'Word not found? Add manually',
                         style: TextStyle(
-                          color: _addWordTextBoxController.text.isNotEmpty ? Theme.of(context).colorScheme.primary : Colors.grey,
+                          color: _addWordTextBoxController.text.isNotEmpty
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey,
                           // decoration: TextDecoration.underline,
                           // decorationColor: Colors.blue,
                           // decorationStyle: TextDecorationStyle.dotted
@@ -151,9 +157,9 @@ class AddWordState extends ConsumerState<AddWord> {
       ),
     );
   }
-  
 }
-Future<bool> addWordToList(String word, context) async{
+
+Future<bool> addWordToList(String word, context) async {
   LoadingOverlay loadingOverlay = LoadingOverlay();
   final Map data = await readData();
   if (data.containsKey(word)) {
@@ -162,7 +168,7 @@ Future<bool> addWordToList(String word, context) async{
   }
   loadingOverlay.showLoadingOverlay(context);
   Map wordDetails;
-  
+
   try {
     wordDetails = await getWordDetails(word);
   } on FormatException {
@@ -183,8 +189,12 @@ Future<bool> addWordToList(String word, context) async{
   loadingOverlay.removeLoadingOverlay();
   final Set allTags = await gatherTags();
   bool? result = await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => WordDetails(word: wordDetails, addWordMode: true, allTags: allTags,))
-  );
+      context,
+      MaterialPageRoute(
+          builder: (context) => WordDetails(
+                word: wordDetails,
+                addWordMode: true,
+                allTags: allTags,
+              )));
   return result ?? false;
 }

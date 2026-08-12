@@ -6,7 +6,13 @@ Map deepCopy(Map original) {
     if (value is Map) {
       return MapEntry(key, deepCopy(Map.from(value)));
     } else if (value is List) {
-      return MapEntry(key, value.map((item) => item is Map ? deepCopy(Map<String, dynamic>.from(item)) : item).toList());
+      return MapEntry(
+          key,
+          value
+              .map((item) => item is Map
+                  ? deepCopy(Map<String, dynamic>.from(item))
+                  : item)
+              .toList());
     } else {
       return MapEntry(key, value);
     }

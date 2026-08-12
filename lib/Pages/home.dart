@@ -11,6 +11,7 @@ import 'package:wordini/Providers/otherproviders.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:wordini/utils.dart';
 import 'package:wordini/widgets.dart';
+
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
@@ -29,6 +30,7 @@ class HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     final asyncData = ref.watch(futureInputDataProvider); // Todo adjust to wait for all needed data
@@ -85,94 +87,97 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
   void initState() {
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     final Map statisticsData = ref.watch(statisticsDataProvider);
     final Map settingsData = ref.watch(settingsProvider);
     final int wordsThisWeek = ref.watch(wordsThisWeekDataProvider);
     return Scaffold(
-        appBar: AppBar(
-          title: Center(child: Text('Wordini')),
-          automaticallyImplyLeading: false,
-          leading: IconButton(
-            onPressed: (){
+      appBar: AppBar(
+        title: Center(child: Text('Wordini')),
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+            onPressed: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()));
+            },
+            icon: Icon(Icons.settings)),
+        actions: [
+          IconButton(
+            onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SettingsPage())
+                MaterialPageRoute(
+                  builder: (context) => WordGameStatsScreen(
+                    gameData: inputToGameStats(
+                        ref.read(statisticsDataProvider),
+                        ref.read(wordDataProvider)),
+                  )
+                )
               );
-            }, 
-            icon: Icon(Icons.settings)
+            },
+            icon: Icon(Icons.bar_chart)
           ),
-          actions: [
-            IconButton(
-              onPressed: (){
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => WordGameStatsScreen(gameData: inputToGameStats(ref.read(statisticsDataProvider), ref.read(wordDataProvider)),))
-                );
-              }, 
-              icon: Icon(Icons.bar_chart)
-            ),
-          ],
-        ),
-        body: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(inputDataProvider);
-            ref.invalidate(wordDataFutureProvider);
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(inputDataProvider);
+          ref.invalidate(wordDataFutureProvider);
 
-            debugPrint('Refreshing data...');
-          },
-          child: SizedBox(
-            height: double.infinity,
-            child: Stack(
-              children: [
-                SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Padding(
-                    padding: const EdgeInsets.all(25),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: Text(
-                            'Statistics',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold
-                            ),
-                          ),
+          debugPrint('Refreshing data...');
+        },
+        child: SizedBox(
+          height: double.infinity,
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.all(25),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Text(
+                          'Statistics',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
                         ),
-                        GestureDetector(
-                          onTap: () async {
-                            final int? value = await showModalBottomSheet(
-                              context: context,
-                              builder: (context) {
-                                return const GoalOptions(goal: 'wordsThisWeek');
-                              },
-                            );
-                            if (value != null) {
-                              ref.read(settingsProvider.notifier).updateValue('wordsThisWeek', value);     
-                            }
-                          },
-                          child: Container(
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          final int? value = await showModalBottomSheet(
+                            context: context,
+                            builder: (context) {
+                              return const GoalOptions(goal: 'wordsThisWeek');
+                            },
+                          );
+                          if (value != null) {
+                            ref
+                                .read(settingsProvider.notifier)
+                                .updateValue('wordsThisWeek', value);
+                          }
+                        },
+                        child: Container(
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Color.fromARGB(255, 30, 30, 30)
-                            ),
+                                borderRadius: BorderRadius.circular(15),
+                                color: Color.fromARGB(255, 30, 30, 30)),
                             width: double.infinity,
                             height: 100,
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'Words Added this week',
                                     style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold
-                                    ),
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                   SizedBox(
                                     height: 6,
@@ -180,41 +185,40 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                   Text(
                                     '$wordsThisWeek / ${settingsData['wordsThisWeek'] ?? 20}',
                                     style: TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.5
-                                    ),
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1.5),
                                   ),
                                   SizedBox(
                                     height: 6.5,
                                   ),
                                   LinearProgressIndicator(
-                                    value: wordsThisWeek / (settingsData['wordsThisWeek'] ?? 20),
+                                    value: wordsThisWeek /
+                                        (settingsData['wordsThisWeek'] ?? 20),
                                     backgroundColor: Colors.grey.shade800,
                                     borderRadius: BorderRadius.circular(10),
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.green),
                                     minHeight: 12,
                                   ),
                                 ],
                               ),
-                            )
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8, left: 8),
-                          child: Text(
-                            'Word Testing',
-                            style: TextStyle(
+                            )),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, left: 8),
+                        child: Text(
+                          'Word Testing',
+                          style: TextStyle(
                               fontSize: 19,
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 1
-                            ),
-                          ),
+                              letterSpacing: 1),
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            GestureDetector(
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          GestureDetector(
                               onLongPress: () async {
                                 final int? value = await showModalBottomSheet(
                                   context: context,
@@ -223,66 +227,77 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                   },
                                 );
                                 if (value != null) {
-                                  ref.read(settingsProvider.notifier).updateValue('WT-today', value);   
-                                  // TODO permindence                       
+                                  ref
+                                      .read(settingsProvider.notifier)
+                                      .updateValue('WT-today', value);
+                                  // TODO permindence
                                 }
                               },
-                              child: dataGaugeChart('Today', statisticsData['guessesToday'], settingsData['WT-today'] ?? 4, context)
-                            ),
-                            GestureDetector(
-                              onLongPress: () async{
+                              child: dataGaugeChart(
+                                  'Today',
+                                  statisticsData['guessesToday'],
+                                  settingsData['WT-today'] ?? 4,
+                                  context)),
+                          GestureDetector(
+                              onLongPress: () async {
                                 final int? value = await showModalBottomSheet(
                                   context: context,
                                   builder: (context) {
-                                    return const GoalOptions(goal: 'WT-thisWeek');
+                                    return const GoalOptions(
+                                        goal: 'WT-thisWeek');
                                   },
                                 );
                                 if (value != null) {
-                                  ref.read(settingsProvider.notifier).updateValue('WT-thisWeek', value);                          
+                                  ref
+                                      .read(settingsProvider.notifier)
+                                      .updateValue('WT-thisWeek', value);
                                 }
                               },
-                              child: dataGaugeChart('This week', statisticsData['guessesThisWeek'], settingsData['WT-thisWeek'] ?? 20, context)
+                              child: dataGaugeChart(
+                                  'This week',
+                                  statisticsData['guessesThisWeek'],
+                                  settingsData['WT-thisWeek'] ?? 20,
+                                  context)),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          spacing: 8,
+                          children: [
+                            Text(
+                              'Start Quiz',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Choose your quiz size',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade400.withAlpha(220)),
                             ),
                           ],
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            spacing: 8,
-                            children: [
-                              Text(
-                                'Start Quiz',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Choose your quiz size',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade400.withAlpha(220)
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Card(
-                          color: Color.fromARGB(255, 30, 30, 30),
-                          child: Padding(
+                      ),
+                      Card(
+                        color: Color.fromARGB(255, 30, 30, 30),
+                        child: Padding(
                             padding: const EdgeInsets.all(15),
                             child: GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                               padding: EdgeInsets.zero,
                               itemCount: 8,
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 4,
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
-                                childAspectRatio: 2.5, 
+                                childAspectRatio: 2.5,
                               ),
                               itemBuilder: (context, index) {
                                 final value = 5 * (index + 1);
@@ -292,7 +307,8 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                     backgroundColor: const Color(0xFF2A2A2E),
                                     foregroundColor: Colors.white,
                                     elevation: 0,
-                                    minimumSize: const Size(double.infinity, 44),
+                                    minimumSize:
+                                        const Size(double.infinity, 44),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
@@ -300,20 +316,20 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                   onPressed: () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => Quizzes(questions: value),
+                                      builder: (context) =>
+                                          Quizzes(questions: value),
                                     ),
                                   ),
                                   child: Text(value.toString()),
                                 );
                               },
-                            )
-                          ),
-                        )
-                      ],
-                    ),
+                            )),
+                      )
+                    ],
                   ),
                 ),
-                Positioned(
+              ),
+              Positioned(
                   right: 10,
                   bottom: 10,
                   child: FloatingActionButton(
@@ -322,8 +338,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => AddWord(),
-                          )
-                      );
+                          ));
                     },
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     child: Text(
@@ -333,16 +348,16 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                         color: Colors.white,
                       ),
                     ),
-                  )
-                )
-              ],
-            ),
+                  ))
+            ],
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-  Padding dataGaugeChart(String title, int value, int goal, BuildContext context) {
+  Padding dataGaugeChart(
+      String title, int value, int goal, BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(bottom: 16),
       child: Container(
@@ -428,14 +443,13 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
 
 GameStats inputToGameStats(Map input, Map wordData) {
   return GameStats(
-    wordsGuessed: input['wordsGuessed'], 
-    speechTypesGuessed: input['speechTypesGuessed'], 
-    totalGuesses: input['totalGuesses'], 
-    totalSkips: input['totalSkips'], 
-    correctGuesses: input['correctGuesses'], 
-    wordGuesses: input['wordGuesses'], 
-    wordsAdded: wordData.length
-  );
+      wordsGuessed: input['wordsGuessed'],
+      speechTypesGuessed: input['speechTypesGuessed'],
+      totalGuesses: input['totalGuesses'],
+      totalSkips: input['totalSkips'],
+      correctGuesses: input['correctGuesses'],
+      wordGuesses: input['wordGuesses'],
+      wordsAdded: wordData.length);
 }
 
 bool isSameDay(DateTime a, DateTime b) {
@@ -445,18 +459,18 @@ bool isSameDay(DateTime a, DateTime b) {
 int getWeekNumber(DateTime date) {
   // Find the first day of the year
   DateTime firstDayOfYear = DateTime(date.year, 1, 1);
-  
+
   // Find the first Monday of the year (ISO week standard)
   DateTime firstMonday = firstDayOfYear;
   while (firstMonday.weekday != DateTime.monday) {
     firstMonday = firstMonday.add(Duration(days: 1));
   }
-  
+
   // If the date is before the first Monday, it belongs to the previous year's last week
   if (date.isBefore(firstMonday)) {
     return getWeekNumber(DateTime(date.year - 1, 12, 31));
   }
-  
+
   // Calculate the week number
   int daysDifference = date.difference(firstMonday).inDays;
   return (daysDifference / 7).floor() + 1;
