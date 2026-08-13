@@ -468,10 +468,10 @@ int getWeekNumber(DateTime date) {
 
   // If the date is before the first Monday, it belongs to the previous year's last week
   if (date.isBefore(firstMonday)) {
-    return getWeekNumber(DateTime(date.year - 1, 12, 31));
+  return getWeekNumber(DateTime(date.year - 1, 12, 31));
   }
 
   // Calculate the week number
   int daysDifference = date.difference(firstMonday).inDays;
-  return (daysDifference / 7).floor() + 1;
+  return (daysDifference / 7).floor() + 1 + date.year;
 }

@@ -121,8 +121,7 @@ class WordsThisWeekDataNotifier extends Notifier<int> {
     int wordsThisWeek = 0;
 
     for (MapEntry word in data.entries) {
-      final int wordWeek =
-          getWeekNumber(DateTime.parse(word.value['dateAdded']));
+      final int wordWeek = getWeekNumber(DateTime.parse(word.value['dateAdded']));
       if (wordWeek == week) {
         wordsThisWeek += 1;
       }
