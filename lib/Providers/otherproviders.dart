@@ -40,7 +40,7 @@ final filtersProvider = StateProvider<Map>((ref) => {
       'wordTypeMode': 'any',
       'selectedTags': <String>{},
       'selectedTagsMode': 'any',
-      'sortBy': 'Alphabetical',
+      'sortBy': 'Date Added', // todo change to enum
       'sortOrder': 'Ascending'
     });
 
