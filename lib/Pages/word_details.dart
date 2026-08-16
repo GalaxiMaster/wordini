@@ -27,6 +27,7 @@ class WordDetails extends ConsumerStatefulWidget {
       'synonyms',
       'etymology',
       'quotes',
+      'source',
       'quizHistory',
     ],
     this.inputs = const [],
@@ -59,8 +60,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
         final speechPartData = entries[speechPartKey] as Map;
         if (speechPartData.containsKey('definitions')) {
           if (speechPartData['definitions'] is List) {
-            speechPartData['definitions'] =
-                organizeDefinitions(speechPartData['definitions']);
+            speechPartData['definitions'] = organizeDefinitions(speechPartData['definitions']);
           }
         }
       }
@@ -253,8 +253,9 @@ class WordDetailsState extends ConsumerState<WordDetails> {
     List<TextEditingController> exampleControllers = [
       for (var ex in initialExamples) TextEditingController(text: ex)
     ];
-    if (exampleControllers.isEmpty)
+    if (exampleControllers.isEmpty) {
       exampleControllers.add(TextEditingController());
+    }
 
     showDialog(
       context: context,
@@ -497,8 +498,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
     showDialog(
       context: context,
       builder: (context) {
-        final TextEditingController etymologyController =
-            TextEditingController(text: speechTypeValue['etymology'] ?? '');
+        final TextEditingController etymologyController = TextEditingController(text: speechTypeValue['etymology'] ?? '');
         return AlertDialog(
           title: const Text('Edit Etymology'),
           content: TextField(
@@ -529,7 +529,41 @@ class WordDetailsState extends ConsumerState<WordDetails> {
       },
     );
   }
-
+  // todo abstraction on these functions
+  void _editSource(Map speechTypeValue) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController sourceController = TextEditingController(text: speechTypeValue['source'] ?? '');
+        return AlertDialog(
+          title: const Text('Edit Source'),
+          content: TextField(
+            controller: sourceController,
+            autofocus: true,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              labelText: 'Source',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() => speechTypeValue['source'] = sourceController.text.trim());
+                saveWord();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
   void _addQuote(Map speechTypeValue) {
     showDialog(
       context: context,
@@ -781,8 +815,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
 
   @override
   Widget build(BuildContext context) {
-    inputs = ref.watch(inputDataProvider)[widget.word['word']] ??
-        {}; // TODO improve this
+    inputs = ref.watch(inputDataProvider)[widget.word['word']] ?? {}; // TODO improve this
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -880,7 +913,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                     ),
                                   ),
                                   onPressed: () => _showTagPopup(context),
-                                  icon: const Icon(Icons.add),
+                                  icon: const Icon(Icons.new_label),
                                 ),
                             ],
                           ),
@@ -1257,11 +1290,8 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                       .toList(),
                                 ),
                               ],
-                              if (((speechType.value['etymology']?.isNotEmpty ??
-                                          false) ||
-                                      editMode) &&
-                                  widget.activatedElements
-                                      .contains('etymology')) ...[
+                              if (((speechType.value['etymology']?.isNotEmpty ?? false) || editMode) &&
+                                  widget.activatedElements.contains('etymology')) ...[
                                 const Divider(),
                                 Row(
                                   children: [
@@ -1304,6 +1334,53 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                       style: const TextStyle(
                                         fontSize: 15,
                                         fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(height: 10),
+                              ],
+                              // todo - abstraction here as well
+                              if (((speechType.value['source']?.isNotEmpty ?? false) || editMode) &&
+                                  widget.activatedElements.contains('source')) ...[
+                                const Divider(),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.source,
+                                      color: Colors.amber,
+                                      size: 22,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      "Source",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    if (editMode) ...[
+                                      const Spacer(),
+                                      IconButton(
+                                        onPressed: () => _editSource(speechType.value),
+                                        icon: const Icon(
+                                          Icons.edit,
+                                          color: Colors.amber,
+                                        ),
+                                        tooltip: 'Edit Source',
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                if (speechType.value['source']?.isNotEmpty == true)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 17,
+                                      vertical: 8,
+                                    ),
+                                    child: MWTaggedText(
+                                      speechType.value['source'],
+                                      style: const TextStyle(
+                                        fontSize: 15,
                                       ),
                                     ),
                                   ),
@@ -1445,16 +1522,13 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                           decoration: BoxDecoration(
                                             color: const Color.fromARGB(
                                                 255, 156, 2, 2),
-                                            borderRadius:
-                                                BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(10),
                                           ),
                                           child: Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceEvenly,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
+                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              crossAxisAlignment: CrossAxisAlignment.center,
                                               children: [
                                                 const Text(
                                                   'SKIPPED',
@@ -1473,13 +1547,12 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                                 if (editMode)
                                                   IconButton(
                                                     onPressed: () => ref
-                                                        .read(inputDataProvider
-                                                            .notifier)
+                                                        .read(inputDataProvider.notifier)
                                                         .removeEntry(
-                                                            widget.word['word'],
-                                                            speechType.value[
-                                                                'partOfSpeech'],
-                                                            index),
+                                                          widget.word['word'], 
+                                                          speechType.value['partOfSpeech'],
+                                                          index
+                                                        ),
                                                     icon: const Icon(
                                                       Icons.close,
                                                       size: 20,
@@ -1538,8 +1611,7 @@ class WordDetailsState extends ConsumerState<WordDetails> {
                                                             .notifier)
                                                         .removeEntry(
                                                             widget.word['word'],
-                                                            speechType.value[
-                                                                'partOfSpeech'],
+                                                            speechType.value['partOfSpeech'],
                                                             index),
                                                     icon: const Icon(
                                                       Icons.close,
