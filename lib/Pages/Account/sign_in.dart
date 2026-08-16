@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:wordini/Pages/home.dart';
 import 'package:wordini/Pages/Account/sign_up.dart';
 import 'package:wordini/encryption_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -48,17 +47,15 @@ class SignInPageState extends State<SignInPage> {
                   await FirebaseAuth.instance.signInWithCredential(credential);
               debugPrint(authentication.idToken);
               debugPrint('Firebase sign-in complete for ${user.email}');
-              bool isNew =
-                  userCredential.additionalUserInfo?.isNewUser ?? false;
+              bool isNew = userCredential.additionalUserInfo?.isNewUser ?? false;
               _encryptionService.writeToSecureStorage(
                   key: 'authIdToken',
-                  value:
-                      _encryptionService.encrypt(authentication.idToken ?? ''));
+                  value: _encryptionService.encrypt(authentication.idToken ?? ''));
               if (isNew) {
                 createDefaultPermissions(userCredential);
               }
               if (mounted) {
-                Navigator.pushReplacementNamed(context, '/home');
+                Navigator.popUntil(context, (route) => route.isFirst);
               }
             } catch (e, st) {
               debugPrint('Error handling authentication event: $e');
@@ -166,11 +163,7 @@ class SignInPageState extends State<SignInPage> {
                               );
                               getUserPermissions();
                               if (!context.mounted) return;
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const HomePage()),
-                              );
+                              Navigator.popUntil(context, (route) => route.isFirst);
                               _encryptionService.writeToSecureStorage(
                                   key: 'password',
                                   value: _encryptionService
@@ -200,8 +193,7 @@ class SignInPageState extends State<SignInPage> {
                             } catch (e) {
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                errorSnackBar(
-                                    'An unexpected error occurred: $e'),
+                                errorSnackBar('An unexpected error occurred: $e'),
                               );
                             }
                           },
@@ -213,8 +205,7 @@ class SignInPageState extends State<SignInPage> {
                           ),
                           child: const Text(
                             'Sign In',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -223,8 +214,7 @@ class SignInPageState extends State<SignInPage> {
                         onTap: () {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => SignUpPage()),
+                            MaterialPageRoute(builder: (context) => SignUpPage()),
                           );
                         },
                         child: Text(

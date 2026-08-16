@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:wordini/Pages/home.dart';
 import 'package:wordini/Pages/Account/sign_in.dart';
 import 'package:wordini/encryption_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -56,7 +55,7 @@ class SignUpPageState extends State<SignUpPage> {
                 createDefaultPermissions(userCredential);
               }
               if (mounted) {
-                Navigator.pushReplacementNamed(context, '/home');
+                Navigator.popUntil(context, (route) => route.isFirst);
               }
             } catch (e, st) {
               debugPrint('Error handling authentication event: $e');
@@ -162,11 +161,7 @@ class SignUpPageState extends State<SignUpPage> {
                               });
                               // createUserPermissions(_auth.currentUser!);
                               if (!context.mounted) return;
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const HomePage()),
-                              );
+                              Navigator.popUntil(context, (route) => route.isFirst);
                               _encryptionService.writeToSecureStorage(
                                   key: 'password',
                                   value: _encryptionService

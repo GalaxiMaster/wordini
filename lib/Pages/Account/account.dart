@@ -27,8 +27,7 @@ class AccountPageState extends State<AccountPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isGoogleAccount =
-        account.providerData.first.providerId == 'google.com';
+    final isGoogleAccount = account.providerData.first.providerId == 'google.com';
 
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 14, 14, 14),
