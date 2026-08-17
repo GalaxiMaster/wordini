@@ -53,10 +53,18 @@ class FlashCardPageState extends ConsumerState<FlashCardPage> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          Text(
+                            firstWordDetails['partOfSpeech'] != null
+                                ? ' (${firstWordDetails['partOfSpeech']})'
+                                : '',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontStyle: FontStyle.italic,
+                            )
+                          ),
+                          const SizedBox(height: 8),
                           MWTaggedText(firstWordDetails['definitions'] is List
-                            ? ((firstWordDetails['definitions'] as List)
-                                        .elementAtOrNull(0) ??
-                                    {})['definition'] ??
+                            ? ((firstWordDetails['definitions'] as List).elementAtOrNull(0) ?? {})['definition'] ??
                                 ''
                             : '', textAlign: TextAlign.center)
                         ],

@@ -350,7 +350,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                             padding: const EdgeInsets.all(15),
                             child: Row(
                               children: [
-                                Text('Open flashcard set'),
+                                Text('Open flashcards', style: TextStyle(fontSize: 16)),
                                 Spacer(),
                                 Icon(Icons.arrow_forward_ios)
                               ]
