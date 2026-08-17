@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wordini/Pages/add_word.dart';
+import 'package:wordini/Pages/flash_cards_page.dart';
 import 'package:wordini/Pages/quizzes.dart';
 import 'package:wordini/Pages/settings.dart';
 import 'package:wordini/Pages/statistics_page.dart';
@@ -156,9 +157,7 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                             },
                           );
                           if (value != null) {
-                            ref
-                                .read(settingsProvider.notifier)
-                                .updateValue('wordsThisWeek', value);
+                            ref.read(settingsProvider.notifier).updateValue('wordsThisWeek', value);
                           }
                         },
                         child: Container(
@@ -324,6 +323,40 @@ class HomePageContentState extends ConsumerState<HomePageContent> {
                                 );
                               },
                             )),
+                      ),
+                      SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Text(
+                          'Flashcards',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FlashCardPage(),
+                            ),
+                          );
+                        },
+                        child: Card(
+                          color: Color.fromARGB(255, 30, 30, 30),
+                          child: Padding(
+                            padding: const EdgeInsets.all(15),
+                            child: Row(
+                              children: [
+                                Text('Open flashcard set'),
+                                Spacer(),
+                                Icon(Icons.arrow_forward_ios)
+                              ]
+                            )
+                          ),
+                        ),
                       )
                     ],
                   ),

@@ -250,11 +250,10 @@ class QuizzesState extends ConsumerState<Quizzes> {
                                   questionsDone++; // up counter in the top right
                                   if (context.mounted) {
                                     showWordDetailsOverlay(
-                                            currentWord['word'],
-                                            currentWord['attributes']
-                                                ['partOfSpeech'],
-                                            context)
-                                        .then((_) {
+                                      word: currentWord['word'],
+                                      partOfSpeech: currentWord['attributes']['partOfSpeech'],
+                                      context: context
+                                    ).then((_) {
                                       WidgetsBinding.instance
                                           .addPostFrameCallback((_) {
                                         _entryFocusNode.requestFocus();
@@ -265,8 +264,7 @@ class QuizzesState extends ConsumerState<Quizzes> {
                                       .read(inputDataProvider.notifier)
                                       .addInputEntry(
                                           currentWord['word'],
-                                          currentWord['attributes']
-                                              ['partOfSpeech'],
+                                          currentWord['attributes']['partOfSpeech'],
                                           {
                                         'skipped': true,
                                         'date': DateTime.now().toString(),
@@ -347,11 +345,10 @@ class QuizzesState extends ConsumerState<Quizzes> {
                                 crossKey.currentState?.showTick();
                                 if (context.mounted) {
                                   showWordDetailsOverlay(
-                                          currentWord['word'],
-                                          currentWord['attributes']
-                                              ['partOfSpeech'],
-                                          context)
-                                      .then((_) {
+                                    word: currentWord['word'],
+                                    partOfSpeech: currentWord['attributes']['partOfSpeech'],
+                                    context: context
+                                  ).then((_) {
                                     WidgetsBinding.instance
                                         .addPostFrameCallback((_) {
                                       _entryFocusNode.requestFocus();

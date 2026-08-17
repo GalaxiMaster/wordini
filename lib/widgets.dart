@@ -251,8 +251,9 @@ class _AnimatedErrorOverlayState extends State<_AnimatedErrorOverlay>
 class MWTaggedText extends StatelessWidget {
   final String input;
   final TextStyle? style;
+  final TextAlign textAlign;
 
-  const MWTaggedText(this.input, {super.key, this.style});
+  const MWTaggedText(this.input, {super.key, this.style, this.textAlign = TextAlign.left});
 
   List<InlineSpan> _parseMWTags(String text) {
     final spans = <InlineSpan>[];
@@ -413,6 +414,7 @@ class MWTaggedText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RichText(
+      textAlign: textAlign,
       text: TextSpan(
         children: _parseMWTags(input.replaceAll('{bc}', '')),
         style: style ?? DefaultTextStyle.of(context).style,
@@ -656,49 +658,48 @@ class AnimatedTickState extends State<AnimatedTick>
   }
 }
 
-dynamic showWordDetailsOverlay(
-    String word, String partOfSpeech, BuildContext context) async {
+dynamic showWordDetailsOverlay({
+    required String word, 
+    String? partOfSpeech, 
+    required BuildContext context
+  }) async {
   Map data = await readKey(word);
   Set allTags = await gatherTags();
   final bool? output;
   if (context.mounted) {
-    output = await showDialog(
+    output = await showModalBottomSheet(
       context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Stack(
+      isScrollControlled: true,
+      backgroundColor: Colors.black,
+      builder: (context) {
+        return SizedBox(
+          width: double.infinity,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Container(
-              //   decoration: BoxDecoration(
-              //     color: Colors.grey.withOpacity(0.8)
-              //   ),
-              //   width: MediaQuery.of(context).size.width,
-              //   height: MediaQuery.of(context).size.width,
-              // ),
               Container(
-                width: MediaQuery.of(context).size.width * 0.8,
-                height: MediaQuery.of(context).size.height * 0.6,
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                width: 32,
+                height: 3,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  // border: Border.all(Color),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade700,
-                      blurRadius: 6.5,
-                      offset: Offset(0, 0),
-                    ),
-                  ],
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(2),
                 ),
+              ),
+              SizedBox(
+                height: 500,
                 child: WordDetails(
                   word: data,
                   allTags: allTags,
-                  activatedElements: ['synonyms'],
-                  initialIndex: partOfSpeech,
-                ), // Your custom widget here
+                  activatedElements: ['synonyms', 'source'],
+                  initialIndex: partOfSpeech, // todo why is it called initial index
+                ),
               ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Close'),
+              ),
+              SizedBox(height: 8)
             ],
           ),
         );

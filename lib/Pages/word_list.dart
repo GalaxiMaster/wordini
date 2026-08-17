@@ -396,51 +396,51 @@ class WordListState extends ConsumerState<WordList> {
                 maxHeight: _showBar ? 150 : 10, // Animate between 10 and 200
               ),
               child: _showBar
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        boxesWithHeading(
-                          'Filtering',
-                          [
-                            BoxDetails(
-                                text: 'Types',
-                                layerLink: _typeLayerLink,
-                                onClick: () =>
-                                    _showTagPopup(context, TagPopupType.type),
-                                type: TagPopupType.type),
-                            BoxDetails(
-                                text: 'Tags',
-                                layerLink: _tagLayerLink,
-                                onClick: () =>
-                                    _showTagPopup(context, TagPopupType.tag),
-                                type: TagPopupType.tag),
-                          ],
-                          context,
-                        ),
-                        boxesWithHeading(
-                          'Sorting',
-                          [
-                            BoxDetails(
-                                text: 'Sort By',
-                                layerLink: _sortByLayerLink,
-                                onClick: () =>
-                                    _showTagPopup(context, TagPopupType.sortBy),
-                                type: TagPopupType.sortBy),
-                            BoxDetails(
-                                text: 'Sort Order',
-                                layerLink: _sortOrderLayerLink,
-                                onClick: () => _showTagPopup(
-                                    context, TagPopupType.sortOrder),
-                                type: TagPopupType.sortOrder),
-                          ],
-                          context,
-                        ),
-                        SizedBox(
-                          height: 10,
-                        )
-                      ],
-                    )
-                  : null,
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      boxesWithHeading(
+                        'Filtering',
+                        [
+                          BoxDetails(
+                              text: 'Types',
+                              layerLink: _typeLayerLink,
+                              onClick: () =>
+                                  _showTagPopup(context, TagPopupType.type),
+                              type: TagPopupType.type),
+                          BoxDetails(
+                              text: 'Tags',
+                              layerLink: _tagLayerLink,
+                              onClick: () =>
+                                  _showTagPopup(context, TagPopupType.tag),
+                              type: TagPopupType.tag),
+                        ],
+                        context,
+                      ),
+                      boxesWithHeading(
+                        'Sorting',
+                        [
+                          BoxDetails(
+                              text: 'Sort By',
+                              layerLink: _sortByLayerLink,
+                              onClick: () =>
+                                  _showTagPopup(context, TagPopupType.sortBy),
+                              type: TagPopupType.sortBy),
+                          BoxDetails(
+                              text: 'Sort Order',
+                              layerLink: _sortOrderLayerLink,
+                              onClick: () => _showTagPopup(
+                                  context, TagPopupType.sortOrder),
+                              type: TagPopupType.sortOrder),
+                        ],
+                        context,
+                      ),
+                      SizedBox(
+                        height: 10,
+                      )
+                    ],
+                  )
+                : null,
             ),
             Expanded(
               child: Container(
