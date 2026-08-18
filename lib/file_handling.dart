@@ -240,13 +240,13 @@ Future<void> importData(BuildContext context) async {
 }
 
 Future<File?> _pickJsonFile() async {
-  final result = await FilePicker.platform.pickFiles(
+  final files = await FilePicker.pickFiles(
     type: FileType.custom,
     allowedExtensions: ['json'],
   );
-  if (result == null || result.files.isEmpty) return null;
+  if (files.isEmpty) return null;
 
-  final path = result.files.single.path;
+  final path = files.single.path;
   return path != null ? File(path) : null;
 }
 

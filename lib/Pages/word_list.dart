@@ -187,8 +187,7 @@ class WordListState extends ConsumerState<WordList> {
             } else {
               newSelected.add(item);
             }
-            final newFilters = {...filters, filterKey: newSelected};
-            ref.read(filtersProvider.notifier).state = newFilters;
+            ref.read(filtersProvider.notifier).updateFilter(filterKey, newSelected);
             setPopupState(() {});
           },
         );
@@ -290,7 +289,9 @@ class WordListState extends ConsumerState<WordList> {
                       '')
                   .toLowerCase();
           if (!lowerWord.contains(searchLower) &&
-              !firstDef.contains(searchLower)) return false;
+              !firstDef.contains(searchLower)) {
+            return false;
+          }
 
           // Type filter
           final selectedTypes = (filters['wordTypes'] as Set)
@@ -364,7 +365,7 @@ class WordListState extends ConsumerState<WordList> {
                       ),
                     ),
                     onChanged: (value) {
-                      ref.read(searchTermProvider.notifier).state = value;
+                      ref.read(searchTermProvider.notifier).set(value);
                     },
                   ),
                   Positioned(
@@ -373,7 +374,7 @@ class WordListState extends ConsumerState<WordList> {
                     child: IconButton(
                       icon: const Icon(Icons.filter_list),
                       onPressed: () async {
-                        ref.read(showBarProvider.notifier).state = !_showBar;
+                        ref.read(showBarProvider.notifier).toggle();
                       },
                     ),
                   ),

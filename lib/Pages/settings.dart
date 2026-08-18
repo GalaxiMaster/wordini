@@ -128,14 +128,15 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
             settingsHeader('Utilities'),
             const SizedBox(height: 8),
             _buildSettingsTile(
-                icon: Icons.local_library,
-                label: 'Archived Words',
-                function: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ArchivedWordsScreen(),
-                      ),
-                    )),
+              icon: Icons.local_library,
+              label: 'Archived Words',
+              function: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ArchivedWordsScreen(),
+                ),
+              )
+            ),
             settingsHeader('Accessability'),
             const SizedBox(height: 8),
             _buildSettingsTile(
@@ -250,35 +251,74 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
   }
 }
 
+// ---------------------------------------------------------------------
+// CSV import progress providers
+// (previously created dynamically as StateProviders inside
+// processCsvRows — moved to top-level Notifiers since classes can't be
+// declared inside a function body. State is reset at the start of each
+// import run instead of being seeded via the constructor.)
+// ---------------------------------------------------------------------
+
+class CsvImportCurrentWordNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+
+  // state is protected on Notifier, so external callers go through this.
+  void set(String value) => state = value;
+}
+
+final csvImportCurrentWordProvider =
+    NotifierProvider<CsvImportCurrentWordNotifier, String>(
+  CsvImportCurrentWordNotifier.new,
+);
+
+class CsvImportCurrentIndexNotifier extends Notifier<int> {
+  @override
+  int build() => 1;
+
+  void set(int value) => state = value;
+  void increment() => state++;
+}
+
+final csvImportCurrentIndexProvider =
+    NotifierProvider<CsvImportCurrentIndexNotifier, int>(
+  CsvImportCurrentIndexNotifier.new,
+);
+
 Future<void> processCsvRows(
   BuildContext context,
   List existingWords,
   WidgetRef ref,
 ) async {
-  final result = await FilePicker.platform.pickFiles(
+  // file_picker 12: FilePicker.platform -> FilePicker (static),
+  // and pickFiles() now returns List<PlatformFile> directly
+  // (empty list, not null, if the user cancels).
+  final files = await FilePicker.pickFiles(
     type: FileType.custom,
     allowedExtensions: ['csv'],
   );
 
-  if (result == null) {
+  if (files.isEmpty) {
     debugPrint("No file selected.");
     return;
   }
 
-  final file = File(result.files.single.path!);
+  final file = File(files.single.path!);
   final content = await file.readAsString();
-  final rows = const CsvToListConverter().convert(content);
+  // csv 8.0.0: CsvToListConverter removed, use Csv().decode() instead.
+  final rows = Csv().decode(content);
 
-  // Providers created dynamically
-  final current = StateProvider<String>((ref) => rows[0][0].toString());
-  final currentInt = StateProvider<int>((ref) => 1);
+  // Reset progress providers for this import run
+  ref
+      .read(csvImportCurrentWordProvider.notifier)
+      .set(rows[0][0].toString());
+  ref.read(csvImportCurrentIndexProvider.notifier).set(1);
 
-  // Create overlay instance
   // Create cancellation token and overlay instance
   final cancelToken = CancelToken();
   final loadingOverlay = LinearProgressBarLoadingOverlay(
-    varRef: currentInt,
-    current: current,
+    varRef: csvImportCurrentIndexProvider,
+    current: csvImportCurrentWordProvider,
     max: rows.length,
     ref: ref,
     cancelToken: cancelToken,
@@ -298,8 +338,8 @@ Future<void> processCsvRows(
     String word = row[0].toString();
 
     // Update providers
-    ref.read(current.notifier).state = word;
-    ref.read(currentInt.notifier).state++;
+    ref.read(csvImportCurrentWordProvider.notifier).set(word);
+    ref.read(csvImportCurrentIndexProvider.notifier).increment();
 
     // Update overlay display
     loadingOverlay.update();
@@ -350,7 +390,7 @@ Future<void> processCsvRows(
   loadingOverlay.hide();
 }
 
-void exportAsCsv(words) async {
+void exportAsCsv(Map<String, dynamic> words) async {
   String getDefinition(Map details) {
     try {
       return details['entries']
@@ -372,13 +412,14 @@ void exportAsCsv(words) async {
     rows.add([capitalise(word), definition, type]);
   });
 
-  String csv = const ListToCsvConverter().convert(rows);
+  // csv 8.0.0: ListToCsvConverter removed, use Csv().encode() instead.
+  final String csvString = Csv().encode(rows);
 
   final directory = await getTemporaryDirectory();
   final path = '${directory.path}/mydata.csv';
 
   final file = File(path);
-  await file.writeAsString(csv);
+  await file.writeAsString(csvString);
 
   if (await file.exists()) {
     await SharePlus.instance.share(

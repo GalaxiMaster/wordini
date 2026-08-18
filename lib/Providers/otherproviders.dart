@@ -4,13 +4,13 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wordini/file_handling.dart' as file;
 
-final wordDataFutureProvider = FutureProvider<Map>((ref) async {
-  return file.readData();
+final wordDataFutureProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  return Map<String, dynamic>.from(await file.readData());
 });
 
-class WordDataWriteableNotifier extends Notifier<Map> {
+class WordDataWriteableNotifier extends Notifier<Map<String, dynamic>> {
   @override
-  Map build() {
+  Map<String, dynamic> build() {
     final asyncData = ref.watch(wordDataFutureProvider);
 
     return asyncData.when(
@@ -31,21 +31,81 @@ class WordDataWriteableNotifier extends Notifier<Map> {
   }
 }
 
-final wordDataProvider = NotifierProvider<WordDataWriteableNotifier, Map>(WordDataWriteableNotifier.new);
-
-final searchTermProvider = StateProvider<String>((ref) => '');
-
-final filtersProvider = StateProvider<Map>((ref) => {
-      'wordTypes': <String>{},
-      'wordTypeMode': 'any',
-      'selectedTags': <String>{},
-      'selectedTagsMode': 'any',
-      'sortBy': 'Date Added', // todo change to enum
-      'sortOrder': 'Ascending'
-    });
-
-final showBarProvider = StateProvider<bool>((ref) => false);
-
+final wordDataProvider =
+    NotifierProvider<WordDataWriteableNotifier, Map<String, dynamic>>(
+  WordDataWriteableNotifier.new,
+);
+class SearchTermNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+ 
+  void set(String value) => state = value;
+ 
+  void clear() => state = '';
+}
+ 
+final searchTermProvider =
+    NotifierProvider<SearchTermNotifier, String>(SearchTermNotifier.new);
+ 
+// ---------------------------------------------------------------------
+// Filters
+// ---------------------------------------------------------------------
+ 
+class FiltersNotifier extends Notifier<Map<String, dynamic>> {
+  static const Map<String, dynamic> _defaults = {
+    'wordTypes': <String>{},
+    'wordTypeMode': 'any',
+    'selectedTags': <String>{},
+    'selectedTagsMode': 'any',
+    'sortBy': 'Date Added', // todo change to enum
+    'sortOrder': 'Ascending',
+  };
+ 
+  @override
+  Map<String, dynamic> build() => _defaults;
+ 
+  /// Replace a single key, keeping the rest of the map intact.
+  /// Always creates a new map so watchers actually get notified.
+  void updateFilter(String key, dynamic value) {
+    state = {...state, key: value};
+  }
+ 
+  void toggleWordType(String type) {
+    final current = Set<String>.from(state['wordTypes'] as Set<String>);
+    current.contains(type) ? current.remove(type) : current.add(type);
+    updateFilter('wordTypes', current);
+  }
+ 
+  void toggleTag(String tag) {
+    final current = Set<String>.from(state['selectedTags'] as Set<String>);
+    current.contains(tag) ? current.remove(tag) : current.add(tag);
+    updateFilter('selectedTags', current);
+  }
+ 
+  void setSortBy(String value) => updateFilter('sortBy', value);
+ 
+  void setSortOrder(String value) => updateFilter('sortOrder', value);
+ 
+  void reset() => state = _defaults;
+}
+ 
+final filtersProvider = NotifierProvider<FiltersNotifier, Map<String, dynamic>>(
+  FiltersNotifier.new,
+);
+ 
+class ShowBarNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+ 
+  void show() => state = true;
+ 
+  void hide() => state = false;
+ 
+  void toggle() => state = !state;
+}
+ 
+final showBarProvider =
+    NotifierProvider<ShowBarNotifier, bool>(ShowBarNotifier.new);
 final futureSettingsDataProvider = FutureProvider<Map>((ref) async {
   return file.readData(path: 'settings');
 });

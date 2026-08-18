@@ -42,8 +42,10 @@ Future<void> initializeNotifications({bool? askPermission}) async {
     iOS: initializationSettingsIOS,
   );
 
+  // flutter_local_notifications v20+: initialize() now takes a named
+  // `settings` parameter instead of a positional one.
   await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
+    settings: initializationSettings,
     onDidReceiveNotificationResponse: (NotificationResponse response) {
       // Handle tap
       debugPrint('Notification clicked: ${response.payload}');
@@ -106,12 +108,13 @@ Future<void> showInstantNotification({
 
   int id = await NotificationIdManager.getNextId();
 
+  // flutter_local_notifications v20+: show() now takes named parameters
+  // (id, title, body, notificationDetails) instead of positional ones.
   await flutterLocalNotificationsPlugin.show(
-    // !here
-    id,
-    title,
-    description,
-    platformChannelSpecifics,
+    id: id,
+    title: title,
+    body: description,
+    notificationDetails: platformChannelSpecifics,
     payload: payload,
   );
 }
@@ -136,12 +139,15 @@ Future<void> scheduleNotification({
 
   int id = await NotificationIdManager.getNextId();
 
+  // flutter_local_notifications v20+: zonedSchedule() now takes named
+  // parameters (id, title, body, scheduledDate, notificationDetails)
+  // instead of positional ones.
   await flutterLocalNotificationsPlugin.zonedSchedule(
-    id,
-    title,
-    description,
-    tz.TZDateTime.now(tz.local).add(duration),
-    platformChannelSpecifics, 
+    id: id,
+    title: title,
+    body: description,
+    scheduledDate: tz.TZDateTime.now(tz.local).add(duration),
+    notificationDetails: platformChannelSpecifics,
     androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     payload: payload,
   );
@@ -165,7 +171,9 @@ void removeNotif(String key) async {
   var box = Hive.box<int>('active-notifications');
   int? id = box.get(key);
   if (id != null) {
-    flutterLocalNotificationsPlugin.cancel(id);
+    // flutter_local_notifications v20+: cancel() now takes a named `id`
+    // parameter instead of a positional one.
+    flutterLocalNotificationsPlugin.cancel(id: id);
     box.delete(key);
   }
   debugPrint('Notification with ID: $id removed for word: $key');

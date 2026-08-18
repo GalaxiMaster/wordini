@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:wordini/Pages/word_details.dart';
 import 'package:wordini/file_handling.dart';
 import 'dart:async';
@@ -46,8 +47,8 @@ class LoadingOverlay {
 
 class LinearProgressBarLoadingOverlay {
   final WidgetRef ref;
-  final StateProvider<int> varRef;
-  final StateProvider<String> current;
+  final ProviderListenable<int> varRef;
+  final ProviderListenable<String> current;
   final int max;
 
   final CancelToken? cancelToken;
