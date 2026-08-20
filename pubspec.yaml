@@ -48,7 +48,8 @@ dev_dependencies:
   envied_generator: ^1.1.1
   
 #! fix analyzer issues with riverpod_lint & hive_generator so it can be upgraded in future
-
+dependency_overrides:
+  permission_handler_android: 13.0.1
 flutter:
   uses-material-design: true
   assets:
